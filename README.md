@@ -1,2 +1,4 @@
-# kerbol_bot
-Private discord bot
+Needed packages:
+  discord.py
+  yt_dlp <- voice stuff
+  pynacl <- voice stuff
