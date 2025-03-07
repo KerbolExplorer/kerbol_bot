@@ -11,6 +11,15 @@ db_aircraft_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases",
 class Airline_Manager(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+        airline_db = sqlite3.connect(db_airline_path)
+        airline_cursor = airline_db.cursor()
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='Airline'" #check if the guild has a table
+        airline_cursor.execute(sql)
+        result = airline_cursor.fetchall()  
+        if not result:
+            sql = f'CREATE TABLE "Airline" (airlineId INTEGER, airlineName TEXT, airlineICAO TEXT, homeBase TEXT, owner INTEGER)' #if the guild doesn't have any table we create it
+            airline_cursor.execute(sql)
     
     @app_commands.command(name="create_airline", description="Creates an airline")
     async def create_airline(self, interaction:discord.Interaction, airline_name: str, airline_icao: str, airline_homebase: str):
