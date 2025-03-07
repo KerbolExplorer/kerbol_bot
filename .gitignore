@@ -2,3 +2,6 @@ __pycache__/
 *.pyc
 *.pyo
 bot_data.py
+db_exp.db
+aircraft.db
+airlines.db
