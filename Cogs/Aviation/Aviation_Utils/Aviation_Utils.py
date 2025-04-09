@@ -83,13 +83,15 @@ def airport_distance(first_airport: str, second_airport: str):
 
     return distance
 
-def get_metar(icao_code: str):
+def get_metar(icao_code: str, raw_only = True):
     """Returns the current metar for an airport.
 
     Parameters
     ----------
     icao_code : str
         ICAO code for the airport.
+    raw_only : boolean
+        Decides if we only return a string with the raw data, or a dictionary with all the data.
 
     Returns
     ----------
@@ -119,15 +121,14 @@ def get_metar(icao_code: str):
             return None
         
         metar = metars[0]
-        return metar["rawOb"]
+        if raw_only:
+            return metar["rawOb"]
+        else:
+            return metar
     except requests.RequestException:
         return False
     except ValueError:
         return False
-
-def metar_data(metar : str):
-    """**NOT IMPLEMENTED** Returns a more legible version of the metar."""
-    pass
 
 def random_regional_flight():
     """**NOT IMPLEMENTED** Returns a random flight that takes place inside a country"""
