@@ -4,13 +4,15 @@ Current functions are:
 
     * airport_lookup: Takes an icao code and returns all the info in the database about it.
     * airport_distance: Returns the distance between two airports in nautical miles.
+    * get_metar: Returns the metar for an airport
 
 """
 
 
 import sqlite3
 import os
-from . import Aviation_Math
+import requests
+import Aviation_Math
 
 db_path = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "airports.db")
 
@@ -80,6 +82,52 @@ def airport_distance(first_airport: str, second_airport: str):
     distance = Aviation_Math.km_to_nm(distance)
 
     return distance
+
+def get_metar(icao_code: str):
+    """Returns the current metar for an airport.
+
+    Parameters
+    ----------
+    icao_code : str
+        ICAO code for the airport.
+
+    Returns
+    ----------
+    string
+        Returns the raw metar for the airport.
+    boolean
+        Returns False if there was an issue getting the metar.
+    None
+        Returns None if there's no metar.
+    """
+    icao_code = icao_code.upper()
+    url = "https://aviationweather.gov/api/data/metar"
+    params = {
+        "ids": icao_code,
+        "format": "json",
+        "taf": "false",
+        "mostRecent": "true",
+        "hours": 1
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        metars = response.json()
+
+        if not metars:
+            return None
+        
+        metar = metars[0]
+        return metar["rawOb"]
+    except requests.RequestException:
+        return False
+    except ValueError:
+        return False
+
+def metar_data(metar : str):
+    """Returns a more legible version of the metar."""
+    pass
 
 def random_regional_flight():
     """Returns a random flight that takes place inside a country"""
