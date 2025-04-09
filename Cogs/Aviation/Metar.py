@@ -18,11 +18,16 @@ class Metar(commands.Cog):
         elif metar == None:
             await interaction.response.send_message("This metar is not available.", ephemeral=True)
         else:
-
+            
+            # Getting the proper zulu time
             zulu_time = datetime.fromtimestamp(metar['obsTime'], tz=timezone.utc)
             zulu_time = zulu_time.strftime("%H%MZ")
+
+            # Handles how the wind is displayed, depending on gusts or vrb winds
             if metar['wgst'] is not None:
                 wind = f"from {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
+            elif metar['wdir'] == "VRB":
+                wind = f"Variable winds at {metar['wspd']}kt\n"
             else:
                 wind = f"from {metar['wdir']}º at {metar['wspd']}kt\n"
             embed = discord.Embed(
