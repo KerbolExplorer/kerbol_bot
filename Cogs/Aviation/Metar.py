@@ -46,7 +46,7 @@ class Metar(commands.Cog):
                     'TCU' : 'Towering cumulus clouds'
                                }
                 for layer in metar['clouds']:
-                    clouds += f"{cover_types[layer['cover']]} at {layer['base']}ft, "
+                    clouds += f"{cover_types[layer['cover']]} at {layer['base']}ft. "
 
 
             embed = discord.Embed(
