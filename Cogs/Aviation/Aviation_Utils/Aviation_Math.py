@@ -4,6 +4,7 @@ Current functions are:
 
     * great_circle_distance: Takes two sets of coordinates and returns the distance between them in km.
     * km_to_nm: Takes a value in km and returns it in nm.
+    * hpa_to_inhg: Takes a value in hpa and returns it in ingh.
 
 """
 
@@ -53,5 +54,16 @@ def km_to_nm(kilometers):
     return kilometers * 0.5399568035
 
 def hpa_to_inhg(hpa_value):
-    """**NOT IMPLEMENTED** Takes an altimeter value in hpa and returns it in inhg"""
-    pass
+    """Takes a value in hpa and returns it in ingh.
+
+    Parameters
+    ----------
+    hpa_value: float
+        The value to convert
+    
+    Returns
+    ----------
+        The value converted to inhg rounded to 2 decimals
+    """
+    result = hpa_value * 0.02953
+    return round(result, 2)

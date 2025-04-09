@@ -61,7 +61,7 @@ class Metar(commands.Cog):
                 f"**Visibility** : {metar['visib']}km\n"
                 f"**Temperature** : {metar['temp']}ºC\n"
                 f"**Dew Point** : {metar['dewp']}ºC\n"
-                f"**Altimeter** : {metar['altim']}\n"
+                f"**Altimeter** : {int(metar['altim'])}hpa ({hpa_to_inhg(float(metar['altim']))}inhg)\n"
                 f"**Clouds**: {clouds}"
             ), inline=False)
             embed.set_footer(text="For flight simulation use only. Source: https://aviationweather.gov/api/data/metar")
