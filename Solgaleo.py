@@ -3,6 +3,8 @@ from discord.ext import commands
 import asyncio
 import random
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 #from bot_data import give_token
 token = os.getenv("TOKEN")

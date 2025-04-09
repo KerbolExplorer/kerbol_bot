@@ -5,3 +5,4 @@ bot_data.py
 db_exp.db
 aircraft.db
 airlines.db
+.env
