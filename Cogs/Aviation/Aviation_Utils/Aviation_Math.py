@@ -51,3 +51,7 @@ def km_to_nm(kilometers):
         The value converted to nm
     """
     return kilometers * 0.5399568035
+
+def hpa_to_inhg(hpa_value):
+    """**NOT IMPLEMENTED** Takes an altimeter value in hpa and returns it in inhg"""
+    pass

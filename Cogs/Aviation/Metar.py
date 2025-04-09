@@ -21,7 +21,10 @@ class Metar(commands.Cog):
 
             zulu_time = datetime.fromtimestamp(metar['obsTime'], tz=timezone.utc)
             zulu_time = zulu_time.strftime("%H%MZ")
-
+            if metar['wgst'] is not None:
+                wind = f"from {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
+            else:
+                wind = f"from {metar['wdir']}º at {metar['wspd']}kt\n"
             embed = discord.Embed(
                 title=f"METAR: {metar['icaoId']}",
                 description=f"**Raw Report**\n```{metar['rawOb']}```",
@@ -30,7 +33,7 @@ class Metar(commands.Cog):
             embed.add_field(name="**Data Summary**", value=(
                 f"**Station** : {metar['icaoId']} ({metar['name']})\n"
                 f"**Observed at** : {zulu_time}\n"
-                f"**Wind** : from {metar['wdir']} at {metar['wspd']}kt\n"
+                f"**Wind** : {wind}"
                 f"**Visibility** : {metar['visib']}km\n"
                 f"**Temperature** : {metar['temp']}ºC\n"
                 f"**Dew Point** : {metar['dewp']}ºC\n"
