@@ -26,13 +26,13 @@ class Metar(commands.Cog):
 
             # Handles how the wind is displayed, depending on gusts or vrb winds
             if metar['wgst'] is not None:
-                wind = f"from {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
+                wind = f"From {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
             elif metar['wdir'] == "VRB":
                 wind = f"Variable winds at {metar['wspd']}kt\n"
             else:
-                wind = f"from {metar['wdir']}º at {metar['wspd']}kt\n"
+                wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
             
-            #Cloud cover handling
+            # Cloud cover handling
             clouds = ""
             if metar['clouds'][0]['cover'] == 'CAVOK' or metar['clouds'][0]['cover'] == 'CLR':
                 clouds = "Clear skies"
