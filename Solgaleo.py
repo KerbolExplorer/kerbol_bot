@@ -2,9 +2,10 @@ import discord
 from discord.ext import commands
 import asyncio
 import random
+import os
 
-from bot_data import give_token
-token = give_token()
+#from bot_data import give_token
+token = os.getenv("TOKEN")
 
 bot = commands.Bot(command_prefix="S!", intents=discord.Intents.all())
 
