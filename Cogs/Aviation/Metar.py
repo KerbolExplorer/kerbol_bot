@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands
 from datetime import datetime, timezone
 from .Aviation_Utils.Aviation_Utils import get_metar
+from .Aviation_Utils.Aviation_Math import hpa_to_inhg
 
 class Metar(commands.Cog):
     def __init__(self, bot):
@@ -30,6 +31,24 @@ class Metar(commands.Cog):
                 wind = f"Variable winds at {metar['wspd']}kt\n"
             else:
                 wind = f"from {metar['wdir']}º at {metar['wspd']}kt\n"
+            
+            #Cloud cover handling
+            clouds = ""
+            if metar['clouds'][0]['cover'] == 'CAVOK':
+                clouds = "Clear skies"
+            else:
+                cover_types = {
+                    'FEW' : 'Few clouds', 
+                    'SCT' : 'Scattered clouds', 
+                    'BKN' : 'Broken clouds', 
+                    'OVC' : 'Overcast clouds', 
+                    'CB' : 'Cumulonimbus clouds', 
+                    'TCU' : 'Towering cumulus clouds'
+                               }
+                for layer in metar['clouds']:
+                    clouds += f"{cover_types[layer['cover']]} at {layer['base']}ft, "
+
+
             embed = discord.Embed(
                 title=f"METAR: {metar['icaoId']}",
                 description=f"**Raw Report**\n```{metar['rawOb']}```",
@@ -43,7 +62,7 @@ class Metar(commands.Cog):
                 f"**Temperature** : {metar['temp']}ºC\n"
                 f"**Dew Point** : {metar['dewp']}ºC\n"
                 f"**Altimeter** : {metar['altim']}\n"
-                f"**Clouds**: {metar['clouds']}"
+                f"**Clouds**: {clouds}"
             ), inline=False)
             embed.set_footer(text="For flight simulation use only. Source: https://aviationweather.gov/api/data/metar")
             await interaction.response.send_message(embed=embed)
