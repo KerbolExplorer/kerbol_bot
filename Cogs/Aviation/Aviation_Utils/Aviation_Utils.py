@@ -12,7 +12,7 @@ Current functions are:
 import sqlite3
 import os
 import requests
-import Aviation_Math
+from . import Aviation_Math
 
 db_path = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "airports.db")
 
@@ -126,9 +126,9 @@ def get_metar(icao_code: str):
         return False
 
 def metar_data(metar : str):
-    """Returns a more legible version of the metar."""
+    """**NOT IMPLEMENTED** Returns a more legible version of the metar."""
     pass
 
 def random_regional_flight():
-    """Returns a random flight that takes place inside a country"""
+    """**NOT IMPLEMENTED** Returns a random flight that takes place inside a country"""
     pass

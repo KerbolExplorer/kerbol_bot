@@ -34,7 +34,7 @@ async def on_ready():
     cogs_list_dev = ['Cogs.Dev_Only.Run','Cogs.Dev_Only.Say']
     cogs_list_lvl = ['Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard']
     cogs_list_games = ['Cogs.Games.rps']
-    cogs_list_aviation = ['Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule']
+    cogs_list_aviation = ['Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar']
     cogs_list_music = ['Cogs.Music.Music']
     cogs_list_misc = ['Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.About', 'Cogs.Misc.Responses']
 
