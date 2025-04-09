@@ -34,7 +34,7 @@ class Metar(commands.Cog):
             
             #Cloud cover handling
             clouds = ""
-            if metar['clouds'][0]['cover'] == 'CAVOK':
+            if metar['clouds'][0]['cover'] == 'CAVOK' or metar['clouds'][0]['cover'] == 'CLR':
                 clouds = "Clear skies"
             else:
                 cover_types = {
@@ -46,11 +46,14 @@ class Metar(commands.Cog):
                     'TCU' : 'Towering cumulus clouds'
                                }
                 for layer in metar['clouds']:
-                    clouds += f"{cover_types[layer['cover']]} at {layer['base']}ft. "
-
+                    try:
+                        clouds += f"{cover_types[layer['cover']]} at {layer['base']}ft. "
+                    except KeyError:
+                        clouds = f"⚠️Could not match cloud type {layer['cover']}"
+                        break
 
             embed = discord.Embed(
-                title=f"METAR: {metar['icaoId']}",
+                title=f"METAR: `{metar['icaoId']}`",
                 description=f"**Raw Report**\n```{metar['rawOb']}```",
                 color=discord.Color.blue()
             )
