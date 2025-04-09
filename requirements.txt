@@ -1,4 +1,4 @@
 discord.py
 yt_dlp
-pynacle
+pynacl
 requests
