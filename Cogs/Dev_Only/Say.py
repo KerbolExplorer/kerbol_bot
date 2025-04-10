@@ -7,11 +7,15 @@ class Say(commands.Cog):
         self.bot = bot
     
     @app_commands.command(name="say", description="[DEV ONLY COMMAND] Have Solgaleo say something for you")
-    async def say(self, interaction:discord.Interaction, message: str):
-        if interaction.user.id != 442728041115025410:
-            await interaction.response.send_message("Only Kerbol can use this command!", ephemeral=True)
-            return
-        await interaction.channel.send(message)
+    async def say(self, interaction:discord.Interaction, message: str, message_id: str = None):
+        if message_id != None:
+            reply_message = await interaction.channel.fetch_message(int(message_id))
+            await interaction.channel.send(content=message, reference=reply_message)
+        else:
+            if interaction.user.id != 442728041115025410:
+                await interaction.response.send_message("Only Kerbol can use this command!", ephemeral=True)
+                return
+            await interaction.channel.send(message)
 
 async def setup(bot):
     await bot.add_cog(Say(bot))
