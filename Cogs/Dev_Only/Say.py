@@ -7,6 +7,10 @@ class Say(commands.Cog):
         self.bot = bot
     
     @app_commands.command(name="say", description="[DEV ONLY COMMAND] Have Solgaleo say something for you")
+    @app_commands.describe(
+        message="The message Solgaleo will say",
+        message_id="The id of the message to reply to"
+    )
     async def say(self, interaction:discord.Interaction, message: str, message_id: str = None):
         if message_id != None:
             reply_message = await interaction.channel.fetch_message(int(message_id))

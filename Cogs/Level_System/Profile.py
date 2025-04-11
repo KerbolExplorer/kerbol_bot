@@ -8,6 +8,7 @@ class Profile(commands.Cog):
         self.bot = bot
     
     @app_commands.command(name="profile",description="Get user's profile")
+    @app_commands.describe(member="The member we want to check")
     async def profile(self, interaction:discord.Interaction,member:discord.Member = None):         #TODO add dropdown menu to change between profiles
 
         if member == None:

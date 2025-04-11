@@ -11,6 +11,7 @@ class Metar(commands.Cog):
     
 
     @app_commands.command(name="metar", description="Gets the metar for an airport")
+    @app_commands.describe(airport="Icao code of the airport")
     async def metar(self, interaction:discord.Interaction, airport:str):
         metar = get_metar(airport, False)
 

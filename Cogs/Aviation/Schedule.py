@@ -13,6 +13,7 @@ class Schedule(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="random_regional_flight", description="Returns a random regional flight")
+    @app_commands.describe(country="ISO code of the country")
     async def random_regional_flight(self, interaction:discord.Interaction, country: str):
         country = country.upper()
 

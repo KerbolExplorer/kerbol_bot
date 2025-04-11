@@ -9,6 +9,9 @@ class Run(commands.Cog):
         self.bot = bot
     
     @app_commands.command(name="run", description="[DEV ONLY COMMAND], runs whatever text was given and returns the result")
+    @app_commands.describe(
+        script="The code Solgaleo will execute"
+    )
     async def run(self, interaction:discord.Interaction, script: str):
         if interaction.user.id != 442728041115025410:
             await interaction.response.send_message("Only Kerbol can use this command!", ephemeral=True)

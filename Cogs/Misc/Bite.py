@@ -8,6 +8,7 @@ class Bite(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="bite", description="Solgaleo bites the selected user")
+    @app_commands.describe(target="The member you want solgaleo to bite")
     async def bite(self, interaction:discord.Interaction, target:discord.Member):
         if (interaction.user.id is target.id):
             self_bite_responses = (

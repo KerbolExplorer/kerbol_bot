@@ -8,6 +8,7 @@ class Level(commands.Cog):
         self.bot = bot
     
     @app_commands.command(name="level", description="Shows the current level and xp values for a member")
+    @app_commands.describe(member="The member to check")
     async def level(self, interaction:discord.Interaction, member:discord.Member = None):
 
         if member == None:
