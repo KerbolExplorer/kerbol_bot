@@ -1,9 +1,8 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
 import os
-from .Aviation_Utils.Aviation_Utils import airport_lookup, airport_distance
+from .Aviation_Utils.Aviation_Utils import airport_lookup, airport_distance, get_metar
 
 db_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airports.db")
 
@@ -18,7 +17,23 @@ class Airport_Lookup(commands.Cog):
         if airport == False:
             await interaction.response.send_message("That airport doesn't exist or is not in my database")
         else:
-            await interaction.response.send_message("The airport is {}, in {}, latitude is {}, longitude is {}, elevation {}, country {}, airport type: {}".format(airport[0][3], airport[0][10], airport[0][4], airport[0][5], airport[0][6], airport[0][8], airport[0][2]))
+            metar = get_metar(airport[0][12])
+            embed = discord.Embed(
+                title=f"Information for `{airport[0][12].upper()}`",
+                description=f"**Current Metar: **\n```{metar}```",
+                color=discord.Color.blue()
+            )
+            embed.add_field(name="**Airport Data:**", value=(
+                f"**Airport Name:** : {airport[0][3]}\n"
+                f"**Location** : {airport[0][10]}\n"
+                f"**Latitude** : {airport[0][4]}\n"
+                f"**Longitude** : {airport[0][5]}\n"
+                f"**Elevation** : {airport[0][6]}\n"
+                f"**Country** : {airport[0][8]}\n"
+                f"**Airport Type**: {airport[0][2]}"
+            ))
+            embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use `/metar`. For flight simulation use only")
+            await interaction.response.send_message(embed=embed)
     
     @app_commands.command(name="airport_distance", description="Calculates the distance between two airports")
     @app_commands.describe(
