@@ -9,6 +9,8 @@ class Leaderboard(commands.Cog):
     
     @app_commands.command(name="leaderboard", description="Displays the leaderboard for the server")
     async def leaderboard(self, interaction:discord.Interaction):
+        await interaction.response.defer()
+
         guild_id = interaction.guild_id
         cap = 0
         db = sqlite3.connect("db_exp.db")
@@ -18,7 +20,7 @@ class Leaderboard(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()  
         if not result:
-            await interaction.response.send_message("I don't have any information about this server in my database.", ephemeral=True)
+            await interaction.followup.send("I don't have any information about this server in my database.", ephemeral=True)
             db.close()
             return
 
@@ -48,7 +50,7 @@ class Leaderboard(commands.Cog):
         embed.add_field(name="Member list:", value= returned_data)
         embed.set_footer(text="Showing the top 10 members of the server")
 
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
 
 async def setup(bot):
