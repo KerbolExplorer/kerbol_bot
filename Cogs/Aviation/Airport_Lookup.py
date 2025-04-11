@@ -32,7 +32,7 @@ class Airport_Lookup(commands.Cog):
                 f"**Country** : {airport[0][8]}\n"
                 f"**Airport Type**: {airport[0][2]}"
             ))
-            embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use `/metar`. For flight simulation use only")
+            embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use /metar. For flight simulation use only")
             await interaction.response.send_message(embed=embed)
     
     @app_commands.command(name="airport_distance", description="Calculates the distance between two airports")

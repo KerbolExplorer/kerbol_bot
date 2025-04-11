@@ -66,4 +66,4 @@ def hpa_to_inhg(hpa_value):
         The value converted to inhg rounded to 2 decimals
     """
     result = hpa_value * 0.02953
-    return round(result, 2)
+    return f"{result:.2f}"
