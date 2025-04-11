@@ -6,10 +6,6 @@ class Ping(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.Cog.listener()
-    async def on_ready(self):
-        print("Ping cog loaded")
-
     @app_commands.command(name="ping", description="Gets the ping from Solgaleo")
     async def ping(self, interaction:discord.Interaction):
         await interaction.response.send_message("Pong! {0}ms".format(round(self.bot.latency, 3)))
