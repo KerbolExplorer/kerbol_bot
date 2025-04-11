@@ -30,7 +30,6 @@ async def change_activity():
 
 @bot.event
 async def on_ready():
-    print("Ready to dance!")
     bot.loop.create_task(change_activity())
 
     cogs_list_Test_Commands = ['Cogs.Test_Commands.Ping']
@@ -66,6 +65,7 @@ async def on_ready():
 
     await bot.tree.sync()
     print("Sync has been successful")
+    print("Ready to dance!")
 
 
 bot.run(token)
