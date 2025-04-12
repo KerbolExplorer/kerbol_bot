@@ -13,19 +13,8 @@ db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases",
 class Metar(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        """request_db = sqlite3.connect(db_requests_path)
-        request_cursor = request_db.cursor()
-        sql = "SELECT * FROM Requests"
-        request_cursor.execute(sql)
-        users = request_cursor.fetchall()   
-        if users != []:
-            for user in users:
-                if user[3] == True:     #This is so the dm isn't send the second the command is executed
-                    sql = "UPDATE Requests SET firstLoop = ? WHERE userId = ? AND airportICAO = ?"
-                    request_cursor.execute(sql, (False, user[0], user[1]))
-        request_db.commit()
-        request_db.close()"""
-        self.send_metar.start()
+        if not self.send_metar.is_running():
+            self.send_metar.start()
 
     def get_metar_embed(self, metar):
             # Getting the proper zulu time
@@ -155,7 +144,7 @@ class Metar(commands.Cog):
         request_db.commit()
         request_db.close()        
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(minutes=1)
     async def send_metar(self):
         request_db = sqlite3.connect(db_requests_path)
         request_cursor = request_db.cursor()
@@ -184,7 +173,7 @@ class Metar(commands.Cog):
                             tries += 1
                 
                 if metar_raw == False or metar_raw == None:     #If the metar couldn't be grabbed 
-                    await user_target.send(f"Hey I tried getting the metar for `{user}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
+                    await user_target.send(f"Hey I tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
                 else:
                     metar_fancy = self.get_metar_embed(metar_raw)
                     await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
@@ -193,8 +182,8 @@ class Metar(commands.Cog):
                     sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
                     request_cursor.execute(sql, (user[0], user[1]))
                 else:
-                    sql = "UPDATE Requests SET calls = ? WHERE userId = ?"
-                    request_cursor.execute(sql, ((user[2] - 1), user[0]))
+                    sql = "UPDATE Requests SET calls = ? WHERE userId = ? AND airportICAO = ?"
+                    request_cursor.execute(sql, ((user[2] - 1), user[0], user[1]))
         else:
             self.send_metar.stop()
         request_db.commit()
