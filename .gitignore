@@ -6,3 +6,4 @@ db_exp.db
 aircraft.db
 airlines.db
 .env
+requests.db
