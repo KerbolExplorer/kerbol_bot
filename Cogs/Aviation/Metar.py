@@ -13,7 +13,18 @@ db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases",
 class Metar(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
+        """request_db = sqlite3.connect(db_requests_path)
+        request_cursor = request_db.cursor()
+        sql = "SELECT * FROM Requests"
+        request_cursor.execute(sql)
+        users = request_cursor.fetchall()   
+        if users != []:
+            for user in users:
+                if user[3] == True:     #This is so the dm isn't send the second the command is executed
+                    sql = "UPDATE Requests SET firstLoop = ? WHERE userId = ? AND airportICAO = ?"
+                    request_cursor.execute(sql, (False, user[0], user[1]))
+        request_db.commit()
+        request_db.close()"""
         self.send_metar.start()
 
     def get_metar_embed(self, metar):
@@ -95,9 +106,15 @@ class Metar(commands.Cog):
         else:
             request_db = sqlite3.connect(db_requests_path)
             request_cursor = request_db.cursor()
-
-            sql = "INSERT INTO Requests (userId, airportICAO, calls, firstLoop) VALUES (?, ?, ?, ?)"
-            request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, True))
+            sql = "SELECT * FROM Requests"
+            request_cursor.execute(sql)
+            result = request_cursor.fetchall()
+            if result == []:
+                sql = "INSERT INTO Requests (userId, airportICAO, calls, firstLoop) VALUES (?, ?, ?, ?)"
+                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, True))
+            else:
+                sql = "INSERT INTO Requests (userId, airportICAO, calls, firstLoop) VALUES (?, ?, ?, ?)"
+                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, False))
             request_db.commit()
             request_db.close()
 
@@ -138,7 +155,7 @@ class Metar(commands.Cog):
         request_db.commit()
         request_db.close()        
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=5)
     async def send_metar(self):
         request_db = sqlite3.connect(db_requests_path)
         request_cursor = request_db.cursor()
