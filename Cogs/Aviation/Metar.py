@@ -13,8 +13,20 @@ db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases",
 class Metar(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
         if not self.send_metar.is_running():
             self.send_metar.start()
+
+        request_db = sqlite3.connect(db_requests_path)
+        request_cursor = request_db.cursor()
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='Requests'"
+        request_cursor.execute(sql)
+        result = request_cursor.fetchall()
+        if not result:
+            sql = f"CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, firstLoop BOOLEAN)"
+            request_cursor.execute(sql)
+        request_db.commit()
+        request_db.close()
 
     def get_metar_embed(self, metar):
             # Getting the proper zulu time
@@ -124,7 +136,7 @@ class Metar(commands.Cog):
         request_cursor.execute(sql, (interaction.user.id,))
         result = request_cursor.fetchall()
         if result == []:
-            await interaction.response.send_message("You don't have any metar requests")
+            await interaction.response.send_message("You don't have any metar requests", ephemeral=True)
         else:
             if airport == None:
                 sql = "DELETE FROM Requests WHERE userId = ?"
@@ -133,9 +145,9 @@ class Metar(commands.Cog):
             else:
                 sql = "SELECT * FROM Requests WHERE userId = ? AND airportICAO = ?"
                 request_cursor.execute(sql, (interaction.user.id, airport.upper()))
-
+                result = request_cursor.fetchall()
                 if result == []:
-                    await interaction.response.send_message(f"Couldn't find any requests for `{airport.upper()}`")
+                    await interaction.response.send_message(f"I Couldn't find any metar requests for `{airport.upper()}`", ephemeral=True)
                 else:
                     sql= "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
                     request_cursor.execute(sql, (interaction.user.id, airport.upper()))

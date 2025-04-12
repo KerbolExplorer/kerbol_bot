@@ -14,11 +14,11 @@ class Airline_Manager(commands.Cog):
 
         airline_db = sqlite3.connect(db_airline_path)
         airline_cursor = airline_db.cursor()
-        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='Airline'" #check if the guild has a table
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='Airline'" #check if the database has a table
         airline_cursor.execute(sql)
         result = airline_cursor.fetchall()  
         if not result:
-            sql = f'CREATE TABLE "Airline" (airlineId INTEGER, airlineName TEXT, airlineICAO TEXT, homeBase TEXT, owner INTEGER)' #if the guild doesn't have any table we create it
+            sql = f'CREATE TABLE "Airline" (airlineId INTEGER, airlineName TEXT, airlineICAO TEXT, homeBase TEXT, owner INTEGER)' #if the database doesn't have any table we create it
             airline_cursor.execute(sql)
         airline_db.commit()
         airline_db.close()
