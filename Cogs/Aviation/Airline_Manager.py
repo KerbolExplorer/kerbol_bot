@@ -20,6 +20,8 @@ class Airline_Manager(commands.Cog):
         if not result:
             sql = f'CREATE TABLE "Airline" (airlineId INTEGER, airlineName TEXT, airlineICAO TEXT, homeBase TEXT, owner INTEGER)' #if the guild doesn't have any table we create it
             airline_cursor.execute(sql)
+        airline_db.commit()
+        airline_db.close()
     
     @app_commands.command(name="create_airline", description="Creates an airline")
     async def create_airline(self, interaction:discord.Interaction, airline_name: str, airline_icao: str, airline_homebase: str):
