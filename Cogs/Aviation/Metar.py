@@ -15,7 +15,6 @@ class Metar(commands.Cog):
         self.bot = bot
 
         self.send_metar.start()
-        print("send_metar has been loaded")
 
     def get_metar_embed(self, metar):
             # Getting the proper zulu time
