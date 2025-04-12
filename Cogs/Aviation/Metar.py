@@ -156,7 +156,7 @@ class Metar(commands.Cog):
         request_db.commit()
         request_db.close()        
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=60)
     async def send_metar(self):
         request_db = sqlite3.connect(db_requests_path)
         request_cursor = request_db.cursor()
@@ -185,7 +185,7 @@ class Metar(commands.Cog):
                             tries += 1
                 
                 if metar_raw == False or metar_raw == None:     #If the metar couldn't be grabbed 
-                    await user_target.send(f"Hey I tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
+                    await user_target.send(f"Hey I've tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
                 else:
                     metar_fancy = self.get_metar_embed(metar_raw)
                     await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
