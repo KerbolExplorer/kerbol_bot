@@ -1,13 +1,11 @@
 import sqlite3
 import os
-db_airport_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airports.db")
+db_airport_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
 db = sqlite3.connect(db_airport_path)
 cursor = db.cursor()
 
-sql = "SELECT * FROM airports WHERE iso_country = 'ES' AND type != 'heliport'"
+sql = "CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, firstLoop BOOLEAN)"
 cursor.execute(sql)
-result = cursor.fetchall()
-print(None)
 
 '''                                #0 1 2 3
 sql = "INSERT INTO Usuarios (id, xp, level, xp_next) VALUES (?, ?, ?, ?)"
