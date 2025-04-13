@@ -13,11 +13,16 @@ class Airport_Lookup(commands.Cog):
     @app_commands.command(name="airport", description="Gives data about an airport")
     @app_commands.describe(airport="The Icao code of the airport we want to see")
     async def airport(self, interaction:discord.Interaction, airport: str):
+        await interaction.response.defer()
         airport = airport_lookup(airport)
         if airport == False:
-            await interaction.response.send_message("That airport doesn't exist or is not in my database")
+            await interaction.followup.send("That airport doesn't exist or is not in my database")
         else:
             metar = get_metar(airport[0][12])
+
+            if metar == False or metar == None:
+                metar = "No metar data available"   #Check if there is a metar
+
             embed = discord.Embed(
                 title=f"Information for `{airport[0][12].upper()}`",
                 description=f"**Current Metar: **\n```{metar}```",
@@ -33,7 +38,7 @@ class Airport_Lookup(commands.Cog):
                 f"**Airport Type**: {airport[0][2]}"
             ))
             embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use /metar. For flight simulation use only")
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
     
     @app_commands.command(name="airport_distance", description="Calculates the distance between two airports")
     @app_commands.describe(
