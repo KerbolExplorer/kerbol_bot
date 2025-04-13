@@ -82,15 +82,16 @@ class Metar(commands.Cog):
     @app_commands.command(name="metar", description="Gets the metar for an airport")
     @app_commands.describe(airport="Icao code of the airport")
     async def metar(self, interaction:discord.Interaction, airport:str):
+        await interaction.response.defer()
         metar = get_metar(airport, False)
 
         if metar == False:
-            await interaction.response.send_message("There was an issue getting this metar.", ephemeral=True)
+            await interaction.followup.send("There was an issue getting this metar.", ephemeral=True)
         elif metar == None:
-            await interaction.response.send_message("This metar is not available.", ephemeral=True)
+            await interaction.followup.send("This metar is not available.", ephemeral=True)
         else:
             embed = self.get_metar_embed(metar)
-            await interaction.response.send_message(embed=embed)
+            await interaction.followup.send(embed=embed)
     
     @app_commands.command(name="metar_request", description="Have Solgaleo periodically send you the metar for an airport")
     @app_commands.describe(
@@ -98,12 +99,13 @@ class Metar(commands.Cog):
         hours="How many hours you want to be reminded for"
     )
     async def metar_request(self, interaction:discord.Interaction, airport:str, hours:int):
+        await interaction.response.defer()
         metar = get_metar(airport, False)
 
         if metar == False:
-            await interaction.response.send_message("There was an issue getting this metar.", ephemeral=True)
+            await interaction.followup.send("There was an issue getting this metar.", ephemeral=True)
         elif metar == None:
-            await interaction.response.send_message("This metar is not available.", ephemeral=True)
+            await interaction.followup.send("This metar is not available.", ephemeral=True)
         else:
             request_db = sqlite3.connect(db_requests_path)
             request_cursor = request_db.cursor()
@@ -119,7 +121,7 @@ class Metar(commands.Cog):
             request_db.commit()
             request_db.close()
 
-            await interaction.response.send_message(f"Roger that, I'll DM you the metar of `{airport}` during {hours} hours. If you wish to cancel, do `/metar_cancel`")
+            await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport}` during {hours} hours. If you wish to cancel, do `/metar_cancel`")
         if not self.send_metar.is_running():
             self.send_metar.start()
 
