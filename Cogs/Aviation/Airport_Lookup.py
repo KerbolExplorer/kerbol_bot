@@ -18,7 +18,7 @@ class Airport_Lookup(commands.Cog):
         if airport == False:
             await interaction.followup.send("That airport doesn't exist or is not in my database")
         else:
-            metar = get_metar(airport[0][12])
+            metar = get_metar(airport[0][1])
 
             if metar == False or metar == None:
                 metar = "No metar data available"   #Check if there is a metar
