@@ -24,7 +24,7 @@ class Airport_Lookup(commands.Cog):
                 metar = "No metar data available"   #Check if there is a metar
 
             embed = discord.Embed(
-                title=f"Information for `{airport[0][12].upper()}`",
+                title=f"Information for `{airport[0][1].upper()}`",
                 description=f"**Current Metar: **\n```{metar}```",
                 color=discord.Color.blue()
             )
