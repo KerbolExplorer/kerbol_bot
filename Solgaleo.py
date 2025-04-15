@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import asyncio
 import random
+import traceback
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -33,7 +34,7 @@ async def change_activity():
 async def on_ready():
     bot.loop.create_task(change_activity())
 
-    cogs_list_Test_Commands = ('Cogs.Test_Commands.Ping',)
+    cogs_list_Test_Commands = ('Cogs.Test_Commands.Ping')
     cogs_list_dev = ('Cogs.Dev_Only.Run','Cogs.Dev_Only.Say')
     cogs_list_lvl = ('Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard')
     cogs_list_games = ('Cogs.Games.rps',)
@@ -77,5 +78,8 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
         await interaction.response.send_message(f"Something went wrong while doing this command, I have notified {admin_user.name} about it", ephemeral=True)
     except discord.InteractionResponded:
         await interaction.followup.send(f"Something went wrong while doing this command, I have notified {admin_user.name} about it", ephemeral=True)
+
+    print(f"\nException occurred in command: {interaction.command.name}")
+    traceback.print_exception(type(error), error, error.__traceback__)
 
 bot.run(token)
