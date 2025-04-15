@@ -48,15 +48,19 @@ class Chance_Games(commands.Cog):
             while current_dice <= dices:
                 result = random.randint(1, sides)
                 total_dices.append(result)
-                print(f"Added dice {current_dice}")
                 current_dice += 1
             total = 0
             for dice in total_dices:
                 total += dice
-            await interaction.response.send_message(
-                f"The dices roll as follow: {total_dices}\n"
-                f"They all add up to **{total}**"
-                )
+            string = f"The dices roll as follow: {total_dices}\n"
+            if len(string) > 2000:
+                string = f"I can't tell you what each dices has rolled because of the message character limit, so you'll have to trust me on this one\n"
+            if total == 69 or total == 420 or total == 621:
+                string += f"They all add up to **{total}**, heh nice"
+            else:
+                string += f"They all add up to **{total}**"
+
+            await interaction.response.send_message(string)
 
 
 async def setup(bot):
