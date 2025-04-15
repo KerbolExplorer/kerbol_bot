@@ -21,7 +21,7 @@ async def change_activity():
         "Project Wingman", "Rivals of Aether", "Deep Rock Galactic", "FalconBMS", "Enter the Gungeon", "FTL: Faster Than Light", 
         "Pokerogue", "Monster Hunter Wilds", "Kerbal Space Program", "Team Fortess 2", "Metal Gear Rising: Revengance", "Starbound", 
         "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zote boat", "Fortnite", "Amorous",
-        "Ad Astra", "Metaphor: Refantazio", "Lethal Company"
+        "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", 
         )
     
     while True:
@@ -33,12 +33,12 @@ async def change_activity():
 async def on_ready():
     bot.loop.create_task(change_activity())
 
-    cogs_list_Test_Commands = ['Cogs.Test_Commands.Ping']
-    cogs_list_dev = ['Cogs.Dev_Only.Run','Cogs.Dev_Only.Say']
-    cogs_list_lvl = ['Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard']
-    cogs_list_games = ['Cogs.Games.rps']
-    cogs_list_aviation = ['Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar']
-    cogs_list_misc = ['Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.About', 'Cogs.Misc.Responses', 'Cogs.Misc.Server']
+    cogs_list_Test_Commands = ('Cogs.Test_Commands.Ping',)
+    cogs_list_dev = ('Cogs.Dev_Only.Run','Cogs.Dev_Only.Say')
+    cogs_list_lvl = ('Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard')
+    cogs_list_games = ('Cogs.Games.rps',)
+    cogs_list_aviation = ('Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar')
+    cogs_list_misc = ('Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.About', 'Cogs.Misc.Responses', 'Cogs.Misc.Server')
 
     for cog in cogs_list_Test_Commands:
         await bot.load_extension(cog)
@@ -63,6 +63,7 @@ async def on_ready():
     await bot.tree.sync()
     print("Sync has been successful")
     print("Ready to dance!")
+
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):

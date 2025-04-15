@@ -156,7 +156,31 @@ class Metar(commands.Cog):
                     await interaction.response.send_message(f"Alright, I've cancelled the metar requests for `{airport.upper()}`")
 
         request_db.commit()
-        request_db.close()        
+        request_db.close()
+
+    @app_commands.command(name="metar_list", description="Returns a list of the metars you requested")
+    async def metar_list(self, interaction:discord.Interaction):
+        request_db = sqlite3.connect(db_requests_path)
+        request_cursor = request_db.cursor()    
+
+        #Check if the user has any metar requests
+        sql = "SELECT * FROM Requests WHERE userId = ?"
+        request_cursor.execute(sql, (interaction.user.id,))
+        result = request_cursor.fetchall()
+        if result == []:
+            await interaction.response.send_message("You don't have any metar requests", ephemeral=True)
+        else:
+            embed = discord.Embed(
+                title="**Your Requests:**",
+                color=discord.Color.blue()
+            )
+            requests = ""
+            for request in result:
+                requests += f"Airport: {request[1]}, requests left: {request[2]}\n"
+            
+            embed.description=requests
+            await interaction.response.send_message("Here are your requests: ", embed=embed)
+            
 
     @tasks.loop(minutes=60)
     async def send_metar(self):
