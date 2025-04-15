@@ -22,7 +22,7 @@ async def change_activity():
         "Project Wingman", "Rivals of Aether", "Deep Rock Galactic", "FalconBMS", "Enter the Gungeon", "FTL: Faster Than Light", 
         "Pokerogue", "Monster Hunter Wilds", "Kerbal Space Program", "Team Fortess 2", "Metal Gear Rising: Revengance", "Starbound", 
         "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zote boat", "Fortnite", "Amorous",
-        "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", "Tomodatchi Life", "Frostpunk"
+        "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", "Tomodatchi Life", "Frostpunk", "Xplane 12"
         )
     
     while True:
@@ -37,7 +37,7 @@ async def on_ready():
     cogs_list_Test_Commands = ('Cogs.Test_Commands.Ping',)
     cogs_list_dev = ('Cogs.Dev_Only.Run','Cogs.Dev_Only.Say')
     cogs_list_lvl = ('Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard')
-    cogs_list_games = ('Cogs.Games.rps',)
+    cogs_list_games = ('Cogs.Games.rps', 'Cogs.Games.Chance_Games')
     cogs_list_aviation = ('Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar')
     cogs_list_misc = ('Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.About', 'Cogs.Misc.Responses', 'Cogs.Misc.Server')
 
@@ -75,9 +75,9 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
         f"Message: `{str(error)}`"
                         )
     try:
-        await interaction.response.send_message(f"Something went wrong while doing this command, I have notified {admin_user.name} about it", ephemeral=True)
+        await interaction.response.send_message(f"Something went wrong while doing this command, I have notified {admin_user.display_name} about it", ephemeral=True)
     except discord.InteractionResponded:
-        await interaction.followup.send(f"Something went wrong while doing this command, I have notified {admin_user.name} about it", ephemeral=True)
+        await interaction.followup.send(f"Something went wrong while doing this command, I have notified {admin_user.display_name} about it", ephemeral=True)
 
     print(f"\nException occurred in command: {interaction.command.name}")
     traceback.print_exception(type(error), error, error.__traceback__)
