@@ -8,6 +8,7 @@ load_dotenv()
 
 #from bot_data import give_token
 token = os.getenv("TOKEN")
+admin = os.getenv("ADMIN")
 
 bot = commands.Bot(command_prefix="S!", intents=discord.Intents.all())
 
@@ -37,7 +38,6 @@ async def on_ready():
     cogs_list_lvl = ['Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard']
     cogs_list_games = ['Cogs.Games.rps']
     cogs_list_aviation = ['Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar']
-    #cogs_list_music = ['Cogs.Music.Music']
     cogs_list_misc = ['Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.About', 'Cogs.Misc.Responses', 'Cogs.Misc.Server']
 
     for cog in cogs_list_Test_Commands:
@@ -55,9 +55,6 @@ async def on_ready():
     for cog in cogs_list_aviation:
         await bot.load_extension(cog)
     
-    #for cog in cogs_list_music:
-        #await bot.load_extension(cog)
-    
     for cog in cogs_list_misc:
         await bot.load_extension(cog)
 
@@ -67,5 +64,17 @@ async def on_ready():
     print("Sync has been successful")
     print("Ready to dance!")
 
+@bot.tree.error
+async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    admin_user = await bot.fetch_user(admin)
+    await admin_user.send(
+        f"Hey, an error has ocurred while executing `{interaction.command.name}`\n"
+        f"Type: `{type(error).__name__}`\n"
+        f"Message: `{str(error)}`"
+                        )
+    try:
+        await interaction.response.send_message(f"Something went wrong while doing this command, I have notified {admin_user.name} about it", ephemeral=True)
+    except discord.InteractionResponded:
+        await interaction.followup.send(f"Something went wrong while doing this command, I have notified {admin_user.name} about it", ephemeral=True)
 
 bot.run(token)
