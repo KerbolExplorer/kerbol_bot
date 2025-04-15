@@ -9,10 +9,12 @@ class About(commands.Cog):
     @app_commands.command(name="about", description="General info on the bot")
     async def about(self, interaction:discord.Interaction):
         embed = discord.Embed(
-            color=0xf1c40f, title="About", description="""Version 2.0. Bot developed by Kerbol (kobalt.621). 
-            The bot is open source, link to the github: [super cool link]. 
+            color=0xf1c40f, title="About", description="""Version 1.0-alpha. Bot developed by Kerbol (kobalt.621). 
+            The bot is open source, link to the github: https://github.com/KerbolExplorer/kerbol_bot. 
             **Known Issues**:
-            -> The music commands have been removed indefinetely due to issues with youtube
+            -> The music commands have been removed indefinetely due to issues with youtube.
+            -> Leaderboard is limited to top 10 users.
+            -> Metar_request does whatever it wants when it comes to timing.
             """
             )
 
