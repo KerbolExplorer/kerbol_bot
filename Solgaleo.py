@@ -22,7 +22,7 @@ async def change_activity():
         "Project Wingman", "Rivals of Aether", "Deep Rock Galactic", "FalconBMS", "Enter the Gungeon", "FTL: Faster Than Light", 
         "Pokerogue", "Monster Hunter Wilds", "Kerbal Space Program", "Team Fortess 2", "Metal Gear Rising: Revengance", "Starbound", 
         "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zote boat", "Fortnite", "Amorous",
-        "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", 
+        "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", "Tomodatchi Life", "Frostpunk"
         )
     
     while True:
@@ -34,7 +34,7 @@ async def change_activity():
 async def on_ready():
     bot.loop.create_task(change_activity())
 
-    cogs_list_Test_Commands = ('Cogs.Test_Commands.Ping')
+    cogs_list_Test_Commands = ('Cogs.Test_Commands.Ping',)
     cogs_list_dev = ('Cogs.Dev_Only.Run','Cogs.Dev_Only.Say')
     cogs_list_lvl = ('Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard')
     cogs_list_games = ('Cogs.Games.rps',)
