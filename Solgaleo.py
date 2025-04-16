@@ -1,9 +1,10 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import asyncio
 import random
 import traceback
 import os
+from datetime import datetime, timezone
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -65,6 +66,21 @@ async def on_ready():
     print("Sync has been successful")
     print("Ready to dance!")
 
+    if not morning_call.is_running():
+        morning_call.start()
+
+@tasks.loop(minutes=60)
+async def morning_call():
+    target_time = "08Z"
+    current_time = datetime.now(timezone.utc)
+    current_time = current_time.strftime("%HZ")
+    admin_user = await bot.fetch_user(admin)
+    if current_time == target_time:
+        greetings = (
+            "Morning bud!", "Morning!", "Morning snack~", "Hey hey!", "Morning, I require headpats", "Morning!, slept well?"
+            )
+        chosen_greeting = random.randint(0, (len(greetings) -1))
+        await admin_user.send(chosen_greeting)
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
