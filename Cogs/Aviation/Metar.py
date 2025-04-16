@@ -121,7 +121,7 @@ class Metar(commands.Cog):
             request_db.commit()
             request_db.close()
 
-            await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport}` during {hours} hours. If you wish to cancel, do `/metar_cancel`")
+            await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport.upper()}` during {hours} hours. If you wish to cancel, do `/metar_cancel`")
         if not self.send_metar.is_running():
             self.send_metar.start()
 

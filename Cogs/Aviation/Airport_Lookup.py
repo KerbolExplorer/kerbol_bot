@@ -50,7 +50,7 @@ class Airport_Lookup(commands.Cog):
         if result is False:
             await interaction.response.send_message("One of the two airports either doesn't exist or I don't have it in my database")
         else:
-            await interaction.response.send_message(f"The distance between {first_airport} and {second_airport} is {int(result)}nm")
+            await interaction.response.send_message(f"The distance between `{first_airport.upper()}` and `{second_airport.upper()}` is {int(result)}nm")
 
 
 
