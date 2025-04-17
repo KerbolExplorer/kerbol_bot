@@ -80,7 +80,7 @@ async def morning_call():
             "Morning bud!", "Morning!", "Morning snack~", "Hey hey!", "Morning, I require headpats", "Morning!, slept well?"
             )
         chosen_greeting = random.randint(0, (len(greetings) -1))
-        await admin_user.send(chosen_greeting)
+        await admin_user.send(greetings[chosen_greeting])
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
