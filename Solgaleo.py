@@ -71,13 +71,13 @@ async def on_ready():
 
 @tasks.loop(minutes=60)
 async def morning_call():
-    target_time = "08Z"
+    target_time = "07Z"
     current_time = datetime.now(timezone.utc)
     current_time = current_time.strftime("%HZ")
     admin_user = await bot.fetch_user(admin)
     if current_time == target_time:
         greetings = (
-            "Morning bud!", "Morning!", "Morning snack~", "Hey hey!", "Morning, I require headpats", "Morning!, slept well?"
+            "Morning bud!", "Morning!", "Morning snack~", "Hey hey!", "Morning, I require headpats", "Morning!, slept well?", "Morning!, I hope you have a nice day!"
             )
         chosen_greeting = random.randint(0, (len(greetings) -1))
         await admin_user.send(greetings[chosen_greeting])
