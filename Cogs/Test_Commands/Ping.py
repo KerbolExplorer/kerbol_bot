@@ -11,5 +11,5 @@ class Ping(commands.Cog):
         await interaction.response.send_message("Pong! {0}ms".format(round(self.bot.latency, 3)))
 
 
-async def setup(bot): # this is called by Pycord to setup the cog
-    await bot.add_cog(Ping(bot)) # add the cog to the bot
+async def setup(bot):
+    await bot.add_cog(Ping(bot))
