@@ -24,7 +24,8 @@ class Gunslingers(commands.Cog):
             return self
 
     @app_commands.command(name="gunslingers", description="Play a game of Gunslingers against Solgaleo")
-    async def gunslingers(self, interaction:discord.Interaction):
+    @app_commands.describe(difficulty="Int represting the difficulty of the bot, more info in gunslinger-about")
+    async def gunslingers(self, interaction:discord.Interaction, difficulty:int = 1):
 
         class Buttons(discord.ui.View):
             def __init__(self, *, timeout = 180):
@@ -60,7 +61,7 @@ class Gunslingers(commands.Cog):
 
         current_turn = 0
         embed = discord.Embed(
-        color=self.bot.user.accent_color,
+        color=0xf1c40f,
         title=f"Gunslingers",
         description="Choose one of the 3 actions"
         )
@@ -162,11 +163,19 @@ class Gunslingers(commands.Cog):
     async def about(self, interaction:discord.Interaction):
         embed = discord.Embed(
             title="Gunslingers",
+            color=0xf1c40f,
             description="Gunslingers is a two player game, currently only allowing for player vs bot, players must try to take down their opponent with the use of 3 actions"
                               )
         embed.add_field(name="Shoot 🔫", value="Shoots the opponent, as long as you have ammo and they aren't shielding. If the attack succeeds, you win.")
         embed.add_field(name="Reload 🔄️", value="Adds a bullet to your bullet count. Both players start with 0 bullets.")
         embed.add_field(name="Shield 🛡️", value="Shields yourself from an upcoming attack. You'll survive the hit and the bullet will be wasted")
+        embed.add_field(name="Bot difficulty: ", value=
+                        "The difficulty the bot will be playing at.\n\n"
+                        "**Difficulty 1**: Solgaleo will simply choose his moves randomly.\n"
+                        "**Difficulty 2**: Solgaleo keeps track of his bullets and the last turn of his opponent.\n"
+                        "**Difficulty 3**: Solgaleo will track his opponets behavior over multiple turns."
+        "")
+        embed.set_footer(text="At no difficulty does Solgaleo read the current player action")
 
         await interaction.response.send_message(embed=embed)
 
