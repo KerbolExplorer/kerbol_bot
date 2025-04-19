@@ -26,8 +26,8 @@ class Gunslingers(commands.Cog):
     @app_commands.command(name="gunslingers", description="Play a game of Gunslingers against Solgaleo")
     @app_commands.describe(difficulty="Int represting the difficulty of the bot, more info in gunslinger-about")
     async def gunslingers(self, interaction:discord.Interaction, difficulty:int = 2):
-        if difficulty < 1 or difficulty > 2:
-            await interaction.response.send_message("Difficulty must either be 1 or 2")
+        if difficulty < 1 or difficulty > 3:
+            await interaction.response.send_message("Difficulty must either be 1, 2 or 3")
             return
         class Buttons(discord.ui.View):
             def __init__(self, *, timeout = 180):
@@ -79,6 +79,7 @@ class Gunslingers(commands.Cog):
 
         opponent_ammo = 0
         opponent_history = []
+        bot_history = []
         
         while player1.alive and player2.alive:
             view = Buttons()
@@ -116,19 +117,73 @@ class Gunslingers(commands.Cog):
                     player2.choice = random.choice(("Shield", "Shield", "Reload"))
                 else:
                     player2.choice = random.choice(("Shoot", "Reload", "Shield"))
-            """else:
+            else:
                 weights = {"Shoot": 1, "Shield": 1, "Reload": 1}
                 
                 if player2.ammo == 0:
                     if opponent_ammo == 0:          #If the opponent has no ammo we reload normally
-                        weights["Reload"] == 100    
-                    else:                         """""
+                        weights["Reload"] = 1000    
+                    else:                           #If the opponent has ammo, expect a shot
+                         weights["Shield"] += 4    
 
+                if opponent_history.count("Reload") > opponent_history.count("Shoot"):  #If the opponent likes to reload, shoot him
+                    weights["Shoot"] += 2
 
+                if opponent_history.count("Shoot") > opponent_history.count("Reload"):  #If the opponent is aggressive, play defensive
+                    weights["Shield"] += 2
 
+                if len(opponent_history) >= 3 and opponent_history[-3:] == ["Shield", "Reload", "Shield"]:  #Detect baiting
+                    weights["Shoot"] += 2
 
+                if len(opponent_history) >= 2 and opponent_history[-1] == opponent_history[-2]:
+                    weights[last_opponent_choice] -= 1  # Anticipate switch-up
 
+                if last_opponent_choice == "Shield" and opponent_ammo > 0:
+                    weights["Shield"] += 2              # If the player has ammo and just shielded, a shot is likely
 
+                if opponent_history.count("Shield") >= 2:
+                    weights["Reload"] += 1                   #Stall detection (shield spam)
+            
+                if random.random() < 0.1:
+                    weights["Shield"] += 1
+
+                if opponent_ammo > 0:
+                    weights["Shield"] += 2
+            
+                if current_turn > 5:
+                    weights["Shoot"] += 1
+                
+                if player2.ammo >= 2:
+                    weights["Shoot"] += 1    #Go aggressive when we have plenty of bullets
+                elif player2.ammo == 1 and opponent_ammo == 0:
+                    weights["Shoot"] += 2    #If the opponent doesn't have bullets we can just shoot lol
+
+                #Try to predict what the opponent will do
+                if len(opponent_history) >= 2:
+                    if opponent_history[-1] == opponent_history[-2]:
+                        likely_next = "Shoot" if last_opponent_choice != "Shoot" else "Reload"
+                        weights[likely_next] += 1
+
+                if len(bot_history) >= 2 and bot_history[-1] == bot_history[-2]:
+                    weights[bot_history[-1]] -= 1  # encourage variation
+                
+            
+                for k in weights:
+                    weights[k] = max(weights[k], 0)
+
+                choices = []
+                for move, weight in weights.items():
+                    choices.extend([move] * weight)
+            
+                player2.choice = random.choice(choices)
+
+                if current_turn == 0:
+                    player2.choice = "Reload"       #At turn 0, the sensible thing to do, is to reload
+                elif current_turn == 1:
+                    player2.choice = "Shield"       #Shield just incase the player shoots the second he has a bullet
+                
+                print(player2.choice)
+        
             turn_result = []
             turn_result.append(f"**TURN {current_turn} RESULTS**")
             turn_result.append(f"{player1.name} chooses **{player1.choice}**")
@@ -175,9 +230,7 @@ class Gunslingers(commands.Cog):
 
             last_opponent_choice = player1.choice
             opponent_history.append(player1.choice)
-
-            if len(opponent_history) > 6:
-                opponent_history.pop(0)
+            bot_history.append(player2.choice)
 
             if player1.choice == "Reload":
                 opponent_ammo += 1
@@ -218,7 +271,7 @@ class Gunslingers(commands.Cog):
                         "The difficulty the bot will be playing at.\n\n"
                         "**Difficulty 1**: Solgaleo will simply choose his moves randomly.\n"
                         "**Difficulty 2**: Solgaleo keeps track of his bullets and the last turn of his opponent.\n"
-                        "**[Not implemented] Difficulty 3**: Solgaleo will track his opponets behavior and bullets over multiple turns."
+                        "**Difficulty 3**: Solgaleo will track his opponets behavior and bullets over multiple turns."
         "")
         embed.set_footer(text="At no difficulty does Solgaleo read the current player action")
 
