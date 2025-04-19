@@ -181,8 +181,6 @@ class Gunslingers(commands.Cog):
                     player2.choice = "Reload"       #At turn 0, the sensible thing to do, is to reload
                 elif current_turn == 1:
                     player2.choice = "Shield"       #Shield just incase the player shoots the second he has a bullet
-                
-                print(player2.choice)
         
             turn_result = []
             turn_result.append(f"**TURN {current_turn} RESULTS**")
