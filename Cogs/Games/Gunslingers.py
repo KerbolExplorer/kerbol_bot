@@ -92,7 +92,7 @@ class Gunslingers(commands.Cog):
             choices = ("Shield", "Shoot", "Reload")
             player2.choice = choices[random.randint(0, (len(choices) - 1))]
             if current_turn == 0:
-                player2.choice == "Reload"
+                player2.choice = "Reload"
 
             turn_result = []
             turn_result.append(f"**TURN {current_turn} RESULTS**")
@@ -146,6 +146,9 @@ class Gunslingers(commands.Cog):
             current_turn += 1
         
         view = Buttons()
+        for child in view.children:
+            child.disabled = True
+
         await message.edit(embed=embed, view=view)
 
         if player1.alive and player2.alive == False:
@@ -154,6 +157,19 @@ class Gunslingers(commands.Cog):
             await interaction.followup.send(f"{player2.name} wins!")
         elif player1.alive == False and player2.alive == False:
             await interaction.followup.send("The two players have been KO'd it's a tie")
+    
+    @app_commands.command(name="gunslingers-about", description="General info about gunslingers")
+    async def about(self, interaction:discord.Interaction):
+        embed = discord.Embed(
+            title="Gunslingers",
+            description="Gunslingers is a two player game, currently only allowing for player vs bot, players must try to take down their opponent with the use of 3 actions"
+                              )
+        embed.add_field(name="Shoot 🔫", value="Shoots the opponent, as long as you have ammo and they aren't shielding. If the attack succeeds, you win.")
+        embed.add_field(name="Reload 🔄️", value="Adds a bullet to your bullet count. Both players start with 0 bullets.")
+        embed.add_field(name="Shield 🛡️", value="Shields yourself from an upcoming attack. You'll survive the hit and the bullet will be wasted")
+
+        await interaction.response.send_message(embed=embed)
+
 
 async def setup(bot):
     await bot.add_cog(Gunslingers(bot))
