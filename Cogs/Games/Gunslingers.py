@@ -26,8 +26,8 @@ class Gunslingers(commands.Cog):
     @app_commands.command(name="gunslingers", description="Play a game of Gunslingers against Solgaleo")
     @app_commands.describe(difficulty="Int represting the difficulty of the bot, more info in gunslinger-about")
     async def gunslingers(self, interaction:discord.Interaction, difficulty:int = 2):
-        if difficulty < 1 or difficulty > 3:
-            await interaction.response.send_message("Difficulty must either be 1, 2 or 3")
+        if difficulty < 1 or difficulty > 2:
+            await interaction.response.send_message("Difficulty must either be 1 or 2")
             return
         class Buttons(discord.ui.View):
             def __init__(self, *, timeout = 180):
@@ -218,7 +218,7 @@ class Gunslingers(commands.Cog):
                         "The difficulty the bot will be playing at.\n\n"
                         "**Difficulty 1**: Solgaleo will simply choose his moves randomly.\n"
                         "**Difficulty 2**: Solgaleo keeps track of his bullets and the last turn of his opponent.\n"
-                        "**Difficulty 3**: Solgaleo will track his opponets behavior and bullets over multiple turns."
+                        "**[Not implemented] Difficulty 3**: Solgaleo will track his opponets behavior and bullets over multiple turns."
         "")
         embed.set_footer(text="At no difficulty does Solgaleo read the current player action")
 
