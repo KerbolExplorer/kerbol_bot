@@ -25,8 +25,10 @@ class Gunslingers(commands.Cog):
 
     @app_commands.command(name="gunslingers", description="Play a game of Gunslingers against Solgaleo")
     @app_commands.describe(difficulty="Int represting the difficulty of the bot, more info in gunslinger-about")
-    async def gunslingers(self, interaction:discord.Interaction, difficulty:int = 1):
-
+    async def gunslingers(self, interaction:discord.Interaction, difficulty:int = 2):
+        if difficulty < 1 or difficulty > 3:
+            await interaction.response.send_message("Difficulty must either be 1, 2 or 3")
+            return
         class Buttons(discord.ui.View):
             def __init__(self, *, timeout = 180):
                 super().__init__(timeout=timeout)
@@ -65,6 +67,7 @@ class Gunslingers(commands.Cog):
         title=f"Gunslingers",
         description="Choose one of the 3 actions"
         )
+        embed.set_footer(text=f"Playing at difficulty {difficulty}")
 
         await interaction.response.send_message("Commencing a gunslingers game...")
         view = Buttons()
@@ -72,6 +75,10 @@ class Gunslingers(commands.Cog):
         player1 = await self.Player(interaction.user.id, self.bot).init()
         player2 = await self.Player(self.bot.user.id, self.bot).init()
 
+        last_opponent_choice = None
+
+        opponent_ammo = 0
+        opponent_history = []
         
         while player1.alive and player2.alive:
             view = Buttons()
@@ -90,10 +97,37 @@ class Gunslingers(commands.Cog):
                 break
             
             #Bot logic
-            choices = ("Shield", "Shoot", "Reload")
-            player2.choice = choices[random.randint(0, (len(choices) - 1))]
-            if current_turn == 0:
-                player2.choice = "Reload"
+            if difficulty == 1:
+                choices = ("Shield", "Shoot", "Reload")
+                player2.choice = choices[random.randint(0, (len(choices) - 1))]
+                if current_turn == 0:
+                    player2.choice = "Reload"
+            elif difficulty == 2:
+                if player2.ammo == 0:
+                    if last_opponent_choice == "Reload":
+                        player2.choice = random.choice(("Reload", "Reload", "Shield"))
+                    else:
+                        player2.choice = "Reload"
+                elif last_opponent_choice == "Reload" and player2.ammo > 0:
+                    player2.choice = "Shield"
+                elif last_opponent_choice == "Shoot":
+                    player2.choice = "Shoot"
+                elif last_opponent_choice == "Shield":
+                    player2.choice = random.choice(("Shield", "Shield", "Reload"))
+                else:
+                    player2.choice = random.choice(("Shoot", "Reload", "Shield"))
+            """else:
+                weights = {"Shoot": 1, "Shield": 1, "Reload": 1}
+                
+                if player2.ammo == 0:
+                    if opponent_ammo == 0:          #If the opponent has no ammo we reload normally
+                        weights["Reload"] == 100    
+                    else:                         """""
+
+
+
+
+
 
             turn_result = []
             turn_result.append(f"**TURN {current_turn} RESULTS**")
@@ -138,7 +172,18 @@ class Gunslingers(commands.Cog):
                 turn_result.append(f"{player2.name} reloads.")
             
             embed.description= "\n".join(turn_result)
-        
+
+            last_opponent_choice = player1.choice
+            opponent_history.append(player1.choice)
+
+            if len(opponent_history) > 6:
+                opponent_history.pop(0)
+
+            if player1.choice == "Reload":
+                opponent_ammo += 1
+            elif player1.choice == "Shoot":
+                opponent_ammo -= 1
+
             player1.choice = ""
             player2.choice = ""    
             player1.shielded = False
@@ -173,7 +218,7 @@ class Gunslingers(commands.Cog):
                         "The difficulty the bot will be playing at.\n\n"
                         "**Difficulty 1**: Solgaleo will simply choose his moves randomly.\n"
                         "**Difficulty 2**: Solgaleo keeps track of his bullets and the last turn of his opponent.\n"
-                        "**Difficulty 3**: Solgaleo will track his opponets behavior over multiple turns."
+                        "**Difficulty 3**: Solgaleo will track his opponets behavior and bullets over multiple turns."
         "")
         embed.set_footer(text="At no difficulty does Solgaleo read the current player action")
 
