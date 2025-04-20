@@ -38,7 +38,6 @@ class Gunslingers(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
                 if interaction.user.id == player1.id:
                     player1.choice = "Shoot"
-                    await interaction.followup.send("Action chosen!", ephemeral=True)
                 else:
                     await interaction.followup.send("You are not participating in this game", ephemeral=True)
 
@@ -47,7 +46,6 @@ class Gunslingers(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
                 if interaction.user.id == player1.id:
                     player1.choice = "Reload"
-                    await interaction.followup.send("Action chosen!", ephemeral=True)
                 else:
                     await interaction.followup.send("You are not participating in this game", ephemeral=True)
 
@@ -56,7 +54,6 @@ class Gunslingers(commands.Cog):
                 await interaction.response.defer(ephemeral=True)
                 if interaction.user.id == player1.id:
                     player1.choice = "Shield"
-                    await interaction.followup.send("Action chosen!", ephemeral=True)
                 else:
                     await interaction.followup.send("You are not participating in this game", ephemeral=True)
 
@@ -69,7 +66,12 @@ class Gunslingers(commands.Cog):
         )
         embed.set_footer(text=f"Playing at difficulty {difficulty}")
 
-        await interaction.response.send_message("Commencing a gunslingers game...")
+        if difficulty == 1:
+            await interaction.response.send_message("I guess I can let a dice play for me")
+        elif difficulty == 2:
+            await interaction.response.send_message("Alright I'll go easy on ya")
+        else:
+            await interaction.response.send_message("Ok, let's see what you got")
         view = Buttons()
         message = await interaction.followup.send(view=view, embed=embed, wait=True)
         player1 = await self.Player(interaction.user.id, self.bot).init()
@@ -244,6 +246,8 @@ class Gunslingers(commands.Cog):
             player2.shielded = False
 
             current_turn += 1
+
+            
         
         view = Buttons()
         for child in view.children:
