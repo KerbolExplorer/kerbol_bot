@@ -18,6 +18,10 @@ class Chance_Games(commands.Cog):
     @app_commands.command(name="diceroll", description="Rolls a 6 side dice by default")
     @app_commands.describe(sides="How many sides the dice has", dices="How many dices you want to throw")
     async def diceroll(self, interaction:discord.Interaction, sides:int = 6, dices:int = 1):
+
+        MAX_DICES = 10000
+        MAX_DISPLAY = 50
+
         #Dice number checks
         if dices < 0:
             await interaction.response.send_message(f"{dices}???")
@@ -43,16 +47,25 @@ class Chance_Games(commands.Cog):
             else: 
                 await interaction.response.send_message(f"And the result is, {result}!")
         else:
-            current_dice = 1
-            total_dices = []
-            while current_dice <= dices:
-                result = random.randint(1, sides)
-                total_dices.append(result)
-                current_dice += 1
-            total = 0
-            for dice in total_dices:
-                total += dice
-            string = f"The dices roll as follow: {total_dices}\n"
+            if dices <= MAX_DISPLAY:
+                current_dice = 1
+                total_dices = []
+                while current_dice <= dices:
+                    result = random.randint(1, sides)
+                    total_dices.append(result)
+                    current_dice += 1
+                total = 0
+                for dice in total_dices:
+                    total += dice
+                string = f"The dices roll as follow: {total_dices}\n"
+            elif dices > MAX_DICES:
+                await interaction.response.send_message(f"Yeah no those are way too many dices, please do something less than {MAX_DICES}", ephemeral=True)
+                return
+            else:
+                string = f"You are asking for too many dices, so I can't show you what each dice rolls, you'll have to trust me on this one.\n"
+                total = 0
+                for _ in range(dices):
+                    total += random.randint(1, sides)
             if len(string) > 2000:
                 string = f"I can't tell you what each dices has rolled because of the message character limit, so you'll have to trust me on this one\n"
             if total == 69 or total == 420 or total == 621:
