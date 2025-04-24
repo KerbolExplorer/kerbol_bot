@@ -30,11 +30,11 @@ class rps(commands.Cog):
                 await self.disable_buttons(self, interaction)
                 await interaction.response.edit_message(view=self)
                 if bot_play == 0:
-                    await interaction.followup.send("Piedra!, empate")
+                    await interaction.followup.send("I use rock!, it's a tie")
                 elif bot_play == 1:
-                    await interaction.followup.send("Tijeras...perdi")
+                    await interaction.followup.send("I use scissors, I lost...")
                 else:
-                    await interaction.followup.send("Papel! Gane!")
+                    await interaction.followup.send("I use paper!, I win!")
         
             @discord.ui.button(label="✂️", style=discord.ButtonStyle.blurple)
             async def scissors(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -46,11 +46,11 @@ class rps(commands.Cog):
                 await self.disable_buttons(self, interaction)
                 await interaction.response.edit_message(view=self)
                 if bot_play == 0:
-                    await interaction.followup.send("Piedra! Gane!")
+                    await interaction.followup.send("I use rock!, I win!")
                 elif bot_play == 1:
-                    await interaction.followup.send("Tijeras, empate")
+                    await interaction.followup.send("I use scissors!, it's a tie")
                 else:
-                    await interaction.followup.send("Papel!...perdi")
+                    await interaction.followup.send("I use paper!, I lost...")
         
             @discord.ui.button(label="🗞️", style=discord.ButtonStyle.blurple)
             async def paper(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -62,11 +62,11 @@ class rps(commands.Cog):
                 await self.disable_buttons(self, interaction)
                 await interaction.response.edit_message(view=self)
                 if bot_play == 0:
-                    await interaction.followup.send("Piedra!..perdi")
+                    await interaction.followup.send("I use rock!, I lost...")
                 elif bot_play == 1:
-                    await interaction.followup.send("Tijeras! Gane!")
+                    await interaction.followup.send("I use scissors!, I win!")
                 else:
-                    await interaction.followup.send("Papel, empate")
+                    await interaction.followup.send("I use paper!, it's a tie")
         
             async def disable_buttons(self, child:discord.ui.Button, interaction: discord.Interaction):
                 for child in self.children:
