@@ -4,7 +4,8 @@ Current functions are:
 
     * airport_lookup: Takes an icao code and returns all the info in the database about it.
     * airport_distance: Returns the distance between two airports in nautical miles.
-    * get_metar: Returns the metar for an airport
+    * get_metar: Returns the metar for an airport.
+    * get_current_zulu: Returns the current zulu time.
 
 """
 
@@ -12,6 +13,7 @@ Current functions are:
 import sqlite3
 import os
 import requests
+from datetime import datetime, timezone
 from . import Aviation_Math
 
 db_path = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "airports.db")
@@ -129,6 +131,19 @@ def get_metar(icao_code: str, raw_only = True):
         return False
     except ValueError:
         return False
+
+def get_current_zulu():
+    """Returns the current zulu time.
+
+    Returns
+    ----------
+    Integer
+        The current zulu time.
+    """
+    current_time = datetime.now(timezone.utc)
+    current_time = int(current_time.strftime("%H%M"))
+    return current_time
+
 
 def random_regional_flight():
     """**NOT IMPLEMENTED** Returns a random flight that takes place inside a country"""

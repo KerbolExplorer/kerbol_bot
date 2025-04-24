@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import asyncio
 import sqlite3
 import os
-from .Aviation_Utils.Aviation_Utils import get_metar
+from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu
 from .Aviation_Utils.Aviation_Math import hpa_to_inhg
 
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
@@ -23,7 +23,7 @@ class Metar(commands.Cog):
         request_cursor.execute(sql)
         result = request_cursor.fetchall()
         if not result:
-            sql = f"CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, firstLoop BOOLEAN)"
+            sql = f"CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER)"
             request_cursor.execute(sql)
         request_db.commit()
         request_db.close()
@@ -112,16 +112,19 @@ class Metar(commands.Cog):
             sql = "SELECT * FROM Requests"
             request_cursor.execute(sql)
             result = request_cursor.fetchall()
+
+            current_time = get_current_zulu()
+            current_time += 100
             if result == []:
-                sql = "INSERT INTO Requests (userId, airportICAO, calls, firstLoop) VALUES (?, ?, ?, ?)"
-                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, True))
+                sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
+                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, current_time))
             else:
-                sql = "INSERT INTO Requests (userId, airportICAO, calls, firstLoop) VALUES (?, ?, ?, ?)"
-                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, False))
+                sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
+                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, current_time))
             request_db.commit()
             request_db.close()
 
-            await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport.upper()}` during {hours} hours. If you wish to cancel, do `/metar_cancel`")
+            await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport.upper()}` during {hours} hours. If you wish to cancel, do `/metar_stop`")
         if not self.send_metar.is_running():
             self.send_metar.start()
 
@@ -182,7 +185,7 @@ class Metar(commands.Cog):
             await interaction.response.send_message("Here are your requests: ", embed=embed)
             
 
-    @tasks.loop(minutes=60)
+    @tasks.loop(minutes=1)
     async def send_metar(self):
         request_db = sqlite3.connect(db_requests_path)
         request_cursor = request_db.cursor()
@@ -190,38 +193,38 @@ class Metar(commands.Cog):
         request_cursor.execute(sql)
         users = request_cursor.fetchall()
 
+        current_time = get_current_zulu()
+
         if users != []:
             for user in users:
-                if user[3] == True:     #This is so the dm isn't sent the second the command is executed
-                    sql = "UPDATE Requests SET firstLoop = ? WHERE userId = ? AND airportICAO = ?"
-                    request_cursor.execute(sql, (False, user[0], user[1]))
-                    continue
-                user_target = await self.bot.fetch_user(user[0])
-                metar_raw = get_metar(user[1], False)
+                if int(user[3]) == current_time or int(user[3] < current_time):     #Send the dm if the times are equal
+                    user_target = await self.bot.fetch_user(user[0])
+                    metar_raw = get_metar(user[1], False)
 
-                if metar_raw == False or metar_raw == None:  #If there was an error grabing the metar, we'll give it 5 minutes before trying again, we do this twice and send an error if it doesn't work
-                    await user_target.send(f"Hey there was an issue getting the metar for `{user[1]}`, I will try again in 5 minutes. If I can't get it then I'll wait another 5 minutes and reach back to you with the results")
-                    tries = 0
-                    while tries != 2:
-                        await asyncio.sleep(300)
-                        metar_raw = get_metar(user[1], False)
-                        if metar_raw != False or metar_raw != None:
-                            break
-                        else:
-                            tries += 1
-                
-                if metar_raw == False or metar_raw == None:     #If the metar couldn't be grabbed 
-                    await user_target.send(f"Hey I've tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
-                else:
-                    metar_fancy = self.get_metar_embed(metar_raw)
-                    await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
+                    if metar_raw == False or metar_raw == None:  #If there was an error grabing the metar, we'll give it 5 minutes before trying again, we do this twice and send an error if it doesn't work
+                        await user_target.send(f"Hey there was an issue getting the metar for `{user[1]}`, I will try again in 5 minutes. If I can't get it then I'll wait another 5 minutes and reach back to you with the results")
+                        tries = 0
+                        while tries != 2:
+                            await asyncio.sleep(300)
+                            metar_raw = get_metar(user[1], False)
+                            if metar_raw:
+                                break
+                            else:
+                                tries += 1
 
-                if user[2] == 1:
-                    sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
-                    request_cursor.execute(sql, (user[0], user[1]))
-                else:
-                    sql = "UPDATE Requests SET calls = ? WHERE userId = ? AND airportICAO = ?"
-                    request_cursor.execute(sql, ((user[2] - 1), user[0], user[1]))
+                    if metar_raw == False or metar_raw == None:     #If the metar couldn't be grabbed 
+                        await user_target.send(f"Hey I've tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
+                    else:
+                        metar_fancy = self.get_metar_embed(metar_raw)
+                        await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
+
+                    if user[2] == 1:
+                        sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
+                        request_cursor.execute(sql, (user[0], user[1]))
+                    else:
+                        sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ?"
+                        current_time += 100
+                        request_cursor.execute(sql, ((user[2] - 1), current_time, user[0], user[1]))
         else:
             self.send_metar.stop()
         request_db.commit()
