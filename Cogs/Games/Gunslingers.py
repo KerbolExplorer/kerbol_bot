@@ -57,6 +57,39 @@ class Gunslingers(commands.Cog):
                 else:
                     await interaction.followup.send("You are not participating in this game", ephemeral=True)
 
+        class History_Button(discord.ui.View):
+            def __init__(self, bot, *, timeout = 180):
+                super().__init__(timeout=timeout)
+                self.bot = bot
+                self.interactions = set()
+            
+            @discord.ui.button(label="DM match history", style=discord.ButtonStyle.green)
+            async def dm_history(self, interaction:discord.Interaction, button: discord.ui.Button):
+                await interaction.response.defer(ephemeral=True)
+                if interaction.user.id in self.interactions:
+                    await interaction.followup.send("I've already DM'd you the history for this match", ephemeral=True)
+                    return
+
+                embed = discord.Embed(
+                    color=0xf1c40f,
+                    title=f"Gunslingers match history between {player1.name} and {player2.name}",
+                    description=""
+                )
+
+                index = 0
+                string = ""
+                while index <= (len(opponent_history) -1):
+                    string += f"**TURN {index}**\n"
+                    string += f"{player1.name} used **{opponent_history[index]}**\n"
+                    string += f"{player2.name} used **{bot_history[index]}**\n\n"
+                    index += 1
+                embed.description = string
+
+                dm_target = await self.bot.fetch_user(interaction.user.id)
+                await dm_target.send(embed=embed)
+
+                self.interactions.add(interaction.user.id)
+
 
         current_turn = 0
         embed = discord.Embed(
@@ -253,7 +286,7 @@ class Gunslingers(commands.Cog):
         for child in view.children:
             child.disabled = True
 
-        await message.edit(embed=embed, view=view)
+        await message.edit(embed=embed, view=History_Button(self.bot))
 
         if player1.alive and player2.alive == False:
             await interaction.followup.send(f"{player1.name} wins!")
@@ -261,13 +294,14 @@ class Gunslingers(commands.Cog):
             await interaction.followup.send(f"{player2.name} wins!")
         elif player1.alive == False and player2.alive == False:
             await interaction.followup.send("The two players have been KO'd it's a tie")
+
     
     @app_commands.command(name="gunslingers-about", description="General info about gunslingers")
     async def about(self, interaction:discord.Interaction):
         embed = discord.Embed(
             title="Gunslingers",
             color=0xf1c40f,
-            description="Gunslingers is a two player game, currently only allowing for player vs bot, players must try to take down their opponent with the use of 3 actions"
+            description="Gunslingers is a two player game, currently only allowing for player vs bot, players must try to take down their opponent with the use of 3 actions."
                               )
         embed.add_field(name="Shoot 🔫", value="Shoots the opponent, as long as you have ammo and they aren't shielding. If the attack succeeds, you win.")
         embed.add_field(name="Reload 🔄️", value="Adds a bullet to your bullet count. Both players start with 0 bullets.")
@@ -278,7 +312,7 @@ class Gunslingers(commands.Cog):
                         "**Difficulty 2**: Solgaleo keeps track of his bullets and the last turn of his opponent.\n"
                         "**Difficulty 3**: Solgaleo will track his opponets behavior and bullets over multiple turns."
         "")
-        embed.set_footer(text="At no difficulty does Solgaleo read the current player action")
+        embed.set_footer(text="At no difficulty does Solgaleo read the current player action.")
 
         await interaction.response.send_message(embed=embed)
 
