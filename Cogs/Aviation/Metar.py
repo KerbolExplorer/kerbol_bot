@@ -192,7 +192,7 @@ class Metar(commands.Cog):
 
         if users != []:
             for user in users:
-                if user[3] == True:     #This is so the dm isn't send the second the command is executed
+                if user[3] == True:     #This is so the dm isn't sent the second the command is executed
                     sql = "UPDATE Requests SET firstLoop = ? WHERE userId = ? AND airportICAO = ?"
                     request_cursor.execute(sql, (False, user[0], user[1]))
                     continue

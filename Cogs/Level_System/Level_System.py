@@ -9,12 +9,12 @@ class Level_System(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    cooldown_members = []
+    cooldown_members = set()
 
     @commands.Cog.listener('on_message')
     async def xp_give(self, message):
         if message.author.bot == False and message.author.id not in Level_System.cooldown_members and message.guild:
-            Level_System.cooldown_members.append(message.author.id)
+            Level_System.cooldown_members.add(message.author.id)
 
             db = sqlite3.connect("db_exp.db")
             cursor = db.cursor()
