@@ -9,7 +9,7 @@ class Fetch(commands.Cog):
     
     @app_commands.command(name="fetch", description="Throw a stick at Solgaleo and he *should* return it")
     async def fetch(self, interaction:discord.Interaction):
-        responses = [
+        responses = (
             "Heres the stick back!", "Heres the stick back, careful with the fire on the tip!", "Uh...where did you launch it?"
             "I think we lost the stick", "Why don't YOU go fetch it for a change?", "I don't feel like it", "Nuh uh",
             "You are better at throwing exams than sticks", "I've found some weird card in japanese with your name on it, here you go!"
@@ -19,7 +19,7 @@ class Fetch(commands.Cog):
             "I've found the One piece!, no you can't see what it is", "I've found a happy meal with one piece characters on it",
             "I've found you a girlfriend XDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXD", "I've found a bad Persona song!", "Found a couple of Tarot cards", 
             "I've found your Tweets from 7 years ago..."
-        ]
+        )
 
         await interaction.response.send_message(responses[random.randint(0, len(responses) -1)])
 
