@@ -7,5 +7,5 @@ aircraft.db
 airlines.db
 .env
 requests.db
-XP_databaseinit.py
+test.py
 AV_databaseinit.py

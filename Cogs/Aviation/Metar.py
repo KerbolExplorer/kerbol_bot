@@ -78,6 +78,9 @@ class Metar(commands.Cog):
             ), inline=False)
             embed.set_footer(text="For flight simulation use only. Source: https://aviationweather.gov/api/data/metar")
             return embed
+    
+    def get_time(self):
+        return int(datetime.now(timezone.utc).timestamp())
 
     @app_commands.command(name="metar", description="Gets the metar for an airport")
     @app_commands.describe(airport="Icao code of the airport")
@@ -113,20 +116,18 @@ class Metar(commands.Cog):
             request_cursor.execute(sql)
             result = request_cursor.fetchall()
 
-            current_time = get_current_zulu()
-            current_time += 100
+            next_call = self.get_time()
+            next_call += 300 #CHANGE TO 3600!!!!!!!
             if result == []:
                 sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
-                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, current_time))
+                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
             else:
                 sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
-                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, current_time))
+                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
             request_db.commit()
             request_db.close()
 
             await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport.upper()}` during {hours} hours. If you wish to cancel, do `/metar_stop`")
-        if not self.send_metar.is_running():
-            self.send_metar.start()
 
     @app_commands.command(name="metar_stop", description="Cancels a metar request or all of them")
     @app_commands.describe(
@@ -199,15 +200,16 @@ class Metar(commands.Cog):
         request_cursor.execute(sql)
         users = request_cursor.fetchall()
 
-        current_time = get_current_zulu()
+        current_time = self.get_time()
 
         if users != []:
             for user in users:
-                if int(user[3]) == current_time or int(user[3] < current_time):     #Send the dm if the times are equal
+                if int(user[3]) < current_time:
+                    print(f"Prepearing to send a dm to {user[0]} requested time was {user[3]}, current time is {current_time}")
                     user_target = await self.bot.fetch_user(user[0])
                     metar_raw = get_metar(user[1], False)
 
-                    if metar_raw == False or metar_raw == None:  #If there was an error grabing the metar, we'll give it 5 minutes before trying again, we do this twice and send an error if it doesn't work
+                    if metar_raw == False or metar_raw == None:
                         await user_target.send(f"Hey there was an issue getting the metar for `{user[1]}`, I will try again in 5 minutes. If I can't get it then I'll wait another 5 minutes and reach back to you with the results")
                         tries = 0
                         while tries != 2:
@@ -223,16 +225,17 @@ class Metar(commands.Cog):
                     else:
                         metar_fancy = self.get_metar_embed(metar_raw)
                         await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
-
+                    
                     if user[2] == 1:
                         sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
                         request_cursor.execute(sql, (user[0], user[1]))
                     else:
                         sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ?"
-                        current_time += 100
-                        request_cursor.execute(sql, ((user[2] - 1), current_time, user[0], user[1]))
-        else:
-            self.send_metar.stop()
+                        next_call = self.get_time() + 300 #CHANGE TO 3600!!!!!!!
+                        request_cursor.execute(sql, ((user[2] - 1), next_call, user[0], user[1]))
+                else:
+                    continue
+
         request_db.commit()
         request_db.close()
 
