@@ -117,7 +117,7 @@ class Metar(commands.Cog):
             result = request_cursor.fetchall()
 
             next_call = self.get_time()
-            next_call += 300 #CHANGE TO 3600!!!!!!!
+            next_call += 3600
             if result == []:
                 sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
                 request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
@@ -230,7 +230,7 @@ class Metar(commands.Cog):
                         request_cursor.execute(sql, (user[0], user[1]))
                     else:
                         sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ?"
-                        next_call = self.get_time() + 300 #CHANGE TO 3600!!!!!!!
+                        next_call = self.get_time() + 3600
                         request_cursor.execute(sql, ((user[2] - 1), next_call, user[0], user[1]))
                 else:
                     continue
