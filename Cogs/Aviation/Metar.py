@@ -205,7 +205,6 @@ class Metar(commands.Cog):
         if users != []:
             for user in users:
                 if int(user[3]) < current_time:
-                    print(f"Prepearing to send a dm to {user[0]} requested time was {user[3]}, current time is {current_time}")
                     user_target = await self.bot.fetch_user(user[0])
                     metar_raw = get_metar(user[1], False)
 

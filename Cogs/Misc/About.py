@@ -14,8 +14,6 @@ class About(commands.Cog):
             **Known Issues**:
             -> The music commands have been removed indefinetely due to issues with youtube.
             -> Leaderboard is limited to top 10 users.
-            -> Metar_request does whatever it wants when it comes to timing.
-            -> Gunslingers difficulty 3 Solgaleo has a very small chance of shooting without ammo.
             """
             )
 
