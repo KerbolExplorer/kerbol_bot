@@ -11,6 +11,7 @@ load_dotenv()
 #from bot_data import give_token
 token = os.getenv("TOKEN")
 admin = os.getenv("ADMIN")
+test_guild = os.getenv("TEST_GUILD")
 
 bot = commands.Bot(command_prefix="S!", intents=discord.Intents.all())
 

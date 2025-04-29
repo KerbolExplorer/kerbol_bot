@@ -183,6 +183,12 @@ class Metar(commands.Cog):
             
             embed.description=requests
             await interaction.response.send_message("Here are your requests: ", embed=embed)
+    
+    @app_commands.command(name="zulu_time", description="Returns the current zulu time")
+    async def zulu_time(self, interaction:discord.Interaction):
+        current_time = get_current_zulu()
+        current_time = str(current_time) + "Z"
+        await interaction.response.send_message(f"The current zulu time is: `{current_time}`")
             
 
     @tasks.loop(minutes=1)
