@@ -102,13 +102,13 @@ class Metar(commands.Cog):
         hours="How many hours you want to be reminded for"
     )
     async def metar_request(self, interaction:discord.Interaction, airport:str, hours:int):
-        await interaction.response.defer()
+        await interaction.response.defer(ephemeral=True)
         metar = get_metar(airport, False)
 
         if metar == False:
-            await interaction.followup.send("There was an issue getting this metar.", ephemeral=True)
+            await interaction.followup.send("There was an issue getting this metar.")
         elif metar == None:
-            await interaction.followup.send("This metar is not available.", ephemeral=True)
+            await interaction.followup.send("This metar is not available.")
         else:
             request_db = sqlite3.connect(db_requests_path)
             request_cursor = request_db.cursor()
@@ -147,7 +147,7 @@ class Metar(commands.Cog):
             if airport == None:
                 sql = "DELETE FROM Requests WHERE userId = ?"
                 request_cursor.execute(sql, (interaction.user.id,))
-                await interaction.response.send_message("All of your metar requests have been cancelled")
+                await interaction.response.send_message("All of your metar requests have been cancelled", ephemeral=True)
             else:
                 sql = "SELECT * FROM Requests WHERE userId = ? AND airportICAO = ?"
                 request_cursor.execute(sql, (interaction.user.id, airport.upper()))
@@ -157,7 +157,7 @@ class Metar(commands.Cog):
                 else:
                     sql= "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
                     request_cursor.execute(sql, (interaction.user.id, airport.upper()))
-                    await interaction.response.send_message(f"Alright, I've cancelled the metar requests for `{airport.upper()}`")
+                    await interaction.response.send_message(f"Alright, I've cancelled the metar requests for `{airport.upper()}`", ephemeral=True)
 
         request_db.commit()
         request_db.close()
@@ -183,7 +183,7 @@ class Metar(commands.Cog):
                 requests += f"Airport: {request[1]}, requests left: {request[2]}\n"
             
             embed.description=requests
-            await interaction.response.send_message("Here are your requests: ", embed=embed)
+            await interaction.response.send_message("Here are your requests: ", embed=embed, ephemeral=True)
     
     @app_commands.command(name="zulu_time", description="Returns the current zulu time")
     async def zulu_time(self, interaction:discord.Interaction):

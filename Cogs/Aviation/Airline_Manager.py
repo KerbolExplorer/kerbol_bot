@@ -97,7 +97,7 @@ class Airline_Manager(commands.Cog):
         airline_info = airline_cursor.fetchall()
 
         if airline_info == []:
-            await interaction.response.send_message("You do not own an airline!")
+            await interaction.response.send_message("You do not own an airline!", ephemeral=True)
             return
         
         general_embed = discord.Embed(color=interaction.user.accent_color, title="General Information")
