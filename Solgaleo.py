@@ -22,7 +22,7 @@ async def change_activity():
         "The Elder Scrolls V: Skyrim", "Halo: The Master Chief Collection", "Halo Infinite", "Ace Combat 7: Skies Unknown",
         "Project Wingman", "Rivals of Aether", "Deep Rock Galactic", "FalconBMS", "Enter the Gungeon", "FTL: Faster Than Light", 
         "Pokerogue", "Monster Hunter Wilds", "Kerbal Space Program", "Team Fortess 2", "Metal Gear Rising: Revengance", "Starbound", 
-        "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zote boat", "Fortnite", "Amorous",
+        "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zoteboat", "Fortnite", "Amorous",
         "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", "Tomodatchi Life", "Frostpunk", "Xplane 12", "Balatro", 
         "The Elder Scrolls IV: Oblivion"
         )
@@ -37,7 +37,7 @@ async def on_ready():
     bot.loop.create_task(change_activity())
 
     cogs_list_Test_Commands = ('Cogs.Test_Commands.Ping',)
-    cogs_list_dev = ('Cogs.Dev_Only.Run','Cogs.Dev_Only.Say')
+    cogs_list_dev = ('Cogs.Dev_Only.Run','Cogs.Dev_Only.Say', 'Cogs.Dev_Only.Dev_commands')
     cogs_list_lvl = ('Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard')
     cogs_list_games = ('Cogs.Games.rps', 'Cogs.Games.Chance_Games', 'Cogs.Games.Gunslingers')
     cogs_list_aviation = ('Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar')
@@ -98,5 +98,10 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
 
     print(f"\nException occurred in command: {interaction.command.name}")
     traceback.print_exception(type(error), error, error.__traceback__)
+
+@bot.event
+async def on_command_error(ctx, error):
+    if isinstance(error, commands.CommandNotFound):
+        return
 
 bot.run(token)
