@@ -112,8 +112,8 @@ class Metar(commands.Cog):
         else:
             request_db = sqlite3.connect(db_requests_path)
             request_cursor = request_db.cursor()
-            sql = "SELECT * FROM Requests"
-            request_cursor.execute(sql)
+            sql = "SELECT * FROM Requests WHERE userId = ? AND airportICAO = ?"
+            request_cursor.execute(sql, (interaction.user.id, airport.upper()))
             result = request_cursor.fetchall()
 
             next_call = self.get_time()
@@ -122,8 +122,9 @@ class Metar(commands.Cog):
                 sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
                 request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
             else:
-                sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
-                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
+                await interaction.followup.send(f"You already have a request for `{airport.upper()}`!")
+                request_db.close()
+                return
             request_db.commit()
             request_db.close()
 
