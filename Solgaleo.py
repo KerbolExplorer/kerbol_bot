@@ -24,7 +24,7 @@ async def change_activity():
         "Pokerogue", "Monster Hunter Wilds", "Kerbal Space Program", "Team Fortess 2", "Metal Gear Rising: Revengance", "Starbound", 
         "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zoteboat", "Fortnite", "Amorous",
         "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", "Tomodatchi Life", "Frostpunk", "Xplane 12", "Balatro", 
-        "The Elder Scrolls IV: Oblivion"
+        "The Elder Scrolls IV: Oblivion", "Pokken Tournament DX", "Super Smash Bros. Ultimate"
         )
     
     while True:
