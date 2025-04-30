@@ -9,7 +9,7 @@ class Responses(commands.Cog):
     
     @commands.Cog.listener('on_message')
     async def responses(self, message):
-        if self.bot.user.mentioned_in(message):
+        if message.author.bot == False and self.bot.user.mentioned_in(message):
             response = ("Hmm?", "Huh?", "What?", "Need anything?", "Make it quick")
             await message.channel.send(response[random.randint(0, len(response) -1)])
 
