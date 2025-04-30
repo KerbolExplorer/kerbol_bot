@@ -85,6 +85,10 @@ async def morning_call():
 
 @bot.tree.error
 async def on_app_command_error(interaction: discord.Interaction, error: discord.app_commands.AppCommandError):
+    if interaction.command == None:
+        await interaction.response.send_message(f"This command is temporarely disabled", ephemeral=True)
+        return
+
     admin_user = await bot.fetch_user(admin)
     await admin_user.send(
         f"Hey, an error has ocurred while executing `{interaction.command.name}`\n"
