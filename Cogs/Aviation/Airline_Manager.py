@@ -45,7 +45,7 @@ class Airline_Manager(commands.Cog):
         else:
             airline_id = (airline_id[0][0] + 1) 
         
-        #Veridy if the user doesn't have more than one airline.
+        #Verify if the user doesn't have more than one airline.
         sql = "SELECT * FROM Airline WHERE owner = ?"
         airline_cursor.execute(sql, (interaction.user.id,))
         airline_owner = airline_cursor.fetchall()

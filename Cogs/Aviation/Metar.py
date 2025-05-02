@@ -19,11 +19,11 @@ class Metar(commands.Cog):
 
         request_db = sqlite3.connect(db_requests_path)
         request_cursor = request_db.cursor()
-        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='Requests'"
+        sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='Requests'"
         request_cursor.execute(sql)
         result = request_cursor.fetchall()
         if not result:
-            sql = f"CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER)"
+            sql = "CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER)"
             request_cursor.execute(sql)
         request_db.commit()
         request_db.close()
@@ -185,6 +185,8 @@ class Metar(commands.Cog):
             
             embed.description=requests
             await interaction.response.send_message("Here are your requests: ", embed=embed, ephemeral=True)
+        
+        request_db.close()
     
     @app_commands.command(name="zulu_time", description="Returns the current zulu time")
     async def zulu_time(self, interaction:discord.Interaction):
