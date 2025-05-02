@@ -1,5 +1,4 @@
 discord.py
-yt_dlp
 pynacl
 requests
 dotenv
