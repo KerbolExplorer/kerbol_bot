@@ -98,11 +98,11 @@ class Level_System(commands.Cog):
         sql = "UPDATE Guilds SET cooldown = ? WHERE id = ?"
         try:
             cursor.execute(sql, (cooldown, interaction.guild.id))
+            sql = f"UPDATE '{interaction.guild.id}' SET cooldownEnd = 0"
+            cursor.execute(sql)
         except Exception:
             await interaction.response.send_message("This server is not in my database. Please send a message so I can register it", ephemeral=True)
             return
-        sql = f"UPDATE '{interaction.guild.id}' SET cooldownEnd = 0"
-        cursor.execute(sql)
         db.commit()
         db.close()
         await interaction.response.send_message(f"Updated the cooldown correctly. It is now set to {cooldown} seconds")
