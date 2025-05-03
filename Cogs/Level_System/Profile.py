@@ -22,13 +22,13 @@ class Profile(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()  
         if not result:
-            result = [(None,"0", "1", "100")]
+            result = [(None,"0", "100", "1")]
         else:
-            sql = f'SELECT * FROM "{guild_id}" WHERE id = ?'
+            sql = f'SELECT * FROM "{guild_id}" WHERE userId = ?'
             cursor.execute(sql, (member.id,))
             result = cursor.fetchall()
             if result == []:
-                result = [(None,"0", "1", "100")]
+                result = [(None,"0", "100", "1")]
 
         if member.id == 442728041115025410:
             title = f"{member.display_name}'s profile :sparkles:"
@@ -42,8 +42,8 @@ class Profile(commands.Cog):
         embed.set_thumbnail(url=member.avatar)
         embed.add_field(name="Name", value=member.display_name)
         embed.add_field(name="ID", value=member.id)
-        embed.add_field(name="Level", value=f"{result[0][2]}")
-        embed.add_field(name="XP", value=f"XP: {result[0][1]}/{result[0][3]}")
+        embed.add_field(name="Level", value=f"{result[0][3]}")
+        embed.add_field(name="XP", value=f"XP: {result[0][1]}/{result[0][2]}")
         embed.set_footer(text=f"Requested by {interaction.user.display_name}")
         await interaction.response.send_message(embed=embed)
         db.close() 

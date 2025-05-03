@@ -29,7 +29,7 @@ class Leaderboard(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()
         db.close()
-        result.sort(key=lambda x: x[1], reverse=True)
+        result.sort(key=lambda x: x[3], reverse=True)
         member_list = []
 
         for member in result:
@@ -37,7 +37,7 @@ class Leaderboard(commands.Cog):
             if cap >= 10:
                 break
             user = await self.bot.fetch_user(member[0])
-            member_data = f"{user}, level: {member[2]}"
+            member_data = f"{user}, level: {member[3]}"
             member_list.append(member_data)
 
         returned_data = '\n'.join(member_list)

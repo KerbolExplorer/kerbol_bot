@@ -27,13 +27,13 @@ class Level(commands.Cog):
             db.close()
             return
 
-        sql = f'SELECT * FROM "{guild_id}" WHERE id = ?'
+        sql = f'SELECT * FROM "{guild_id}" WHERE userId = ?'
         cursor.execute(sql, (member.id,))
         result = cursor.fetchall()
         if result == []:
             await interaction.response.send_message("I don't have information about this user.", ephemeral=True)
         else:
-            await interaction.response.send_message(f"{member.name} is level {result[0][2]} and needs {abs(result[0][1] - result[0][3])}xp to reach the next level.")
+            await interaction.response.send_message(f"{member.name} is level {result[0][3]} and needs {abs(result[0][1] - result[0][2])}xp to reach the next level.")
 
         db.close()
 
