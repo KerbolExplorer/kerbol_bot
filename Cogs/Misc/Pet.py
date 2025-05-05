@@ -10,7 +10,7 @@ class Pet(commands.Cog):
     @app_commands.command(name="pet", description="Pet Solgaleo")
     async def pet(self, interaction:discord.Interaction):
         responses = ("**Arff**", "**UwU**", "**:3**", "**Woof**", "**PURRR**", "**Mmmmh**", "**Waff**", "**Wuff**", "**Solll**", "ouch...")
-        await interaction.response.send_message(responses[random.randint(0, len(responses) -1)])
+        await interaction.response.send_message(random.choice(responses))
 
 
 async def setup(bot):

@@ -18,10 +18,10 @@ class Fetch(commands.Cog):
             "Here's a gun I found on the floor, it seems to speak!", "Here's the golden arrow you threw!", "Found a green leak!, Popipo!",
             "I've found the One piece!, no you can't see what it is", "I've found a happy meal with one piece characters on it",
             "I've found you a girlfriend XDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXDXD", "I've found a bad Persona song!", "Found a couple of Tarot cards", 
-            "I've found your Tweets from 7 years ago..."
+            "I've found your Tweets from 7 years ago...", "I've found something that doesn't exist!"
         )
 
-        await interaction.response.send_message(responses[random.randint(0, len(responses) -1)])
+        await interaction.response.send_message(random.choice(responses))
 
 async def setup(bot):
     await bot.add_cog(Fetch(bot))

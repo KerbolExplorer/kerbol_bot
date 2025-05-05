@@ -28,9 +28,10 @@ async def change_activity():
         )
     
     while True:
-        chosen_game = random.randint(0, (len(gameList) -1))
-        await bot.change_presence(status=discord.Status.online, activity=discord.Game(gameList[chosen_game]))
-        await asyncio.sleep(10800)
+        chosen_game = random.choice(gameList)
+        await bot.change_presence(status=discord.Status.online, activity=discord.Game(chosen_game))
+        time_between_game = random.randint(1800, 21600)
+        await asyncio.sleep(time_between_game)
 
 @bot.event
 async def on_ready():
