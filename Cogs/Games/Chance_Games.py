@@ -74,6 +74,18 @@ class Chance_Games(commands.Cog):
                 string += f"They all add up to **{total}**"
 
             await interaction.response.send_message(string)
+    
+    @app_commands.command(name="8ball", description="Ask a question to an 8ball")
+    @app_commands.describe(question="The question you want to ask")
+    async def eight_ball(self, interaction:discord.Interaction, question:str):
+        responses = (
+            "It is certain", "It is decidly so", "Without a doubt", "Yes definitely", "You may rely on it", "As I see it, yes", "Most likely",
+            "Outlook good", "Yes", "Signs point to yes", "Hmmmmm", "Reply hazy, try again", "Ask again later", "Better not tell you now",
+            "Cannot predict now", "Concentrate and ask again", "Don't count on it", "My reply is no", "My sources say no", "Outlook not so good",
+            "Very doubtful"
+            )
+        response = random.choice(responses)
+        await interaction.response.send_message(f"Question: {question}\nAnswer: {response}")
 
 
 async def setup(bot):
