@@ -10,10 +10,10 @@ class Rate(commands.Cog):
     @app_commands.command(name="rate", description="Rates something")
     @app_commands.describe(item="What is going to be rated")
     async def rate(self, interaction:discord.Interaction, item: str):
-        if item == "<@631770724649926657>" or item == "<@573578910625955850>":
+        if item == "<@631770724649926657>" or item == "<@573578910625955850>" or item.lower() == "solgaleo":
             await interaction.response.send_message("I humbly rate myself a 10/10")
             return
-        elif item == "<@442728041115025410>":
+        elif item == "<@442728041115025410>" or item.lower() == "kerbol":
             await interaction.response.send_message("Yeah he is pretty neat, 10/10")
             return
 
