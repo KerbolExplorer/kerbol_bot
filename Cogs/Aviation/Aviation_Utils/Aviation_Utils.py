@@ -23,7 +23,7 @@ def airport_lookup(airport: str):
 
     Parameters
     ----------
-    lat1 : str
+    airport : str
         ICAO code for the airport we want to search for.
 
     Returns
@@ -146,7 +146,26 @@ def get_current_zulu():
 
 
 def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance:int = 0, max_distance:int = 9999):
-    """**NOT IMPLEMENTED** Returns a random flight"""
+    """Returns a random flight
+
+    Parameters
+    ----------
+    country: ISO code of the country.
+    international: If the flight is internation (not implemented).
+    departing_airport: The airport you want to depart from.
+    arrival_airport: The airport you arrive at.
+    min_distance: The minimum distance of the flight (not implemented).
+    max_distance: The max distance of the flight (not implemented).
+
+    Returns
+    ----------
+    None: If there's no airport in the country given.
+    1: If there is only 1 airport in this country.
+    2: If the departing airport is not valid.
+    3: If the arrival airport is not valid
+    Tuple
+        A tuple containing the information of the flight.
+    """
     
     country = country.upper()
     airport_db = sqlite3.connect(db_path)
@@ -157,16 +176,30 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     airport_choices = cursor.fetchall()
     airport_db.close()
 
-    if airport_choices == []:
+    if not airport_choices:
         return None
     elif len(airport_choices) == 1:
         return 1
     
     if departing_airport == None:
         departing_airport = (airport_choices[0][0], airport_choices[0][3])
+    else:
+        departing_airport = airport_lookup(departing_airport)
+
+        if departing_airport == False:
+            return 2
+
+        departing_airport = (departing_airport[0][3], departing_airport[0][1])
 
     if arrival_airport == None:
         arrival_airport = (airport_choices[1][0], airport_choices[1][3])
+    else:
+        arrival_airport = airport_lookup(arrival_airport)
+
+        if arrival_airport == False:
+            return 3
+
+        arrival_airport = (arrival_airport[0][3], arrival_airport[0][1])
 
     distance = airport_distance(departing_airport[1], arrival_airport[1])
 

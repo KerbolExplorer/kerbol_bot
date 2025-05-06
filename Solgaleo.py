@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from dotenv import load_dotenv
 load_dotenv()
 
-#from bot_data import give_token
 token = os.getenv("TOKEN")
 admin = os.getenv("ADMIN")
 
