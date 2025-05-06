@@ -145,6 +145,29 @@ def get_current_zulu():
     return current_time
 
 
-def random_regional_flight():
-    """**NOT IMPLEMENTED** Returns a random flight that takes place inside a country"""
-    pass
+def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance:int = 0, max_distance:int = 9999):
+    """**NOT IMPLEMENTED** Returns a random flight"""
+    
+    country = country.upper()
+    airport_db = sqlite3.connect(db_path)
+    cursor = airport_db.cursor()
+
+    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != 'closed' ORDER BY RANDOM() LIMIT 20"
+    cursor.execute(sql, (country,))
+    airport_choices = cursor.fetchall()
+    airport_db.close()
+
+    if airport_choices == []:
+        return None
+    elif len(airport_choices) == 1:
+        return 1
+    
+    if departing_airport == None:
+        departing_airport = (airport_choices[0][0], airport_choices[0][3])
+
+    if arrival_airport == None:
+        arrival_airport = (airport_choices[1][0], airport_choices[1][3])
+
+    distance = airport_distance(departing_airport[1], arrival_airport[1])
+
+    return (departing_airport, arrival_airport, distance)
