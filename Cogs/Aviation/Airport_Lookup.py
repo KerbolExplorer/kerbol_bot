@@ -29,13 +29,13 @@ class Airport_Lookup(commands.Cog):
                 color=discord.Color.blue()
             )
             embed.add_field(name="**Airport Data:**", value=(
-                f"**Airport Name:** : {airport[0][3]}\n"
+                f"**Airport Name** : {airport[0][3]}\n"
                 f"**Location** : {airport[0][10]}\n"
                 f"**Latitude** : {airport[0][4]}\n"
                 f"**Longitude** : {airport[0][5]}\n"
                 f"**Elevation** : {airport[0][6]}\n"
                 f"**Country** : {airport[0][8]}\n"
-                f"**Airport Type**: {airport[0][2]}"
+                f"**Airport Type** : {airport[0][2]}"
             ))
             embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use /metar. For flight simulation use only")
             await interaction.followup.send(embed=embed)
