@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ADMIN = os.getenv("ADMIN")
-DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
+DB_AIRCRAFT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "aircraft.db"))
 
 class Dev_commands(commands.Cog):
     def __init__(self, bot):
@@ -63,20 +63,47 @@ class Dev_commands(commands.Cog):
                 return
         else:
             return
-        
+    
+    # Adds an airframe to aircraft.db so the plane can be bought later on
+    # Example: S!add_aircraft PC12 1800 9 1000 4740 5300000 528 ALL
     @commands.command()
     async def add_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, price:int, cruise_speed:int, airfield_type:str):
-        print("Command triggered!")
         if self.verify_messenger(ctx.author.id) == True:
             db = sqlite3.connect(DB_AIRCRAFT_PATH)
             cursor = db.cursor()
-            sql = f"INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, price, cruise_speed, airfield_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            sql = "INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, price, cruise_speed, airfield_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
             cursor.execute(sql, (type, range, pax_capacity, cargo_capacity, motw, price, cruise_speed, airfield_type))
             await ctx.message.add_reaction("✅")
             db.commit()
             db.close()
         else:
             await ctx.message.add_reaction("❌")
+
+    @commands.command()
+    async def edit_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, price:int, cruise_speed:int, airfield_type:str, new_type:str):
+        if self.verify_messenger(ctx.author.id) == True:
+            db = sqlite3.connect(DB_AIRCRAFT_PATH)
+            cursor = db.cursor()
+            sql = "UPDATE Aircraft SET type = ?, range = ?, paxCapacity = ?, cargoCapacity = ?, motw = ?, price = ?, cruise_speed = ?, airfield_type = ? WHERE type = ?"
+            cursor.execute(sql, (new_type, range, pax_capacity, cargo_capacity, motw, price, cruise_speed, airfield_type, type))
+            await ctx.message.add_reaction("✅")
+            db.commit()
+            db.close()
+        else:
+            await ctx.message.add_reaction("❌")
+
+    @commands.command()
+    async def remove_aircraft(self, ctx, type:str):
+        if self.verify_messenger(ctx.author.id) == True:
+            db = sqlite3.connect(DB_AIRCRAFT_PATH)
+            cursor = db.cursor()
+            sql = "DELETE FROM Aircraft WHERE type = ?"
+            cursor.execute(sql, (type,))
+            await ctx.message.add_reaction("✅")
+            db.commit()
+            db.close()
+        else:
+            await ctx.message.add_reaction("❌")   
                 
 
 async def setup(bot):
