@@ -1,19 +1,21 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+import sqlite3
 import os
 import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 
-admin = os.getenv("ADMIN")
+ADMIN = os.getenv("ADMIN")
+DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
 
 class Dev_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     def verify_messenger(self, id):
-        if int(id) != int(admin):
+        if int(id) != int(ADMIN):
             return False
         else:
             return True
@@ -62,7 +64,19 @@ class Dev_commands(commands.Cog):
         else:
             return
         
-
+    @commands.command()
+    async def add_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, price:int, cruise_speed:int, airfield_type:str):
+        print("Command triggered!")
+        if self.verify_messenger(ctx.author.id) == True:
+            db = sqlite3.connect(DB_AIRCRAFT_PATH)
+            cursor = db.cursor()
+            sql = f"INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, price, cruise_speed, airfield_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+            cursor.execute(sql, (type, range, pax_capacity, cargo_capacity, motw, price, cruise_speed, airfield_type))
+            await ctx.message.add_reaction("✅")
+            db.commit()
+            db.close()
+        else:
+            await ctx.message.add_reaction("❌")
                 
 
 async def setup(bot):
