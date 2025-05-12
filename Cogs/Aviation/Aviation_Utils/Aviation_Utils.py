@@ -145,7 +145,7 @@ def get_current_zulu():
     return current_time
 
 
-def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance:int = 0, max_distance:int = 9999):
+def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None):
     """Returns a random flight
 
     Parameters
@@ -154,8 +154,8 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     international: If the flight is internation (not implemented).
     departing_airport: The airport you want to depart from.
     arrival_airport: The airport you arrive at.
-    min_distance: The minimum distance of the flight (not implemented).
-    max_distance: The max distance of the flight (not implemented).
+    min_distance: The minimum distance of the flight.
+    max_distance: The max distance of the flight.
 
     Returns
     ----------
@@ -171,36 +171,76 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     airport_db = sqlite3.connect(db_path)
     cursor = airport_db.cursor()
 
-    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != 'closed' ORDER BY RANDOM() LIMIT 20"
+    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != 'closed' ORDER BY RANDOM() LIMIT 2"
     cursor.execute(sql, (country,))
     airport_choices = cursor.fetchall()
-    airport_db.close()
 
     if not airport_choices:
         return None
     elif len(airport_choices) == 1:
         return 1
     
-    if departing_airport == None:
-        departing_airport = (airport_choices[0][0], airport_choices[0][3])
-    else:
-        departing_airport = airport_lookup(departing_airport)
+    if min_distance is None:
+        min_distance = 0
+    if max_distance is None:
+        max_distance = 9999
+    
+    if max_distance < min_distance:
+        return None
+    
+    departure_locked = False
+    arrival_locked = False
 
+    if departing_airport is not None:
+        departing_airport = airport_lookup(departing_airport)
+        departure_locked = True
         if departing_airport == False:
             return 2
 
         departing_airport = (departing_airport[0][3], departing_airport[0][1])
 
-    if arrival_airport == None:
+    if arrival_airport is None:
         arrival_airport = (airport_choices[1][0], airport_choices[1][3])
     else:
         arrival_airport = airport_lookup(arrival_airport)
+        arrival_locked = True
 
         if arrival_airport == False:
             return 3
 
         arrival_airport = (arrival_airport[0][3], arrival_airport[0][1])
 
-    distance = airport_distance(departing_airport[1], arrival_airport[1])
+    
+    attempts = 20
+    total_attempts = 0
+    while attempts >= 0:
+        if not departure_locked:
+            departing_airport = (airport_choices[0][0], airport_choices[0][3])
+        
+        if not arrival_locked:
+            arrival_airport = (airport_choices[1][0], airport_choices[1][3])
+        distance = airport_distance(departing_airport[1], arrival_airport[1])
 
+        if distance < min_distance or distance > max_distance:
+            cursor.execute(sql, (country,))
+            airport_choices = cursor.fetchall()
+            attempts -= 1
+            if attempts == 0:
+                min_distance = max(0, min_distance - 25)
+                max_distance += 25
+                attempts = 20
+            total_attempts += 1
+        else:
+            break
+        print(f"Current airports {departing_airport[1]} and {arrival_airport[1]} not valid, current distance {int(distance)}nm")
+        if total_attempts == 100:
+            break
+
+    if distance < min_distance or distance > max_distance:
+        return None
+    else:
+        print(f"Valid flight found {departing_airport[1]} to {arrival_airport[1]}, {int(distance)}nm")
+        print(f"Airport found in {total_attempts} loops")
+
+    airport_db.close()
     return (departing_airport, arrival_airport, distance)

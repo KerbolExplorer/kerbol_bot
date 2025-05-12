@@ -14,19 +14,20 @@ class Schedule(commands.Cog):
 
     @app_commands.command(name="random_regional_flight", description="Returns a random regional flight")
     @app_commands.describe(country="ISO code of the country")
-    async def random_regional_flight(self, interaction:discord.Interaction, country: str, departure_airport : str = None, arrival_airport: str = None):
-        
-        flight = random_flight(country, False, departure_airport, arrival_airport)
+    async def random_regional_flight(self, interaction:discord.Interaction, country: str, departure_airport : str = None, arrival_airport: str = None, min_distance: int = None, max_distance: int = None):
+        await interaction.response.defer()
+
+        flight = random_flight(country, False, departure_airport, arrival_airport, min_distance, max_distance)
         if flight == None:
-            await interaction.response.send_message("Could not find any valid flights for that country", ephemeral=True)
+            await interaction.followup.send("Could not find any valid flights", ephemeral=True)
         elif flight == 1:
-            await interaction.response.send_message("You have somehow found a country with a single airport")
+            await interaction.followup.send("You have somehow found a country with a single airport")
         elif flight == 2:
-            await interaction.response.send_message("The first airport is not valid", ephemeral=True)
+            await interaction.followup.send("The first airport is not valid", ephemeral=True)
         elif flight == 3:
-            await interaction.response.send_message("The second airport is not valid", ephemeral=True)
+            await interaction.followup.send("The second airport is not valid", ephemeral=True)
         else:
-            await interaction.response.send_message(f"A flight has been selected from {flight[0][1]} ({flight[0][0]}) to {flight[1][1]} ({flight[1][0]}) with a distance of {int(flight[2])}nm")
+            await interaction.followup.send(f"A flight has been selected from {flight[0][1]} ({flight[0][0]}) to {flight[1][1]} ({flight[1][0]}) with a distance of {int(flight[2])}nm")
 
 
 
