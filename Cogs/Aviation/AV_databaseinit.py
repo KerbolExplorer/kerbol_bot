@@ -1,11 +1,13 @@
 import sqlite3
 import os
-db_airport_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
+db_airport_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airlines.db")
 db = sqlite3.connect(db_airport_path)
 cursor = db.cursor()
 
-sql = "CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, firstLoop BOOLEAN)"
-cursor.execute(sql)
+sql = "UPDATE Airline SET money = ? WHERE airlineId = ? "
+cursor.execute(sql, (500000, 0))
+db.commit()
+db.close()
 
 '''                                #0 1 2 3
 sql = "INSERT INTO Usuarios (id, xp, level, xp_next) VALUES (?, ?, ?, ?)"

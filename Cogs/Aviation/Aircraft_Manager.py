@@ -37,6 +37,25 @@ class Aircraft_Manager(commands.Cog):
             self.owner = owner
             self.home_base = home_base
 
+    @app_commands.command(name="buy-aircraft", description="Buy a brand new aircraft for your airline")
+    @app_commands.describe(
+        type="The type of the aircraft (C172, B738, A320..)",
+        registration="The registration of the aircraft",
+        home_base="The home base of the aircraft. It will be delivered here."
+        )
+    async def buy_aircraft(self, interaction:discord.Interaction, type:str, registration:str, home_base:str):
+        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_cursor = airline_db.cursor()
+        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        aircraft_cursor = airline_db.cursor()
+
+        sql = "SELECT money FROM Airline WHERE owner = ?"
+        airline_cursor.execute(sql, (interaction.author.id,))
+        result = airline_cursor.fetchone()
+
+        if result == []:
+            airline_db.close()
+            await interaction.followup.send("You do not own an airline", ephemeral=True)
 
 async def setup(bot):
     await bot.add_cog(Aircraft_Manager(bot))
