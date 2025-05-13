@@ -70,12 +70,14 @@ def airport_distance(first_airport: str, second_airport: str):
     cursor.execute(sql, (first_airport,))
     first_airport = cursor.fetchall()
     if first_airport == []:
+        db.close()
         return False
     first_airport_cords = (float(first_airport[0][4]), float(first_airport[0][5]))
 
     cursor.execute(sql, (second_airport,))
     second_airport = cursor.fetchall()
     if second_airport == []:
+        db.close()
         return False
     second_airport_cords = (float(second_airport[0][4]), float(second_airport[0][5]))
 
@@ -83,6 +85,7 @@ def airport_distance(first_airport: str, second_airport: str):
 
     distance = Aviation_Math.km_to_nm(distance)
 
+    db.close()
     return distance
 
 def get_metar(icao_code: str, raw_only = True):
@@ -166,18 +169,26 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     Tuple
         A tuple containing the information of the flight.
     """
-    
+
+    import psutil
+    import random
+
+    print("Command executed")
     country = country.upper()
     airport_db = sqlite3.connect(db_path)
     cursor = airport_db.cursor()
 
-    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != 'closed' ORDER BY RANDOM() LIMIT 2"
+    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != 'closed'"
     cursor.execute(sql, (country,))
-    airport_choices = cursor.fetchall()
+    all_airports = cursor.fetchall()
 
-    if not airport_choices:
+    if not all_airports:
+        cursor.close()
+        airport_db.close()
         return None
-    elif len(airport_choices) == 1:
+    elif len(all_airports) == 1:
+        cursor.close()
+        airport_db.close()
         return 1
     
     if min_distance is None:
@@ -186,6 +197,8 @@ def random_flight(country:str, international:bool = False, departing_airport:str
         max_distance = 9999
     
     if max_distance < min_distance:
+        cursor.close()
+        airport_db.close()
         return None
     
     departure_locked = False
@@ -195,34 +208,43 @@ def random_flight(country:str, international:bool = False, departing_airport:str
         departing_airport = airport_lookup(departing_airport)
         departure_locked = True
         if departing_airport == False:
+            cursor.close()
+            airport_db.close()
             return 2
 
         departing_airport = (departing_airport[0][3], departing_airport[0][1])
 
-    if arrival_airport is None:
-        arrival_airport = (airport_choices[1][0], airport_choices[1][3])
-    else:
+    if arrival_airport is not None:
         arrival_airport = airport_lookup(arrival_airport)
         arrival_locked = True
-
         if arrival_airport == False:
+            cursor.close()
+            airport_db.close()
             return 3
 
         arrival_airport = (arrival_airport[0][3], arrival_airport[0][1])
+
+    def print_memory_usage():
+        process = psutil.Process(os.getpid())
+        mem_bytes = process.memory_info().rss  # Resident Set Size: actual RAM used
+        mem_mb = mem_bytes / 1024 / 1024
+        print(f"Memory usage: {mem_mb:.2f} MB")
     
     attempts = 20
     total_attempts = 0
-    while attempts >= 0:
+    while attempts > 0:
         if not departure_locked:
-            departing_airport = (airport_choices[0][0], airport_choices[0][3])
+            dep = random.choice(all_airports)
+            departing_airport = (dep[0], dep[3])
         
         if not arrival_locked:
-            arrival_airport = (airport_choices[1][0], airport_choices[1][3])
+            arrival = random.choice(all_airports)
+            arrival_airport = (arrival[0], arrival[3])
+
         distance = airport_distance(departing_airport[1], arrival_airport[1])
 
         if distance < min_distance or distance > max_distance:
-            cursor.execute(sql, (country,))
-            airport_choices = cursor.fetchall()
+            print_memory_usage()
             attempts -= 1
             if attempts == 0:
                 min_distance = max(0, min_distance - 25)
@@ -232,18 +254,15 @@ def random_flight(country:str, international:bool = False, departing_airport:str
         else:
             break
         if total_attempts == 100:
-            del airport_choices
             cursor.close()
             airport_db.close()
             return None
 
     if distance < min_distance or distance > max_distance:
-        del airport_choices
         cursor.close()
         airport_db.close()
         return None
     
-    del airport_choices
     cursor.close()
     airport_db.close()
     return (departing_airport, arrival_airport, distance)
