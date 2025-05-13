@@ -18,7 +18,7 @@ class Airline_Manager(commands.Cog):
         airline_cursor.execute(sql)
         result = airline_cursor.fetchall()  
         if not result:
-            sql = f'CREATE TABLE "Airline" (airlineId INTEGER, airlineName TEXT, airlineICAO TEXT, homeBase TEXT, owner INTEGER)' #if the database doesn't have any table we create it
+            sql = f'CREATE TABLE "Airline" (airlineId INTEGER, airlineName TEXT, airlineICAO TEXT, homeBase TEXT, owner INTEGER, money INTEGER)' #if the database doesn't have any table we create it
             airline_cursor.execute(sql)
         airline_db.commit()
         airline_db.close()

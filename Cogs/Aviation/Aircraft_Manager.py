@@ -44,18 +44,91 @@ class Aircraft_Manager(commands.Cog):
         home_base="The home base of the aircraft. It will be delivered here."
         )
     async def buy_aircraft(self, interaction:discord.Interaction, type:str, registration:str, home_base:str):
+        await interaction.response.defer()
         airline_db = sqlite3.connect(DB_AIRLINE_PATH)
         airline_cursor = airline_db.cursor()
         aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
         aircraft_cursor = airline_db.cursor()
 
-        sql = "SELECT money FROM Airline WHERE owner = ?"
-        airline_cursor.execute(sql, (interaction.author.id,))
-        result = airline_cursor.fetchone()
+        sql = "SELECT money, airlineId FROM Airline WHERE owner = ?"
+        airline_cursor.execute(sql, (interaction.user.id,))
+        airline_result = airline_cursor.fetchone()
 
-        if result == []:
+        sql = "SELECT type, price FROM Aircraft WHERE type = ?"
+        aircraft_cursor.execute(sql, (type,))
+        aircraft_result = aircraft_cursor.fetchone()
+
+        if airline_result == []:
             airline_db.close()
+            aircraft_db.close()
             await interaction.followup.send("You do not own an airline", ephemeral=True)
+            return
+        
+        if aircraft_result == []:
+            aircraft_db.close()
+            airline_db.close()
+            await interaction.followup.send(f"The aircraft type {type} does not exist in my database.", ephemeral=True)
+            return
+        
+        if airline_result[0][0] < aircraft_result[0][1]:
+            aircraft_db.close()
+            airline_db.close()
+            await interaction.followup.send(f"Your airline does not have enough money to buy this aircraft.", ephemeral=True)
+            return
+        
+        airline_id = airline_result[0][1]
+        new_money = abs(aircraft_result[0][1] - airline_result[0][0]) 
+        
+        class Buttons(discord.ui.View):
+            def __init__(self, *, timeout = 180):
+                super().__init__(timeout=timeout)
+
+            @discord.ui.button(label="✅", style=discord.ButtonStyle.green)
+            async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+                sql = f"SELECT * FROM {airline_id}"
+                aircraft_cursor.execute(sql)
+                result = aircraft_cursor.fetchone()
+
+                if result == []:    # First plane they've purchased, we need to create a table with all their planes
+                    sql = f"CREATE TABLE '{airline_id}' (type TEXT, registration TEXT, hours INTEGER, base TEXT)" 
+                    airline_cursor.execute(sql)
+                
+                sql = f"INSERT INTO '{airline_id}' (type, registration, hours, location, base) VALUES (?, ?, ?, ?)"
+                aircraft_cursor.execute(sql, (type, registration, 0, home_base, home_base))
+
+                sql = "UPDATE Airline SET money = ? WHERE owner = ?"
+                airline_cursor.execute(sql, (new_money, interaction.user.id))
+
+                await interaction.followup.send(f"The aircraft {registration} type {type} has been purchased, it's waiting for you at {home_base}!")
+                airline_db.close()
+                aircraft_db.close()
+                return
+
+
+            @discord.ui.button(label="❌", style=discord.ButtonStyle.red)
+            async def rock(self, interaction: discord.Interaction, button: discord.ui.Button):
+                aircraft_db.close()
+                aircraft_db.close()
+                await interaction.followup.send(f"Purchase cancelled", ephemeral=True)
+                return
+
+        embed = discord.Embed(
+            title=f"Purchasing {type}",
+            color=0xf1c40f,
+            description="Purchase information:"
+        )        
+        embed.add_field(name="Aircraft type:", value=type)
+        embed.add_field(name="Registration:", value=registration)
+        embed.add_field(name="Pax capacity:", value="-")
+        embed.add_field(name="Cargo capacity:", value="-")
+        embed.add_field(name="motw", value="-")
+        embed.add_field(name="Runway type", value="-")
+        embed.add_field(name="Cruise speed", value="-")
+        embed.add_field(name="Home Base ", value=home_base)
+        embed.set_footer(text="Plane will be delivered to it's home base")
+
+        await interaction.followup.send(embed=embed, view=Buttons())
+
 
 async def setup(bot):
     await bot.add_cog(Aircraft_Manager(bot))
