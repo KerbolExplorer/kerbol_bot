@@ -120,7 +120,15 @@ class Airline_Manager(commands.Cog):
         general_embed.set_footer(text=f"Airline ID is: {airline_info[0][0]}")
 
         fleet_embed = discord.Embed(color=interaction.user.accent_color, title="Airline fleet")
-        fleet_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
+        aircraft_db = sqlite3.connect(db_aircraft_path)
+        aircraft_cursor = aircraft_db.cursor()
+        sql = f"SELECT * FROM '{airline_info[0][0]}'"
+        aircraft_cursor.execute(sql)
+        results = aircraft_cursor.fetchall()
+        string = ""
+        for result in results:
+            string = string.join(f"\nType:{result[0]}, Registration:{result[1]}, Flight hours:{result[2]}, Current Location:{result[3]}, Home Base:{result[4]}")
+        fleet_embed.description = string
 
         hubs_embed = discord.Embed(color=interaction.user.accent_color, title="Airline hubs")
         hubs_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
