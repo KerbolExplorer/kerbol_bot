@@ -56,11 +56,17 @@ class Airline_Manager(commands.Cog):
             airline_owner = interaction.user.id
         
         #TODO add a modal to confirm airline data before creation.
-        sql = "INSERT INTO Airline (airlineId, airlineName, airlineICAO, homeBase, owner) VALUES (?, ?, ?, ? , ?)"
-        airline_cursor.execute(sql, (airline_id, airline_name, airline_icao.upper(), airline_homebase.upper(), airline_owner))
+        sql = "INSERT INTO Airline (airlineId, airlineName, airlineICAO, homeBase, owner, money) VALUES (?, ?, ?, ?, ?, ?)"
+        airline_cursor.execute(sql, (airline_id, airline_name, airline_icao.upper(), airline_homebase.upper(), airline_owner, 500000))
+        aircraft_db = sqlite3.connect(db_aircraft_path)
+        cursor = aircraft_db.cursor()
+        sql = f"CREATE TABLE '{airline_id}' (type TEXT, registration TEXT, hours INTEGER, location TEXT, base TEXT)"
+        cursor.execute(sql)
+        await interaction.response.send_message("Airline created!")
         airline_db.commit()
         airline_db.close()
-        await interaction.response.send_message("Airline created!")
+        aircraft_db.commit()
+        aircraft_db.close()
 
 
     @app_commands.command(name="delete_airline", description="Deletes an airline")      #TODO this will later go in the manage airline command
@@ -83,7 +89,13 @@ class Airline_Manager(commands.Cog):
 
         sql = "DELETE FROM Airline WHERE airlineName = ?"
         airline_cursor.execute(sql, (airline_name,))
+        aircraft_db = sqlite3.connect(db_aircraft_path)
+        cursor = aircraft_db.cursor()
+        sql = f"DROP TABLE '{airline_info[0][0]}'"
+        cursor.execute(sql)
+        aircraft_db.commit()
         airline_db.commit()
+        aircraft_db.close()
         airline_db.close()
         await interaction.response.send_message(f"The airline {airline_name}, was deleted.")
 
@@ -117,7 +129,7 @@ class Airline_Manager(commands.Cog):
         schedules_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
 
         economy_embed = discord.Embed(color=interaction.user.accent_color, title="Airline Economy")
-        economy_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
+        economy_embed.add_field(name="Money", value=airline_info[0][5])
         
         embeds = [general_embed, fleet_embed, hubs_embed, schedules_embed, economy_embed]
 

@@ -20,7 +20,7 @@ class Aircraft_Manager(commands.Cog):
             sql = f"CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT)" #if the database doesn't have any table we create it
             cursor.execute(sql)
         db.commit()
-        db.close
+        db.close()
 
 
     class Aircraft:
@@ -48,7 +48,8 @@ class Aircraft_Manager(commands.Cog):
         airline_db = sqlite3.connect(DB_AIRLINE_PATH)
         airline_cursor = airline_db.cursor()
         aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
-        aircraft_cursor = airline_db.cursor()
+        aircraft_cursor = aircraft_db.cursor()
+
 
         sql = "SELECT money, airlineId FROM Airline WHERE owner = ?"
         airline_cursor.execute(sql, (interaction.user.id,))
@@ -70,14 +71,14 @@ class Aircraft_Manager(commands.Cog):
             await interaction.followup.send(f"The aircraft type {type} does not exist in my database.", ephemeral=True)
             return
         
-        if airline_result[0][0] < aircraft_result[0][1]:
+        if airline_result[0] < aircraft_result[1]:
             aircraft_db.close()
             airline_db.close()
             await interaction.followup.send(f"Your airline does not have enough money to buy this aircraft.", ephemeral=True)
             return
         
-        airline_id = airline_result[0][1]
-        new_money = abs(aircraft_result[0][1] - airline_result[0][0]) 
+        airline_id = airline_result[1]
+        new_money = abs(aircraft_result[1] - airline_result[0]) 
         
         class Buttons(discord.ui.View):
             def __init__(self, *, timeout = 180):
@@ -85,31 +86,26 @@ class Aircraft_Manager(commands.Cog):
 
             @discord.ui.button(label="✅", style=discord.ButtonStyle.green)
             async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
-                sql = f"SELECT * FROM {airline_id}"
-                aircraft_cursor.execute(sql)
-                result = aircraft_cursor.fetchone()
-
-                if result == []:    # First plane they've purchased, we need to create a table with all their planes
-                    sql = f"CREATE TABLE '{airline_id}' (type TEXT, registration TEXT, hours INTEGER, base TEXT)" 
-                    airline_cursor.execute(sql)
                 
-                sql = f"INSERT INTO '{airline_id}' (type, registration, hours, location, base) VALUES (?, ?, ?, ?)"
+                sql = f"INSERT INTO '{airline_id}' (type, registration, hours, location, base) VALUES (?, ?, ?, ?, ?)"
                 aircraft_cursor.execute(sql, (type, registration, 0, home_base, home_base))
 
                 sql = "UPDATE Airline SET money = ? WHERE owner = ?"
                 airline_cursor.execute(sql, (new_money, interaction.user.id))
 
-                await interaction.followup.send(f"The aircraft {registration} type {type} has been purchased, it's waiting for you at {home_base}!")
+                await interaction.response.send_message(f"The aircraft `{registration}` type `{type}` has been purchased, it's waiting for you at `{home_base}!")
+                airline_db.commit()
+                aircraft_db.commit()
                 airline_db.close()
                 aircraft_db.close()
                 return
 
 
             @discord.ui.button(label="❌", style=discord.ButtonStyle.red)
-            async def rock(self, interaction: discord.Interaction, button: discord.ui.Button):
+            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
                 aircraft_db.close()
                 aircraft_db.close()
-                await interaction.followup.send(f"Purchase cancelled", ephemeral=True)
+                await interaction.response.send_message(f"Purchase cancelled", ephemeral=True)
                 return
 
         embed = discord.Embed(
