@@ -209,7 +209,6 @@ def random_flight(country:str, international:bool = False, departing_airport:str
             return 3
 
         arrival_airport = (arrival_airport[0][3], arrival_airport[0][1])
-
     
     attempts = 20
     total_attempts = 0
@@ -232,15 +231,19 @@ def random_flight(country:str, international:bool = False, departing_airport:str
             total_attempts += 1
         else:
             break
-        print(f"Current airports {departing_airport[1]} and {arrival_airport[1]} not valid, current distance {int(distance)}nm")
         if total_attempts == 100:
-            break
+            del airport_choices
+            cursor.close()
+            airport_db.close()
+            return None
 
     if distance < min_distance or distance > max_distance:
+        del airport_choices
+        cursor.close()
+        airport_db.close()
         return None
-    else:
-        print(f"Valid flight found {departing_airport[1]} to {arrival_airport[1]}, {int(distance)}nm")
-        print(f"Airport found in {total_attempts} loops")
-
+    
+    del airport_choices
+    cursor.close()
     airport_db.close()
     return (departing_airport, arrival_airport, distance)
