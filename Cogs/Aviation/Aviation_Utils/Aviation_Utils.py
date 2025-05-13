@@ -169,11 +169,8 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     Tuple
         A tuple containing the information of the flight.
     """
-
-    import psutil
     import random
 
-    print("Command executed")
     country = country.upper()
     airport_db = sqlite3.connect(db_path)
     cursor = airport_db.cursor()
@@ -223,12 +220,6 @@ def random_flight(country:str, international:bool = False, departing_airport:str
             return 3
 
         arrival_airport = (arrival_airport[0][3], arrival_airport[0][1])
-
-    def print_memory_usage():
-        process = psutil.Process(os.getpid())
-        mem_bytes = process.memory_info().rss  # Resident Set Size: actual RAM used
-        mem_mb = mem_bytes / 1024 / 1024
-        print(f"Memory usage: {mem_mb:.2f} MB")
     
     attempts = 20
     total_attempts = 0
@@ -244,7 +235,6 @@ def random_flight(country:str, international:bool = False, departing_airport:str
         distance = airport_distance(departing_airport[1], arrival_airport[1])
 
         if distance < min_distance or distance > max_distance:
-            print_memory_usage()
             attempts -= 1
             if attempts == 0:
                 min_distance = max(0, min_distance - 25)
