@@ -13,7 +13,7 @@ class About(commands.Cog):
             The bot is open source, link to the github: https://github.com/KerbolExplorer/kerbol_bot. 
             **Known Issues**:
             -> The music commands have been removed indefinetely due to issues with youtube.
-            -> Leaderboard is limited to top 10 users.
+            -> Leaderboard is limited to top 10 users. Might also take a while to load.
             """
             )
 
