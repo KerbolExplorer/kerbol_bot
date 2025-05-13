@@ -45,47 +45,26 @@ def airport_lookup(airport: str):
     else:
         return airport
 
-def airport_distance(first_airport: str, second_airport: str):
+def airport_distance(coordinates1, coordinates2):
     """Returns the distance between two airports in nautical miles.
 
     Parameters
     ----------
-    first_airport : str
-        ICAO code for the first airport.
-    second_airport : str
-        ICAO code for the second airport.
+    coordinates1 : tuple
+        The coordinates for the first airport (lat, long).
+    coordinates2 : tuple
+        The coordinates for the second airport (lat, long).
 
     Returns
     ----------
     float
         The distance between the two airports in nm.
     """
-    first_airport = first_airport.upper()
-    second_airport = second_airport.upper()
-        
-    db = sqlite3.connect(db_path)
-    cursor = db.cursor()
-        
-    sql = "SELECT * FROM airports WHERE ident = ?"
-    cursor.execute(sql, (first_airport,))
-    first_airport = cursor.fetchall()
-    if first_airport == []:
-        db.close()
-        return False
-    first_airport_cords = (float(first_airport[0][4]), float(first_airport[0][5]))
 
-    cursor.execute(sql, (second_airport,))
-    second_airport = cursor.fetchall()
-    if second_airport == []:
-        db.close()
-        return False
-    second_airport_cords = (float(second_airport[0][4]), float(second_airport[0][5]))
-
-    distance = Aviation_Math.great_circle_distance(first_airport_cords[0], first_airport_cords[1], second_airport_cords[0], second_airport_cords[1])
+    distance = Aviation_Math.great_circle_distance(float(coordinates1[0]), float(coordinates1[1]), float(coordinates2[0]), float(coordinates2[1]))
 
     distance = Aviation_Math.km_to_nm(distance)
 
-    db.close()
     return distance
 
 def get_metar(icao_code: str, raw_only = True):
@@ -226,13 +205,15 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     while attempts > 0:
         if not departure_locked:
             dep = random.choice(all_airports)
+            departing_cords = (dep[1], dep[2])
             departing_airport = (dep[0], dep[3])
         
         if not arrival_locked:
             arrival = random.choice(all_airports)
+            arrival_cords = (arrival[1], arrival[2])
             arrival_airport = (arrival[0], arrival[3])
 
-        distance = airport_distance(departing_airport[1], arrival_airport[1])
+        distance = airport_distance(departing_cords, arrival_cords)
 
         if distance < min_distance or distance > max_distance:
             attempts -= 1

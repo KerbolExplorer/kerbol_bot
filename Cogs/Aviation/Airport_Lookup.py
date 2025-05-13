@@ -46,11 +46,38 @@ class Airport_Lookup(commands.Cog):
         second_airport="The icao code of the second airport"
     )
     async def airport_distance(self, interaction:discord.Interaction, first_airport: str, second_airport: str):
-        result = airport_distance(first_airport, second_airport)
-        if result is False:
-            await interaction.response.send_message("One of the two airports either doesn't exist or I don't have it in my database")
+        import sqlite3
+
+        await interaction.response.defer()
+
+        first_airport = first_airport.upper()
+        second_airport = second_airport.upper()
+
+        db = sqlite3.connect(db_path)
+        cursor = db.cursor()
+
+        sql = "SELECT ident, latitude_deg, longitude_deg FROM airports WHERE ident = ?"
+        cursor.execute(sql, (first_airport,))
+        first_airport = cursor.fetchone()
+        if first_airport == []:
+            db.close()
+            interaction.followup.send(f"Airport {first_airport} is not valid")
+            return
         else:
-            await interaction.response.send_message(f"The distance between `{first_airport.upper()}` and `{second_airport.upper()}` is {int(result)}nm")
+            first_cords = (first_airport[1], first_airport[2])
+        
+        sql = "SELECT ident, latitude_deg, longitude_deg FROM airports WHERE ident = ?"
+        cursor.execute(sql, (second_airport,))
+        second_airport = cursor.fetchone()
+        if second_airport == []:
+            db.close()
+            interaction.followup.send(f"Airport {second_airport} is not valid")
+            return
+        else:
+            second_cords = (second_airport[1], second_airport[2])
+
+        result = airport_distance(first_cords, second_cords)
+        await interaction.followup.send(f"The distance between `{first_airport[0]}` and `{second_airport[0]}` is {int(result)}nm")
 
 
 
