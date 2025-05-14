@@ -63,7 +63,6 @@ class Mission_System(commands.Cog):
             color=0xf1c40f
         )
 
-        description = ""
         mission_list = []
         counter = 0
 
