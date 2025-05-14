@@ -154,7 +154,7 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     airport_db = sqlite3.connect(db_path)
     cursor = airport_db.cursor()
 
-    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != ?"
+    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type = ?"
     cursor.execute(sql, (country, type))
     all_airports = cursor.fetchall()
 

@@ -37,9 +37,9 @@ class MissionType:
     
     def __str__(self):
         if self.requires_plane:
-            return f"Mission ID: {self.id} {self.type}, from {self.departure} to {self.arrival} ({self.distance}nm) on a {self.aircraft_type}"
+            return f"Mission ID: {self.id} {self.type}, from {self.departure[1]} to {self.arrival[1]} ({self.distance}nm) on a {self.aircraft_type}"
         else:
-            return f"Mission ID: {self.id} {self.type}, from {self.departure} to {self.arrival} ({self.distance}nm) {self.pax} passengers, {self.cargo} of cargo."
+            return f"Mission ID: {self.id} {self.type}, from {self.departure[1]} to {self.arrival[1]} ({self.distance}nm) {self.pax} passengers, {self.cargo} of cargo."
 
 class Mission_System(commands.Cog):
     def __init__(self, bot):
@@ -52,11 +52,11 @@ class Mission_System(commands.Cog):
         await interaction.response.defer()
         airport = airport_lookup(airport)
         if not airport:
-            await interaction.response.send_message("This airport is not in my database")
+            await interaction.followup.send("This airport is not in my database.")
             return
         
         mission_types = ("Cargo transport", "Passenger transport", "Ferry flight")
-        MAX_MISSIONS = 10
+        MAX_MISSIONS = 9
 
         embed = discord.Embed(
             title=f"Missions for `{airport[0][1]}`",
@@ -77,7 +77,7 @@ class Mission_System(commands.Cog):
         results = missions_cursor.fetchall()
         if results == []:
             while counter < MAX_MISSIONS:
-                flight = random_flight(country=airport[0][8], departing_airport=airport[0][1], min_distance=50, max_distance=500, type="small_airport")
+                flight = random_flight(country=airport[0][8], departing_airport=airport[0][1], min_distance=50, max_distance=300, type="small_airport")
                 if not flight:
                     continue
 
@@ -99,14 +99,14 @@ class Mission_System(commands.Cog):
                     mission_list.append(mission)
                 counter += 1
 
-                embed.add_field(name=f"{mission.id}, {mission.type}. `{mission.departure}` - `{mission.arrival}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
+                embed.add_field(name=f"{mission.id}, {mission.type}. `{mission.departure[1]}` - `{mission.arrival[1]}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
 
                 sql = f"INSERT INTO '{airport[0][1]}' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[0], mission.arrival[0], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward))
+                missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward))
         else:
             for result in results:
                 mission = MissionType(result[1], result[2], result[3], result[4], result[5], result[6], result[7])
-                embed.add_field(name=f"{mission.id}, {mission.type}. `{mission.departure}` - `{mission.arrival}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
+                embed.add_field(name=f"{mission.id}. {mission.type}. `{mission.departure[1]}` - `{mission.arrival[1]}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
 
         embed.set_footer(text="To accept a mission do S!accept_mission *mission id*")
         
