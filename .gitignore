@@ -10,3 +10,4 @@ requests.db
 test.py
 AV_databaseinit.py
 reminders.db
+missions.db

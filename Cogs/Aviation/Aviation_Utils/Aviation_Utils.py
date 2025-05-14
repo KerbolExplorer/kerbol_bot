@@ -127,7 +127,7 @@ def get_current_zulu():
     return current_time
 
 
-def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None):
+def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None, type = "small_airport"):
     """Returns a random flight
 
     Parameters
@@ -154,8 +154,8 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     airport_db = sqlite3.connect(db_path)
     cursor = airport_db.cursor()
 
-    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != 'closed'"
-    cursor.execute(sql, (country,))
+    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != ?"
+    cursor.execute(sql, (country, type))
     all_airports = cursor.fetchall()
 
     if not all_airports:
@@ -188,6 +188,7 @@ def random_flight(country:str, international:bool = False, departing_airport:str
             airport_db.close()
             return 2
 
+        departing_cords = (departing_airport[0][4], departing_airport[0][5])
         departing_airport = (departing_airport[0][3], departing_airport[0][1])
 
     if arrival_airport is not None:
@@ -197,7 +198,7 @@ def random_flight(country:str, international:bool = False, departing_airport:str
             cursor.close()
             airport_db.close()
             return 3
-
+        arrival_cords = (arrival_airport[0][4], arrival_airport[0][5])
         arrival_airport = (arrival_airport[0][3], arrival_airport[0][1])
     
     attempts = 20

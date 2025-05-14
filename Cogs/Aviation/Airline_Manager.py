@@ -7,6 +7,7 @@ import os
 
 db_airline_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airlines.db")
 db_aircraft_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
+DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
 
 class Airline_Manager(commands.Cog):
     def __init__(self, bot):
@@ -58,11 +59,20 @@ class Airline_Manager(commands.Cog):
         #TODO add a modal to confirm airline data before creation.
         sql = "INSERT INTO Airline (airlineId, airlineName, airlineICAO, homeBase, owner, money) VALUES (?, ?, ?, ?, ?, ?)"
         airline_cursor.execute(sql, (airline_id, airline_name, airline_icao.upper(), airline_homebase.upper(), airline_owner, 500000))
+
         aircraft_db = sqlite3.connect(db_aircraft_path)
-        cursor = aircraft_db.cursor()
+        aircraft_cursor = aircraft_db.cursor()
         sql = f"CREATE TABLE '{airline_id}' (type TEXT, registration TEXT, hours INTEGER, location TEXT, base TEXT)"
-        cursor.execute(sql)
+        aircraft_cursor.execute(sql)
+
+        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        mission_cursor = mission_db.cursor()
+        sql = f"CREATE TABLE '{airline_id}' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER)"
+        mission_cursor.execute(sql)
+
         await interaction.response.send_message("Airline created!")
+        mission_db.commit()
+        mission_db.close()
         airline_db.commit()
         airline_db.close()
         aircraft_db.commit()
@@ -90,9 +100,16 @@ class Airline_Manager(commands.Cog):
         sql = "DELETE FROM Airline WHERE airlineName = ?"
         airline_cursor.execute(sql, (airline_name,))
         aircraft_db = sqlite3.connect(db_aircraft_path)
-        cursor = aircraft_db.cursor()
+        aircraft_cursor = aircraft_db.cursor()
         sql = f"DROP TABLE '{airline_info[0][0]}'"
-        cursor.execute(sql)
+        aircraft_cursor.execute(sql)
+
+        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        mission_cursor = mission_db.cursor()
+        mission_cursor.execute(sql)
+
+        mission_db.commit()
+        mission_db.close()
         aircraft_db.commit()
         airline_db.commit()
         aircraft_db.close()
@@ -127,7 +144,7 @@ class Airline_Manager(commands.Cog):
         results = aircraft_cursor.fetchall()
         string = ""
         for result in results:
-            string = string.join(f"\nType:{result[0]}, Registration:{result[1]}, Flight hours:{result[2]}, Current Location:{result[3]}, Home Base:{result[4]}")
+            string += f"\nType:{result[0]}, Registration:{result[1]}, Flight hours:{result[2]}, Current Location:{result[3]}, Home Base:{result[4]}"
         fleet_embed.description = string
 
         hubs_embed = discord.Embed(color=interaction.user.accent_color, title="Airline hubs")
@@ -169,8 +186,8 @@ class Airline_Manager(commands.Cog):
                         emoji = "🌐"
                     ),
                     discord.SelectOption(
-                        label = "Schedules",
-                        description = "Shows the schedules of the airline",
+                        label = "Missions",
+                        description = "Shows active missions of the airline",
                         emoji = "🎫"
                     ),
                     discord.SelectOption(
@@ -181,7 +198,7 @@ class Airline_Manager(commands.Cog):
                 ]
             )
             async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
-                index = ["General Information", "Fleet", "Hubs", "Schedules", "Economy"].index(select.values[0])
+                index = ["General Information", "Fleet", "Hubs", "Missions", "Economy"].index(select.values[0])
                 await interaction.response.edit_message(embed=self.embeds[index], view=self)
         
         await interaction.response.send_message(view=AirlineView(embeds), embed=general_embed)
