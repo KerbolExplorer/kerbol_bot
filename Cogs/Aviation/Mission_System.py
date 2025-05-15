@@ -226,7 +226,9 @@ class Mission_System(commands.Cog):
             )
             embed.add_field(name="Passengers:", value=result[4])
             embed.add_field(name="Cargo:", value=result[5])
-            embed.add_field(name="Reward:", value=result[9])
+
+        embed.add_field(name="Reward:", value=result[9])
+        embed.set_footer(text="You can cancel a mission with S!mission_cancel id")
 
 
         class Buttons(discord.ui.View):
@@ -250,7 +252,50 @@ class Mission_System(commands.Cog):
                 return
 
 
-        await ctx.send(view=Buttons(), embed=embed)     
+        await ctx.send(view=Buttons(), embed=embed)   
+
+    @commands.command()
+    async def mission_cancel(self, ctx, mission:int):  
+        import traceback
+        try:
+            author = ctx.author.id
+            airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+            airline_cursor = airline_db.cursor()
+            sql = "SELECT airlineId FROM Airline WHERE owner = ?"
+            airline_cursor.execute(sql, (author,))
+            airline_result = airline_cursor.fetchone()
+
+            if airline_result is None:
+                await ctx.send("You do not own an airline!")
+                airline_db.close()
+                return
+
+            mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+            mission_cursor = mission_db.cursor()
+            sql = "SELECT id, airline FROM Missions WHERE id = ?"
+            mission_cursor.execute(sql, (mission,))
+            result = mission_cursor.fetchone()
+
+            if result[1] != airline_result[0]:
+                await ctx.send("You have not accepted this mission!")
+                airline_db.close()
+                mission_db.close()
+                return
+
+            if result is None:
+                await ctx.send("No missions exists with this id!")
+                airline_db.close()
+                mission_db.close()
+                return
+
+            sql = "UPDATE Missions SET airline = NULL WHERE id = ?"
+            mission_cursor.execute(sql, (mission,))
+            mission_db.commit()
+            mission_db.close()
+            airline_db.close()
+            await ctx.send(f"Successfully cancelled mission with id: {mission}")
+        except Exception as e:
+            traceback.print_exc()
 
 
 async def setup(bot):
