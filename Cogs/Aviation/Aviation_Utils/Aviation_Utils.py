@@ -126,6 +126,12 @@ def get_current_zulu():
     current_time = int(current_time.strftime("%H%M"))
     return current_time
 
+def valid_icao(airport:str):
+    if len(airport) > 4:
+        return False
+    else:
+        return True
+
 
 def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None, type = "small_airport"):
     """Returns a random flight
@@ -213,6 +219,15 @@ def random_flight(country:str, international:bool = False, departing_airport:str
             arrival = random.choice(all_airports)
             arrival_cords = (arrival[1], arrival[2])
             arrival_airport = (arrival[0], arrival[3])
+
+        if valid_icao(departing_airport[1]) == False:
+            attempts += 1
+            total_attempts += 1
+            continue
+        if valid_icao(arrival_airport[1]) == False:
+            attempts += 1
+            total_attempts += 1
+            continue
 
         distance = airport_distance(departing_cords, arrival_cords)
 

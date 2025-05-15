@@ -8,7 +8,7 @@ import os
 
 DB_AIRLINE_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airlines.db")
 DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
-DB_AIRLINE_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
+DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
 DB_AIRPOR_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airport_missions.db")
 
 class MissionType:
@@ -45,6 +45,17 @@ class Mission_System(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        db = sqlite3.connect(DB_MISSIONS_PATH)
+        cursor = db.cursor()
+
+        sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='Missions'"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        if not result:
+            sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER)"
+            cursor.execute(sql)
+            db.commit()
+            db.close()
     
     @app_commands.command(name="mission_board", description="Shows the available missions at a given airport")
     @app_commands.describe(airport="ICAO code of the airport you want to check")
@@ -66,13 +77,11 @@ class Mission_System(commands.Cog):
         mission_list = []
         counter = 0
 
-        mission_db = sqlite3.connect(DB_AIRLINE_MISSIONS_PATH)
+        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
         missions_cursor = mission_db.cursor()
-        sql = f"CREATE TABLE IF NOT EXISTS '{airport[0][1]}' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER)"
-        missions_cursor.execute(sql)
 
-        sql = f"SELECT * FROM '{airport[0][1]}'"
-        missions_cursor.execute(sql)
+        sql = f"SELECT * FROM 'Missions' WHERE departure = ?"
+        missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
         if results == []:
             while counter < MAX_MISSIONS:
@@ -100,12 +109,12 @@ class Mission_System(commands.Cog):
 
                 embed.add_field(name=f"{mission.id}, {mission.type}. `{mission.departure[1]}` - `{mission.arrival[1]}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
 
-                sql = f"INSERT INTO '{airport[0][1]}' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                sql = f"INSERT INTO 'Missions' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward))
         else:
             for result in results:
                 mission = MissionType(result[1], result[2], result[3], result[4], result[5], result[6], result[7])
-                embed.add_field(name=f"{mission.id}. {mission.type}. `{mission.departure[1]}` - `{mission.arrival[1]}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
+                embed.add_field(name=f"{mission.id}. {mission.type}. `{mission.departure}` - `{mission.arrival}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
 
         embed.set_footer(text="To accept a mission do S!accept_mission *mission id*")
         
