@@ -10,7 +10,6 @@ import os
 DB_AIRLINE_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airlines.db")
 DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
 DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
-DB_AIRPOR_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airport_missions.db")
 
 class MissionType:
     _id_counter = 0
@@ -184,6 +183,75 @@ class Mission_System(commands.Cog):
                 await interaction.response.edit_message(embed=self.embeds[index], view=self)
 
         await interaction.followup.send(view=MissionView(embeds), embed=departure_embed)
+    
+    @commands.command()
+    async def mission(self, ctx, mission:int):
+        author = ctx.author.id
+        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_cursor = airline_db.cursor()
+        sql = "SELECT airlineId FROM Airline WHERE owner = ?"
+        airline_cursor.execute(sql, (author,))
+        airline_result = airline_cursor.fetchone()
+
+        if airline_result is None:
+            await ctx.send("You do not own an airline!")
+            airline_db.close()
+            return
+
+        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        mission_cursor = mission_db.cursor()
+        sql = "SELECT * FROM Missions WHERE id = ?"
+        mission_cursor.execute(sql, (mission,))
+        result = mission_cursor.fetchone()
+
+        if result is None:
+            await ctx.send("No missions exists with this id!")
+            airline_db.close()
+            mission_db.close()
+            return
+        
+        if result[7]:
+            embed = discord.Embed(
+            title=f"{result[1]} from `{result[2]}` to `{result[3]}` ({result[6]})",
+            description="Ferry flights do not require your own plane",
+            color=0xf1c40f
+            )
+            embed.add_field(name="Aircraft:", value=result[8])
+            embed.add_field(name="Reward:", value=result[9])
+        else:    
+            embed = discord.Embed(
+            title=f"{result[1]} from `{result[2]}` to `{result[3]}`",
+            description="Cargo/Pax can be hauled in several flights if it doesn't fit on the plane in one go",
+            color=0xf1c40f
+            )
+            embed.add_field(name="Passengers:", value=result[4])
+            embed.add_field(name="Cargo:", value=result[5])
+            embed.add_field(name="Reward:", value=result[9])
+
+
+        class Buttons(discord.ui.View):
+            def __init__(self, *, timeout = 180):
+                super().__init__(timeout=timeout)
+            @discord.ui.button(label="✅", style=discord.ButtonStyle.green)
+            async def confirmed(self, interaction:discord.Interaction, button:discord.ui.Button):
+                sql = "UPDATE Missions SET airline = ? WHERE id = ?"
+                mission_cursor.execute(sql, (airline_result[0], mission))
+                await interaction.response.send_message("You have accepted the mission, good luck!", ephemeral=True)
+                mission_db.commit()
+                mission_db.close()
+                airline_db.close()
+                return
+
+            @discord.ui.button(label="❌", style=discord.ButtonStyle.red)
+            async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                mission_db.close()
+                airline_db.close()
+                await interaction.response.send_message("You have not accepted the mission.", ephemeral=True)
+                return
+
+
+        await ctx.send(view=Buttons(), embed=embed)     
+
 
 async def setup(bot):
     await bot.add_cog(Mission_System(bot))

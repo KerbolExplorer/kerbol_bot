@@ -150,7 +150,7 @@ class Airline_Manager(commands.Cog):
         hubs_embed = discord.Embed(color=interaction.user.accent_color, title="Airline hubs")
         hubs_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
 
-        schedules_embed = discord.Embed(color=interaction.user.accent_color, title="Airline Schedules")
+        schedules_embed = discord.Embed(color=interaction.user.accent_color, title="Missions")
         schedules_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
 
         economy_embed = discord.Embed(color=interaction.user.accent_color, title="Airline Economy")

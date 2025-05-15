@@ -125,6 +125,9 @@ class Aircraft_Manager(commands.Cog):
         embed.set_footer(text="Plane will be delivered to it's home base")
 
         await interaction.followup.send(embed=embed, view=Buttons())
+    
+    async def load_aircraft(self):  #This allows you to load the aircraft with cargo, you should also be allowed to partially load cargo
+        pass
 
 
 async def setup(bot):
