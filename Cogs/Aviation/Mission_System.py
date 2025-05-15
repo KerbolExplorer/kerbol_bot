@@ -49,7 +49,7 @@ class Mission_System(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER, createdAt INTEGER)"
+            sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER, createdAt INTEGER)"
             cursor.execute(sql)
         
         now = int(time.time())
@@ -117,17 +117,8 @@ class Mission_System(commands.Cog):
                         mission_list.append(mission)
                     counter += 1
 
-                    #Select the airline id, this is done by grabbing the newest airline's id and adding it a 1
-                    sql = "SELECT * FROM Missions ORDER BY id DESC LIMIT 1"
-                    missions_cursor.execute(sql)
-                    mission_id = missions_cursor.fetchall()
-                    if mission_id == []:
-                        mission_id = 0
-                    else:
-                        mission_id = (mission_id[0][0] + 1) 
-
-                    sql = "INSERT INTO 'Missions' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                    missions_cursor.execute(sql, (mission_id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, int(time.time())))
+                    sql = "INSERT INTO 'Missions' (type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    missions_cursor.execute(sql, (mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, int(time.time())))
 
         departure_embed = discord.Embed(
             title=f"Missions from `{airport[0][1]}`",
@@ -142,21 +133,26 @@ class Mission_System(commands.Cog):
         generate_missions(airport[0][1], airport[0][8], "From")
         generate_missions(airport[0][1], airport[0][8], "To")
 
-        sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward FROM Missions WHERE departure = ?"
+        sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward, airline FROM Missions WHERE departure = ?"
         missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
         for result in results:
-            departure_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
+            if result[8] is None:
+                departure_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
+            else:
+                departure_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}` ✈️", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
 
-        sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward FROM Missions WHERE arrival = ?"
+        sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward, airline FROM Missions WHERE arrival = ?"
         missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
         for result in results:
-            arrival_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
-        
+            if result[8] is None:
+                arrival_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
+            else:
+                arrival_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}` ✈️", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
 
-        arrival_embed.set_footer(text="To accept a mission do S!mission *mission id*")   
-        departure_embed.set_footer(text="To accept a mission do S!mission *mission id*")
+        arrival_embed.set_footer(text="To accept a mission do S!mission *mission id*. A ✈️ besides a mission means that someone has already accepted it.")   
+        departure_embed.set_footer(text="To accept a mission do S!mission *mission id*. A ✈️ besides a mission means that someone has already accepted it.")
         mission_db.commit()
         mission_db.close()
 
@@ -261,6 +257,52 @@ class Mission_System(commands.Cog):
         await ctx.send(view=Buttons(), embed=embed)   
 
     @commands.command()
+    async def mission_complete(self, ctx, mission:int):
+        author = ctx.author.id
+        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_cursor = airline_db.cursor()
+        sql = "SELECT airlineId, money FROM Airline WHERE owner = ?"
+        airline_cursor.execute(sql, (author,))
+        airline_result = airline_cursor.fetchone()
+
+        if airline_result is None:
+            await ctx.send("You do not own an airline!")
+            airline_db.close()
+            return
+        
+        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        mission_cursor = mission_db.cursor()
+        sql = "SELECT id, airline, reward FROM Missions WHERE id = ?"
+        mission_cursor.execute(sql, (mission,))
+        result = mission_cursor.fetchone()
+
+        if result[1] != airline_result[0]:
+            await ctx.send("You have not accepted this mission!")
+            airline_db.close()
+            mission_db.close()
+            return
+        
+        if result is None:
+            await ctx.send("No missions exists with this id!")
+            airline_db.close()
+            mission_db.close()
+            return
+        
+        new_total = airline_result[1] + result[2]
+
+        sql = "UPDATE Airline SET money = ? WHERE airlineId = ?"
+        airline_cursor.execute(sql, (new_total, airline_result[0]))
+
+        sql = "DELETE FROM Missions WHERE id = ?"
+        mission_cursor.execute(sql, (result[0],))
+
+        await ctx.send("The mission has been completed and the reward has been added to your account")
+        airline_db.commit()
+        mission_db.commit()
+        airline_db.close()
+        mission_db.close()
+
+    @commands.command()
     async def mission_cancel(self, ctx, mission:int):  
         author = ctx.author.id
         airline_db = sqlite3.connect(DB_AIRLINE_PATH)
@@ -268,7 +310,7 @@ class Mission_System(commands.Cog):
         sql = "SELECT airlineId FROM Airline WHERE owner = ?"
         airline_cursor.execute(sql, (author,))
         airline_result = airline_cursor.fetchone()
-        
+
         if airline_result is None:
             await ctx.send("You do not own an airline!")
             airline_db.close()
@@ -298,6 +340,7 @@ class Mission_System(commands.Cog):
         mission_db.close()
         airline_db.close()
         await ctx.message.add_reaction("✅")
+    
 
 
 async def setup(bot):
