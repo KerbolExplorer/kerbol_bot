@@ -17,14 +17,14 @@ class Aircraft_Manager(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()  
         if not result:
-            sql = f"CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT)" #if the database doesn't have any table we create it
+            sql = f"CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT, size TEXT)" #if the database doesn't have any table we create it
             cursor.execute(sql)
         db.commit()
         db.close()
 
 
     class Aircraft:
-        def __init__(self, registration, type, range, pax_capacity, cargo_capacity, motw, price, owner, home_base, cruise_speed, airfield_type):
+        def __init__(self, registration, type, range, pax_capacity, cargo_capacity, motw, price, owner, home_base, cruise_speed, airfield_type, size):
             self.registration = registration
             self.type = type   
             self.range = range
@@ -36,6 +36,7 @@ class Aircraft_Manager(commands.Cog):
             self.airfield_type = airfield_type
             self.owner = owner
             self.home_base = home_base
+            self.size = size
 
     @app_commands.command(name="buy-aircraft", description="Buy a brand new aircraft for your airline")
     @app_commands.describe(

@@ -127,7 +127,19 @@ def get_current_zulu():
     return current_time
 
 def valid_icao(airport:str):
-    """Checks if an airport has a valid icao code ()"""
+    """Checks if an airport has a valid icao code (At or below 4 letters, so stuff like GCLP or L53).
+
+
+    Parameters
+    ----------
+    String
+        The icao code we want to check.
+    
+    Returns
+    ----------
+    Boolean
+        True if it's valid, False if it's not.
+    """
     if len(airport) > 4:
         return False
     else:

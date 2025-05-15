@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+import time
 from .Aviation_Utils.Aviation_Utils import airport_lookup, airport_distance, random_flight
 import sqlite3
 import random
@@ -52,8 +53,13 @@ class Mission_System(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER)"
+            sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER, createdAt INTEGER)"
             cursor.execute(sql)
+        
+        now = int(time.time())
+        MISSION_EXPIRATION = 86400
+        sql = "DELETE FROM Missions WHERE ? - createdAt > ?"
+        cursor.execute(sql, (now, MISSION_EXPIRATION))
         db.commit()
         db.close()
     
@@ -115,8 +121,8 @@ class Mission_System(commands.Cog):
                         mission_list.append(mission)
                     counter += 1
 
-                    sql = "INSERT INTO 'Missions' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                    missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward))
+                    sql = "INSERT INTO 'Missions' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, int(time.time())))
 
         departure_embed = discord.Embed(
             title=f"Missions from `{airport[0][1]}`",
@@ -144,8 +150,8 @@ class Mission_System(commands.Cog):
             arrival_embed.add_field(name=f"{result[0]}, {result[1]}. `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
         
 
-        arrival_embed.set_footer(text="To accept a mission do S!accept_mission *mission id*")   
-        departure_embed.set_footer(text="To accept a mission do S!accept_mission *mission id*")
+        arrival_embed.set_footer(text="To accept a mission do S!mission *mission id*")   
+        departure_embed.set_footer(text="To accept a mission do S!mission *mission id*")
         mission_db.commit()
         mission_db.close()
 
