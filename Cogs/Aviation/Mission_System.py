@@ -12,10 +12,7 @@ DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases",
 DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
 
 class MissionType:
-    _id_counter = 0
     def __init__(self, type, departure, arrival, pax, cargo, distance, requires_plane, aircraft_type = None):
-        MissionType._id_counter += 1
-        self.id = MissionType._id_counter
         self.type = type
         self.departure = departure
         self.arrival = arrival
@@ -77,7 +74,7 @@ class Mission_System(commands.Cog):
         missions_cursor = mission_db.cursor()
 
         def generate_missions(airport, country, direction):
-            mission_types = ("Cargo transport", "Passenger transport", "Ferry flight")
+            mission_types = ("Cargo transport", "Passenger transport", "Ferry flight\n")
             mission_list = []
 
             if direction == "From":
@@ -120,8 +117,17 @@ class Mission_System(commands.Cog):
                         mission_list.append(mission)
                     counter += 1
 
+                    #Select the airline id, this is done by grabbing the newest airline's id and adding it a 1
+                    sql = "SELECT * FROM Missions ORDER BY id DESC LIMIT 1"
+                    missions_cursor.execute(sql)
+                    mission_id = missions_cursor.fetchall()
+                    if mission_id == []:
+                        mission_id = 0
+                    else:
+                        mission_id = (mission_id[0][0] + 1) 
+
                     sql = "INSERT INTO 'Missions' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                    missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, int(time.time())))
+                    missions_cursor.execute(sql, (mission_id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, int(time.time())))
 
         departure_embed = discord.Embed(
             title=f"Missions from `{airport[0][1]}`",
@@ -140,13 +146,13 @@ class Mission_System(commands.Cog):
         missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
         for result in results:
-            departure_embed.add_field(name=f"{result[0]}, {result[1]}. `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
+            departure_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
 
         sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward FROM Missions WHERE arrival = ?"
         missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
         for result in results:
-            arrival_embed.add_field(name=f"{result[0]}, {result[1]}. `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
+            arrival_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
         
 
         arrival_embed.set_footer(text="To accept a mission do S!mission *mission id*")   
