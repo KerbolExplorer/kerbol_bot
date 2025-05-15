@@ -9,6 +9,7 @@ load_dotenv()
 
 ADMIN = os.getenv("ADMIN")
 DB_AIRCRAFT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "aircraft.db"))
+DB_AIRPORT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "airport.db"))
 
 class Dev_commands(commands.Cog):
     def __init__(self, bot):
@@ -104,6 +105,20 @@ class Dev_commands(commands.Cog):
             db.close()
         else:
             await ctx.message.add_reaction("❌")   
+    
+    @commands.command()
+    async def add_airport(self, ctx, ident, type, name, latitude, longitude, elevation, continent, country, location):
+        if self.verify_messenger(ctx.author.id) == True:
+            db = sqlite3.connect(DB_AIRPORT_PATH)
+            cursor = db.cursor()
+            sql = "INSERT INTO Airports (ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, municipality)"
+            cursor.execute(sql, (ident, type, name, latitude, longitude, elevation, continent, country, location))
+            await ctx.message.add_reaction("✅")
+            db.commit()
+            db.close()
+        else:
+            await ctx.message.add_reaction("❌")
+
                 
 
 async def setup(bot):

@@ -156,7 +156,7 @@ class Airline_Manager(commands.Cog):
         economy_embed = discord.Embed(color=interaction.user.accent_color, title="Airline Economy")
         economy_embed.add_field(name="Money", value=airline_info[0][5])
         
-        embeds = [general_embed, fleet_embed, hubs_embed, schedules_embed, economy_embed]
+        embeds = (general_embed, fleet_embed, hubs_embed, schedules_embed, economy_embed)
 
         
 

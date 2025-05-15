@@ -54,8 +54,8 @@ class Mission_System(commands.Cog):
         if not result:
             sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER)"
             cursor.execute(sql)
-            db.commit()
-            db.close()
+        db.commit()
+        db.close()
     
     @app_commands.command(name="mission_board", description="Shows the available missions at a given airport")
     @app_commands.describe(airport="ICAO code of the airport you want to check")
@@ -66,65 +66,118 @@ class Mission_System(commands.Cog):
             await interaction.followup.send("This airport is not in my database.")
             return
         
-        mission_types = ("Cargo transport", "Passenger transport", "Ferry flight")
         MAX_MISSIONS = 9
-
-        embed = discord.Embed(
-            title=f"Missions for `{airport[0][1]}`",
-            color=0xf1c40f
-        )
-
-        mission_list = []
-        counter = 0
 
         mission_db = sqlite3.connect(DB_MISSIONS_PATH)
         missions_cursor = mission_db.cursor()
 
-        sql = f"SELECT * FROM 'Missions' WHERE departure = ?"
+        def generate_missions(airport, country, direction):
+            mission_types = ("Cargo transport", "Passenger transport", "Ferry flight")
+            mission_list = []
+
+            if direction == "From":
+                sql = "SELECT * FROM 'Missions' WHERE departure = ?"
+            else:
+                sql = "SELECT * FROM 'Missions' WHERE arrival = ?"
+            missions_cursor.execute(sql, (airport,))
+            results = missions_cursor.fetchall()
+
+            number_of_missions = len(results)
+            counter = number_of_missions
+            MAX_ATTEMPTS = 30
+            attempts = 0
+            if number_of_missions < MAX_MISSIONS:
+                while counter < MAX_MISSIONS and attempts < MAX_ATTEMPTS:
+                    attempts += 1
+                    if direction == "From":
+                        flight = random_flight(country=country, departing_airport=airport, min_distance=50, max_distance=300, type="small_airport")
+                    else:
+                        flight = random_flight(country=country, arrival_airport=airport, min_distance=50, max_distance=300, type="small_airport")
+                    if not flight:
+                        counter += 1
+                        continue
+
+                    mission = random.choice(mission_types)
+                    if mission == "Cargo transport":
+                        cargo = random.randint(15, 200)
+                        distance = flight[2]
+                        mission = MissionType(mission, flight[0], flight[1], 0, cargo, distance, False)
+                        mission_list.append(mission)
+                    elif mission == "Passenger transport":
+                        pax = random.randint(1, 6)
+                        distance = flight[2]
+                        mission = MissionType(mission, flight[0], flight[1], pax, 0, distance, False)
+                        mission_list.append(mission)
+                    else:
+                        distance = flight[2]
+                        plane_type = "C172"
+                        mission = MissionType(mission, flight[0], flight[1], 0, 0, distance, True, plane_type)
+                        mission_list.append(mission)
+                    counter += 1
+
+                    sql = "INSERT INTO 'Missions' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward))
+
+        departure_embed = discord.Embed(
+            title=f"Missions from `{airport[0][1]}`",
+            color=0xf1c40f
+        )
+
+        arrival_embed = discord.Embed(
+            title=f"Missions to `{airport[0][1]}`",
+            color=0xf1c40f
+        )
+
+        generate_missions(airport[0][1], airport[0][8], "From")
+        generate_missions(airport[0][1], airport[0][8], "To")
+
+        sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward FROM Missions WHERE departure = ?"
         missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
-        if results == []:
-            while counter < MAX_MISSIONS:
-                flight = random_flight(country=airport[0][8], departing_airport=airport[0][1], min_distance=50, max_distance=300, type="small_airport")
-                if not flight:
-                    continue
+        for result in results:
+            departure_embed.add_field(name=f"{result[0]}, {result[1]}. `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
 
-                mission = random.choice(mission_types)
-                if mission == "Cargo transport":
-                    cargo = random.randint(15, 200)
-                    distance = flight[2]
-                    mission = MissionType(mission, flight[0], flight[1], 0, cargo, distance, False)
-                    mission_list.append(mission)
-                elif mission == "Passenger transport":
-                    pax = random.randint(1, 6)
-                    distance = flight[2]
-                    mission = MissionType(mission, flight[0], flight[1], pax, 0, distance, False)
-                    mission_list.append(mission)
-                else:
-                    distance = flight[2]
-                    plane_type = "C172"
-                    mission = MissionType(mission, flight[0], flight[1], 0, 0, distance, True, plane_type)
-                    mission_list.append(mission)
-                counter += 1
-
-                embed.add_field(name=f"{mission.id}, {mission.type}. `{mission.departure[1]}` - `{mission.arrival[1]}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
-
-                sql = f"INSERT INTO 'Missions' (id, type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                missions_cursor.execute(sql, (mission.id, mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward))
-        else:
-            for result in results:
-                mission = MissionType(result[1], result[2], result[3], result[4], result[5], result[6], result[7])
-                embed.add_field(name=f"{mission.id}. {mission.type}. `{mission.departure}` - `{mission.arrival}`", value=f"{mission.pax} passengers, {mission.cargo} cargo. {mission.distance}nm. Reward:{mission.reward}")
-
-        embed.set_footer(text="To accept a mission do S!accept_mission *mission id*")
+        sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward FROM Missions WHERE arrival = ?"
+        missions_cursor.execute(sql, (airport[0][1],))
+        results = missions_cursor.fetchall()
+        for result in results:
+            arrival_embed.add_field(name=f"{result[0]}, {result[1]}. `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
         
+
+        arrival_embed.set_footer(text="To accept a mission do S!accept_mission *mission id*")   
+        departure_embed.set_footer(text="To accept a mission do S!accept_mission *mission id*")
         mission_db.commit()
         mission_db.close()
 
-        await interaction.followup.send(embed=embed)
+        embeds = (departure_embed, arrival_embed)
 
+        class MissionView(discord.ui.View):
+            def __init__(self, embeds):
+                super().__init__()
+                self.embeds = embeds
+            
+            @discord.ui.select(
+                placeholder="Select an option:",
+                min_values= 1,
+                max_values= 1,
+                options = [
+                    discord.SelectOption(
+                        label="From",
+                        description ="Shows the missions from this airport",
+                        emoji ="↗️"
+                    ),
+                    discord.SelectOption(
+                        label = "To",
+                        description = "Shows the missions to this airport",
+                        emoji = "↘️"
+                    )
+                ]
+            )
+            async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+                index = ["From", "To"].index(select.values[0])
+                await interaction.response.edit_message(embed=self.embeds[index], view=self)
 
-
+        await interaction.followup.send(view=MissionView(embeds), embed=departure_embed)
 
 async def setup(bot):
     await bot.add_cog(Mission_System(bot))
