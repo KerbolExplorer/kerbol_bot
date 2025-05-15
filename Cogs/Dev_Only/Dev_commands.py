@@ -9,7 +9,7 @@ load_dotenv()
 
 ADMIN = os.getenv("ADMIN")
 DB_AIRCRAFT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "aircraft.db"))
-DB_AIRPORT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "airport.db"))
+DB_AIRPORT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "airports.db"))
 
 class Dev_commands(commands.Cog):
     def __init__(self, bot):
@@ -107,19 +107,33 @@ class Dev_commands(commands.Cog):
             await ctx.message.add_reaction("❌")   
     
     @commands.command()
-    async def add_airport(self, ctx, ident, type, name, latitude, longitude, elevation, continent, country, location):
+    async def add_airport(self, ctx, ident, type, name, latitude, longitude, elevation:int, continent, country, location, region, scheduled_service):
         if self.verify_messenger(ctx.author.id) == True:
             db = sqlite3.connect(DB_AIRPORT_PATH)
             cursor = db.cursor()
-            sql = "INSERT INTO Airports (ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, municipality)"
-            cursor.execute(sql, (ident, type, name, latitude, longitude, elevation, continent, country, location))
+            sql = "INSERT INTO airports (ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, municipality, iso_region, scheduled_service) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            cursor.execute(sql, (ident, type, name, latitude, longitude, elevation, continent, country, location, region, scheduled_service))
             await ctx.message.add_reaction("✅")
             db.commit()
             db.close()
         else:
             await ctx.message.add_reaction("❌")
-
-                
+    
+    @commands.command()
+    async def edit_airport(self, ctx, ident, new_ident, type, name, latitude, longitude, elevation:int, continent, country, location, region, scheduled_service):
+        try:
+            if self.verify_messenger(ctx.author.id) == True:
+                db = sqlite3.connect(DB_AIRPORT_PATH)
+                cursor = db.cursor()
+                sql = "UPDATE airports SET ident = ?, type = ?, name = ?, latitude_deg = ?, longitude_deg = ?, elevation_ft = ?, continent = ?, iso_country = ?, municipality = ?, iso_region = ?, scheduled_service = ? WHERE ident = ?"
+                cursor.execute(sql, (new_ident, type, name, latitude, longitude, elevation, continent, country, location, region, scheduled_service, ident))
+                await ctx.message.add_reaction("✅")
+                db.commit()
+                db.close()
+            else:
+                await ctx.message.add_reaction("❌")    
+        except Exception as e:
+            print(e)    
 
 async def setup(bot):
     await bot.add_cog(Dev_commands(bot))

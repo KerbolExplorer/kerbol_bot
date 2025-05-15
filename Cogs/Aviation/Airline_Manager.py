@@ -165,7 +165,7 @@ class Airline_Manager(commands.Cog):
         for result in results:
             string += f"\nID:{result[0]}, Type:{result[1]}, From:{result[2]}, To:{result[3]}, reward:{result[4]}"
         if len(string) == 0:
-            string = "No missions"
+            string = "No missions, go accept some!"
         schedules_embed.description = string
 
 
@@ -220,6 +220,8 @@ class Airline_Manager(commands.Cog):
         await interaction.response.send_message(view=AirlineView(embeds), embed=general_embed)
     
         airline_db.close()
+        aircraft_db.close()
+        missions_db.close()
 
 async def setup(bot):
     await bot.add_cog(Airline_Manager(bot))
