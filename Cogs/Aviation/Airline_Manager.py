@@ -136,6 +136,7 @@ class Airline_Manager(commands.Cog):
         general_embed.add_field(name="Owner:", value= await self.bot.fetch_user(airline_info[0][4]))
         general_embed.set_footer(text=f"Airline ID is: {airline_info[0][0]}")
 
+
         fleet_embed = discord.Embed(color=interaction.user.accent_color, title="Airline fleet")
         aircraft_db = sqlite3.connect(db_aircraft_path)
         aircraft_cursor = aircraft_db.cursor()
@@ -147,11 +148,26 @@ class Airline_Manager(commands.Cog):
             string += f"\nType:{result[0]}, Registration:{result[1]}, Flight hours:{result[2]}, Current Location:{result[3]}, Home Base:{result[4]}"
         fleet_embed.description = string
 
+
         hubs_embed = discord.Embed(color=interaction.user.accent_color, title="Airline hubs")
         hubs_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
 
+
         schedules_embed = discord.Embed(color=interaction.user.accent_color, title="Missions")
-        schedules_embed.add_field(name="NOT IMPLEMENTED", value="Coming soon")
+        missions_db = sqlite3.connect(DB_MISSIONS_PATH)
+        missions_cursor = missions_db.cursor()
+
+        sql = "SELECT id, type, departure, arrival, reward FROM Missions WHERE airline = ?"
+        missions_cursor.execute(sql, (airline_info[0][0],))
+        results = missions_cursor.fetchall()
+        
+        string = ""
+        for result in results:
+            string += f"\nID:{result[0]}, Type:{result[1]}, From:{result[2]}, To:{result[3]}, reward:{result[4]}"
+        if len(string) == 0:
+            string = "No missions"
+        schedules_embed.description = string
+
 
         economy_embed = discord.Embed(color=interaction.user.accent_color, title="Airline Economy")
         economy_embed.add_field(name="Money", value=airline_info[0][5])
@@ -160,7 +176,7 @@ class Airline_Manager(commands.Cog):
 
         
 
-        class AirlineView(discord.ui.View):         # select 0 = General, select 1 = Fleet, select 2 = hubs, select 3 = schedules, select 4 = Economy
+        class AirlineView(discord.ui.View):         # select 0 = General, select 1 = Fleet, select 2 = hubs, select 3 = missions, select 4 = Economy
             def __init__(self, embeds):
                 super().__init__()
                 self.embeds = embeds
