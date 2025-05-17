@@ -54,7 +54,7 @@ def km_to_nm(kilometers):
     return kilometers * 0.5399568035
 
 def hpa_to_inhg(hpa_value):
-    """Takes a value in hpa and returns it in ingh.
+    """Takes a value in hpa and returns it in inhg.
 
     Parameters
     ----------
@@ -66,4 +66,8 @@ def hpa_to_inhg(hpa_value):
         The value converted to inhg rounded to 2 decimals
     """
     result = hpa_value * 0.02953
-    return f"{result:.2f}"
+    return round(result, 2)
+
+def inhg_to_hpa(inhg_value):
+    result = inhg_value * 33.865
+    return round(result, 2)

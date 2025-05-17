@@ -4,6 +4,7 @@ from discord.ext import commands
 import sqlite3
 import os
 import asyncio
+import sqlite3
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -16,6 +17,7 @@ class Dev_commands(commands.Cog):
         self.bot = bot
 
     def verify_messenger(self, id):
+        if int(id) != int(ADMIN):
         if int(id) != int(ADMIN):
             return False
         else:
