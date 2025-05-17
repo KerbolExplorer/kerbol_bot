@@ -3,17 +3,20 @@ from discord import app_commands
 from discord.ext import commands
 import os
 import asyncio
+import sqlite3
 from dotenv import load_dotenv
 load_dotenv()
 
-admin = os.getenv("ADMIN")
+ADMIN = os.getenv("ADMIN")
+
+DB_AIRPORT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "airports.db"))
 
 class Dev_commands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
     def verify_messenger(self, id):
-        if int(id) != int(admin):
+        if int(id) != int(ADMIN):
             return False
         else:
             return True
@@ -61,7 +64,37 @@ class Dev_commands(commands.Cog):
                 return
         else:
             return
-        
+
+        #S!add_airport KAVX small_airport "Catalina Airport" 33.404 -118.414878 1541 NA US Avalon US-CA no
+    @commands.command()
+    async def add_airport(self, ctx, ident, type, name, latitude, longitude, elevation:int, continent, country, location, region, scheduled_service):
+        if self.verify_messenger(ctx.author.id) == True:
+            db = sqlite3.connect(DB_AIRPORT_PATH)
+            cursor = db.cursor()
+            sql = "INSERT INTO airports (ident, type, name, latitude_deg, longitude_deg, elevation_ft, continent, iso_country, municipality, iso_region, scheduled_service) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            cursor.execute(sql, (ident, type, name, latitude, longitude, elevation, continent, country, location, region, scheduled_service))
+            await ctx.message.add_reaction("✅")
+            db.commit()
+            db.close()
+        else:
+            await ctx.message.add_reaction("❌")
+
+        #S!edit_airport KVAX KAVX small_airport "Catalina Airport" 33.404 -118.414878 1541 NA US Avalon US-CA no
+    @commands.command()
+    async def edit_airport(self, ctx, ident, new_ident, type, name, latitude, longitude, elevation:int, continent, country, location, region, scheduled_service):
+        try:
+            if self.verify_messenger(ctx.author.id) == True:
+                db = sqlite3.connect(DB_AIRPORT_PATH)
+                cursor = db.cursor()
+                sql = "UPDATE airports SET ident = ?, type = ?, name = ?, latitude_deg = ?, longitude_deg = ?, elevation_ft = ?, continent = ?, iso_country = ?, municipality = ?, iso_region = ?, scheduled_service = ? WHERE ident = ?"
+                cursor.execute(sql, (new_ident, type, name, latitude, longitude, elevation, continent, country, location, region, scheduled_service, ident))
+                await ctx.message.add_reaction("✅")
+                db.commit()
+                db.close()
+            else:
+                await ctx.message.add_reaction("❌")    
+        except Exception as e:
+            print(e)    
 
                 
 
