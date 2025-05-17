@@ -6,7 +6,7 @@ import asyncio
 import sqlite3
 import os
 from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu
-from .Aviation_Utils.Aviation_Math import hpa_to_inhg
+from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
 
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
 
@@ -193,6 +193,18 @@ class Metar(commands.Cog):
         current_time = get_current_zulu()
         current_time = str(current_time) + "Z"
         await interaction.response.send_message(f"The current zulu time is: `{current_time}`")
+    
+    @app_commands.command(name="baro-converter", description="Converts an altimeter value to it's equivalent in hpa or inhg")
+    @app_commands.describe(value="The value we want to convert")
+    async def baro_converter(self, interaction:discord.Interaction, value:float):
+        if value > 1000: #value is in hpa
+            converted = hpa_to_inhg(value)
+            await interaction.response.send_message(f"{value:.0f} hpa in inhg would be: {converted} inhg")
+        else:
+            converted = inhg_to_hpa(value)
+            await interaction.response.send_message(f"{value:.2f} in inhg would be: {int(converted)} hpa")
+
+
             
 
     @tasks.loop(minutes=1)
