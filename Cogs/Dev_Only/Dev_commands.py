@@ -18,7 +18,6 @@ class Dev_commands(commands.Cog):
 
     def verify_messenger(self, id):
         if int(id) != int(ADMIN):
-        if int(id) != int(ADMIN):
             return False
         else:
             return True
