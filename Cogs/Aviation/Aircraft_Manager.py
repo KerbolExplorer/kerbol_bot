@@ -13,18 +13,26 @@ class Aircraft_Manager(commands.Cog):
 
         db = sqlite3.connect(DB_AIRCRAFT_PATH)
         cursor = db.cursor()
-        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='Aircraft'" #check if the database has a table
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='Aircraft'" #check if plane template table exists
         cursor.execute(sql)
         result = cursor.fetchall()  
         if not result:
-            sql = f"CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT, size TEXT)" #if the database doesn't have any table we create it
+            sql = "CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT, size TEXT)" #if the database doesn't have any table we create it
             cursor.execute(sql)
+
+        sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='AircraftList'"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        if not result:
+            sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER location TEXT, homeBase TEXT)"
+            cursor.execute(sql)
+        
         db.commit()
         db.close()
 
 
     class Aircraft:
-        def __init__(self, registration, type, range, pax_capacity, cargo_capacity, motw, price, owner, home_base, cruise_speed, airfield_type, size):
+        def __init__(self, registration, type, range, pax_capacity, cargo_capacity, motw, price, owner, home_base, cruise_speed, airfield_type, size, id):
             self.registration = registration
             self.type = type   
             self.range = range
@@ -37,6 +45,7 @@ class Aircraft_Manager(commands.Cog):
             self.owner = owner
             self.home_base = home_base
             self.size = size
+            self.id = id
 
     @app_commands.command(name="buy-aircraft", description="Buy a brand new aircraft for your airline")
     @app_commands.describe(
@@ -60,7 +69,7 @@ class Aircraft_Manager(commands.Cog):
         aircraft_cursor.execute(sql, (type,))
         aircraft_result = aircraft_cursor.fetchone()
 
-        if airline_result == []:
+        if airline_result == None:
             airline_db.close()
             aircraft_db.close()
             await interaction.followup.send("You do not own an airline", ephemeral=True)
@@ -94,7 +103,7 @@ class Aircraft_Manager(commands.Cog):
                 sql = "UPDATE Airline SET money = ? WHERE owner = ?"
                 airline_cursor.execute(sql, (new_money, interaction.user.id))
 
-                await interaction.response.send_message(f"The aircraft `{registration}` type `{type}` has been purchased, it's waiting for you at `{home_base}!")
+                await interaction.response.send_message(f"The aircraft `{registration}` type `{type}` has been purchased, it's waiting for you at `{home_base}`!")
                 airline_db.commit()
                 aircraft_db.commit()
                 airline_db.close()
@@ -114,19 +123,24 @@ class Aircraft_Manager(commands.Cog):
             color=0xf1c40f,
             description="Purchase information:"
         )        
+        sql = "SELECT range, paxCapacity, cargoCapacity, motw, cruise_speed, airfield_type, price FROM Aircraft WHERE type = ?"
+        aircraft_cursor.execute(sql, (type,))
+        result = aircraft_cursor.fetchone()
         embed.add_field(name="Aircraft type:", value=type)
         embed.add_field(name="Registration:", value=registration)
-        embed.add_field(name="Pax capacity:", value="-")
-        embed.add_field(name="Cargo capacity:", value="-")
-        embed.add_field(name="motw:", value="-")
-        embed.add_field(name="Runway type:", value="-")
-        embed.add_field(name="Cruise speed:", value="-")
+        embed.add_field(name="Range:", value=result[0])
+        embed.add_field(name="Pax capacity:", value=result[1])
+        embed.add_field(name="Cargo capacity:", value=result[2])
+        embed.add_field(name="motw:", value=result[3])
+        embed.add_field(name="Runway type:", value=result[5])
+        embed.add_field(name="Cruise speed:", value=result[4])
         embed.add_field(name="Home Base:", value=home_base)
+        embed.add_field(name="Price:", value=result[6])
         embed.set_footer(text="Plane will be delivered to it's home base")
 
         await interaction.followup.send(embed=embed, view=Buttons())
     
-    async def load_aircraft(self):  #This allows you to load the aircraft with cargo, you should also be allowed to partially load cargo
+    async def load_aircraft(self, mission_id):  #This allows you to load the aircraft with cargo, you should also be allowed to partially load cargo
         pass
 
 

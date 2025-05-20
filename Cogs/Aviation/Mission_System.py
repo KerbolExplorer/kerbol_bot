@@ -49,7 +49,7 @@ class Mission_System(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER, createdAt INTEGER)"
+            sql = "CREATE TABLE IF NOT EXISTS 'Missions' (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER, airline INTEGER, createdAt INTEGER, planeId INTEGER)"
             cursor.execute(sql)
         
         now = int(time.time())
