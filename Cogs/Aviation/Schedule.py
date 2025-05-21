@@ -13,7 +13,13 @@ class Schedule(commands.Cog):
         self.bot = bot
 
     @app_commands.command(name="random_regional_flight", description="Returns a random regional flight")
-    @app_commands.describe(country="ISO code of the country")
+    @app_commands.describe(
+        country="ISO code of the country",
+        departure_airport="The airport you want to depart from",
+        arrival_airport="The airport you want to arrive to",
+        min_distance="The minimum distance of the flight, note that this might be decreased if the bot can't find a flight within set parameters",
+        max_distance= "The maximum distance of the flight, note that this might be decreased if the bot can't find a flight within set parameters"
+        )
     async def random_regional_flight(self, interaction:discord.Interaction, country: str, departure_airport : str = None, arrival_airport: str = None, min_distance: int = None, max_distance: int = None):
         await interaction.response.defer()
 

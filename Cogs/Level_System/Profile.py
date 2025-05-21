@@ -39,7 +39,7 @@ class Profile(commands.Cog):
             color=member.color,
             title=title
         )
-        embed.set_thumbnail(url=member.avatar)
+        embed.set_thumbnail(url=member.display_avatar)
         embed.add_field(name="Name", value=member.display_name)
         embed.add_field(name="ID", value=member.id)
         embed.add_field(name="Level", value=f"{result[0][3]}")
