@@ -65,14 +65,7 @@ class Airline_Manager(commands.Cog):
         sql = f"CREATE TABLE '{airline_id}' (type TEXT, registration TEXT, hours INTEGER, location TEXT, base TEXT)"
         aircraft_cursor.execute(sql)
 
-        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
-        mission_cursor = mission_db.cursor()
-        sql = f"CREATE TABLE '{airline_id}' (id INTEGER, type TEXT, departure TEXT, arrival TEXT, pax INTEGER, cargo INTEGER, distance INTEGER, needPlane BOOLEAN, planeType TEXT, reward INTEGER)"
-        mission_cursor.execute(sql)
-
         await interaction.response.send_message("Airline created!")
-        mission_db.commit()
-        mission_db.close()
         airline_db.commit()
         airline_db.close()
         aircraft_db.commit()
@@ -104,12 +97,6 @@ class Airline_Manager(commands.Cog):
         sql = f"DROP TABLE '{airline_info[0][0]}'"
         aircraft_cursor.execute(sql)
 
-        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
-        mission_cursor = mission_db.cursor()
-        mission_cursor.execute(sql)
-
-        mission_db.commit()
-        mission_db.close()
         aircraft_db.commit()
         airline_db.commit()
         aircraft_db.close()
@@ -146,6 +133,9 @@ class Airline_Manager(commands.Cog):
         string = ""
         for result in results:
             string += f"\nType:{result[0]}, Registration:{result[1]}, Flight hours:{result[2]}, Current Location:{result[3]}, Home Base:{result[4]}"
+        
+        if len(string) == 0:
+            string = "You own no aircraft, do `/aircraft_market` to browse some."
         fleet_embed.description = string
 
 
