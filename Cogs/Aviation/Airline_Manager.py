@@ -60,20 +60,13 @@ class Airline_Manager(commands.Cog):
         sql = "INSERT INTO Airline (airlineId, airlineName, airlineICAO, homeBase, owner, money) VALUES (?, ?, ?, ?, ?, ?)"
         airline_cursor.execute(sql, (airline_id, airline_name, airline_icao.upper(), airline_homebase.upper(), airline_owner, 500000))
 
-        aircraft_db = sqlite3.connect(db_aircraft_path)
-        aircraft_cursor = aircraft_db.cursor()
-        sql = f"CREATE TABLE '{airline_id}' (type TEXT, registration TEXT, hours INTEGER, location TEXT, base TEXT)"
-        aircraft_cursor.execute(sql)
-
         await interaction.response.send_message("Airline created!")
         airline_db.commit()
         airline_db.close()
-        aircraft_db.commit()
-        aircraft_db.close()
 
 
     @app_commands.command(name="delete_airline", description="Deletes an airline")      #TODO this will later go in the manage airline command
-    async def delete_airline(self, interaction:discord.Interaction, airline_name: str):
+    async def delete_airline(self, interaction:discord.Interaction, airline_name: str): #TODO 2: This will also remove the planes owned by the airline
         airline_db = sqlite3.connect(db_airline_path)
         airline_cursor = airline_db.cursor()
 
@@ -127,8 +120,8 @@ class Airline_Manager(commands.Cog):
         fleet_embed = discord.Embed(color=interaction.user.accent_color, title="Airline fleet")
         aircraft_db = sqlite3.connect(db_aircraft_path)
         aircraft_cursor = aircraft_db.cursor()
-        sql = f"SELECT * FROM '{airline_info[0][0]}'"
-        aircraft_cursor.execute(sql)
+        sql = f"SELECT * FROM AircraftList WHERE airlineId = ?"
+        aircraft_cursor.execute(sql, (airline_info[0][0],))
         results = aircraft_cursor.fetchall()
         string = ""
         for result in results:

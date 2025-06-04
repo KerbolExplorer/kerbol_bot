@@ -1,6 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
+from .Aviation_Utils.Aviation_Utils import airport_lookup
 import sqlite3
 import os
 
@@ -17,35 +18,18 @@ class Aircraft_Manager(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()  
         if not result:
-            sql = "CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT, size TEXT)" #if the database doesn't have any table we create it
+            sql = "CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, empty INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT, size TEXT)" #if the database doesn't have any table we create it
             cursor.execute(sql)
 
         sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='AircraftList'"
         cursor.execute(sql)
         result = cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER location TEXT, homeBase TEXT)"
+            sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, airlineId INTEGER, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER, location TEXT, homeBase TEXT, status INTEGER, engineStatus INTEGER)"
             cursor.execute(sql)
         
         db.commit()
         db.close()
-
-
-    class Aircraft:
-        def __init__(self, registration, type, range, pax_capacity, cargo_capacity, motw, price, owner, home_base, cruise_speed, airfield_type, size, id):
-            self.registration = registration
-            self.type = type   
-            self.range = range
-            self.pax_capacity = pax_capacity
-            self.cargo_capacity = cargo_capacity
-            self.motw = motw
-            self.price = price
-            self.cruise_speed = cruise_speed
-            self.airfield_type = airfield_type
-            self.owner = owner
-            self.home_base = home_base
-            self.size = size
-            self.id = id
 
     @app_commands.command(name="buy-aircraft", description="Buy a brand new aircraft for your airline")
     @app_commands.describe(
@@ -75,16 +59,20 @@ class Aircraft_Manager(commands.Cog):
             await interaction.followup.send("You do not own an airline", ephemeral=True)
             return
         
-        if aircraft_result == []:
+        if aircraft_result == None:
             aircraft_db.close()
             airline_db.close()
-            await interaction.followup.send(f"The aircraft type {type} does not exist in my database.", ephemeral=True)
+            await interaction.followup.send(f"The aircraft type `{type}` does not exist in my database.", ephemeral=True)
             return
-        
+
         if airline_result[0] < aircraft_result[1]:
             aircraft_db.close()
             airline_db.close()
             await interaction.followup.send(f"Your airline does not have enough money to buy this aircraft.", ephemeral=True)
+            return
+        
+        if airport_lookup(home_base) == False:
+            await interaction.followup.send(f"Airport `{home_base}` does not exist in my database.")
             return
         
         airline_id = airline_result[1]
@@ -97,8 +85,8 @@ class Aircraft_Manager(commands.Cog):
             @discord.ui.button(label="✅", style=discord.ButtonStyle.green)
             async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
                 
-                sql = f"INSERT INTO '{airline_id}' (type, registration, hours, location, base) VALUES (?, ?, ?, ?, ?)"
-                aircraft_cursor.execute(sql, (type, registration, 0, home_base, home_base))
+                sql = f"INSERT INTO AircraftList (airlineId, type, registration, hours, currentPax, currentCargo, location, homeBase, status, engineStatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                aircraft_cursor.execute(sql, (airline_id, type, registration, 0, 0, 0, home_base, home_base, 100, 100))
 
                 sql = "UPDATE Airline SET money = ? WHERE owner = ?"
                 airline_cursor.execute(sql, (new_money, interaction.user.id))
@@ -123,19 +111,20 @@ class Aircraft_Manager(commands.Cog):
             color=0xf1c40f,
             description="Purchase information:"
         )        
-        sql = "SELECT range, paxCapacity, cargoCapacity, motw, cruise_speed, airfield_type, price FROM Aircraft WHERE type = ?"
+        sql = "SELECT * FROM Aircraft WHERE type = ?"
         aircraft_cursor.execute(sql, (type,))
         result = aircraft_cursor.fetchone()
         embed.add_field(name="Aircraft type:", value=type)
         embed.add_field(name="Registration:", value=registration)
-        embed.add_field(name="Range:", value=result[0])
-        embed.add_field(name="Pax capacity:", value=result[1])
-        embed.add_field(name="Cargo capacity:", value=result[2])
-        embed.add_field(name="motw:", value=result[3])
-        embed.add_field(name="Runway type:", value=result[5])
-        embed.add_field(name="Cruise speed:", value=result[4])
+        embed.add_field(name="Range:", value=result[1])
+        embed.add_field(name="Pax capacity:", value=result[2])
+        embed.add_field(name="Cargo capacity:", value=result[3])
+        embed.add_field(name="motw:", value=str(result[4]) + "kg")
+        embed.add_field(name="Empty:", value=str(result[5]) + "kg")
+        embed.add_field(name="Runway type:", value=result[6])
+        embed.add_field(name="Cruise speed:", value=result[7])
         embed.add_field(name="Home Base:", value=home_base)
-        embed.add_field(name="Price:", value=result[6])
+        embed.add_field(name="Price:", value=result[8])
         embed.set_footer(text="Plane will be delivered to it's home base")
 
         await interaction.followup.send(embed=embed, view=Buttons())

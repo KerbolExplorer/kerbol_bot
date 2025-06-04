@@ -69,12 +69,12 @@ class Dev_commands(commands.Cog):
     # Adds an airframe to aircraft.db so the plane can be bought later on
     # Example: S!add_aircraft PC12 1800 9 1000 4740 5300000 528 ALL
     @commands.command()
-    async def add_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, price:int, cruise_speed:int, airfield_type:str):
+    async def add_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str):
         if self.verify_messenger(ctx.author.id) == True:
             db = sqlite3.connect(DB_AIRCRAFT_PATH)
             cursor = db.cursor()
-            sql = "INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, price, cruise_speed, airfield_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
-            cursor.execute(sql, (type, range, pax_capacity, cargo_capacity, motw, price, cruise_speed, airfield_type))
+            sql = "INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, empty, price, cruise_speed, airfield_type, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            cursor.execute(sql, (type, range, pax_capacity, cargo_capacity, motw, empty, price, cruise_speed, airfield_type, size))
             await ctx.message.add_reaction("✅")
             db.commit()
             db.close()
@@ -82,12 +82,12 @@ class Dev_commands(commands.Cog):
             await ctx.message.add_reaction("❌")
 
     @commands.command()
-    async def edit_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, price:int, cruise_speed:int, airfield_type:str, new_type:str):
+    async def edit_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str, new_type:str):
         if self.verify_messenger(ctx.author.id) == True:
             db = sqlite3.connect(DB_AIRCRAFT_PATH)
             cursor = db.cursor()
-            sql = "UPDATE Aircraft SET type = ?, range = ?, paxCapacity = ?, cargoCapacity = ?, motw = ?, price = ?, cruise_speed = ?, airfield_type = ? WHERE type = ?"
-            cursor.execute(sql, (new_type, range, pax_capacity, cargo_capacity, motw, price, cruise_speed, airfield_type, type))
+            sql = "UPDATE Aircraft SET type = ?, range = ?, paxCapacity = ?, cargoCapacity = ?, motw = ?, empty = ?, price = ?, cruise_speed = ?, airfield_type = ?, size = ? WHERE type = ?"
+            cursor.execute(sql, (new_type, range, pax_capacity, cargo_capacity, motw, empty, price, cruise_speed, airfield_type, size, type))
             await ctx.message.add_reaction("✅")
             db.commit()
             db.close()
@@ -122,19 +122,16 @@ class Dev_commands(commands.Cog):
     
     @commands.command()
     async def edit_airport(self, ctx, ident, new_ident, type, name, latitude, longitude, elevation:int, continent, country, location, region, scheduled_service):
-        try:
-            if self.verify_messenger(ctx.author.id) == True:
-                db = sqlite3.connect(DB_AIRPORT_PATH)
-                cursor = db.cursor()
-                sql = "UPDATE airports SET ident = ?, type = ?, name = ?, latitude_deg = ?, longitude_deg = ?, elevation_ft = ?, continent = ?, iso_country = ?, municipality = ?, iso_region = ?, scheduled_service = ? WHERE ident = ?"
-                cursor.execute(sql, (new_ident, type, name, latitude, longitude, elevation, continent, country, location, region, scheduled_service, ident))
-                await ctx.message.add_reaction("✅")
-                db.commit()
-                db.close()
-            else:
-                await ctx.message.add_reaction("❌")    
-        except Exception as e:
-            print(e)    
+        if self.verify_messenger(ctx.author.id) == True:
+            db = sqlite3.connect(DB_AIRPORT_PATH)
+            cursor = db.cursor()
+            sql = "UPDATE airports SET ident = ?, type = ?, name = ?, latitude_deg = ?, longitude_deg = ?, elevation_ft = ?, continent = ?, iso_country = ?, municipality = ?, iso_region = ?, scheduled_service = ? WHERE ident = ?"
+            cursor.execute(sql, (new_ident, type, name, latitude, longitude, elevation, continent, country, location, region, scheduled_service, ident))
+            await ctx.message.add_reaction("✅")
+            db.commit()
+            db.close()
+        else:
+            await ctx.message.add_reaction("❌")    
 
 async def setup(bot):
     await bot.add_cog(Dev_commands(bot))

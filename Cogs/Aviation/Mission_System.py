@@ -101,7 +101,7 @@ class Mission_System(commands.Cog):
 
                     mission = random.choice(mission_types)
                     if mission == "Cargo transport":
-                        cargo = random.randint(15, 200)
+                        cargo = random.randint(15, 600)
                         distance = flight[2]
                         mission = MissionType(mission, flight[0], flight[1], 0, cargo, distance, False)
                         mission_list.append(mission)
