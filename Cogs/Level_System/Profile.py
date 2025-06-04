@@ -39,7 +39,7 @@ class Profile(commands.Cog):
             color=member.color,
             title=title
         )
-        embed.set_thumbnail(url=member.avatar)
+        embed.set_thumbnail(url=member.display_avatar)
         embed.add_field(name="Name", value=member.display_name)
         embed.add_field(name="ID", value=member.id)
         embed.add_field(name="Level", value=f"{result[0][3]}")
@@ -47,6 +47,29 @@ class Profile(commands.Cog):
         embed.set_footer(text=f"Requested by {interaction.user.display_name}")
         await interaction.response.send_message(embed=embed)
         db.close() 
+
+    @app_commands.command(name="banner", description="Shows the banner of a user")
+    @app_commands.describe(member="The member we want to check")
+    async def banner(self, interaction:discord.Interaction, member:discord.Member = None):
+        await interaction.response.defer()
+        if member == None:
+            member = interaction.user
+        
+
+        embed = discord.Embed(
+            title=f"{member.display_name}'s banner", 
+            color=member.color
+        )
+        
+        user = await self.bot.fetch_user(member.id)
+
+        banner = user.banner
+        
+        if banner == None:
+            await interaction.followup.send("This user doesn't have a banner", ephemeral=True)
+        else:
+            embed.set_image(url=banner.url)
+            await interaction.followup.send(embed=embed)
 
 
 async def setup(bot):
