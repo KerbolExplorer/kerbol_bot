@@ -14,6 +14,7 @@ admin = os.getenv("ADMIN")
 bot = commands.Bot(command_prefix="S!", intents=discord.Intents.all())
 
 async def change_activity():
+    admin_user = await bot.fetch_user(admin)
     gameList = (
         "Persona 3 FES", "Persona 3 Reload", "Persona 4 Golden", "Persona 5 Royal", "Pokemon Sun", 
         "Pokemon Mystery Dungeon: Explorers of Sky", "Pokemon Super Mystery Dungeon", "Subnautica",
@@ -23,13 +24,14 @@ async def change_activity():
         "Pokerogue", "Monster Hunter Wilds", "Kerbal Space Program", "Team Fortess 2", "Metal Gear Rising: Revengance", "Starbound", 
         "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zoteboat", "Fortnite", "Amorous",
         "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", "Tomodatchi Life", "Frostpunk", "Xplane 12", "Balatro", 
-        "The Elder Scrolls IV: Oblivion", "Pokken Tournament DX", "Super Smash Bros. Ultimate", "Minecraft"
+        "The Elder Scrolls IV: Oblivion", "Pokken Tournament DX", "Super Smash Bros. Ultimate", "Minecraft", "Deltarune", "Undertale"
         )
     
     while True:
         chosen_game = random.choice(gameList)
         await bot.change_presence(status=discord.Status.online, activity=discord.Game(chosen_game))
         time_between_game = random.randint(1800, 21600)
+        await admin_user.send(f"Started playing {chosen_game} for {round(time_between_game/3600, 2)} hours") #TODO: Remove after debuging
         await asyncio.sleep(time_between_game)
 
 @bot.event
