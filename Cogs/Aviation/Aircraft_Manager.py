@@ -154,6 +154,7 @@ class Aircraft_Manager(commands.Cog):
             return
         elif mission_data[5] != -1:
             await interaction.followup.send("This mission has already been loaded on another plane")
+            return
 
         aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
         aircraft_cursor = aircraft_db.cursor()
@@ -176,7 +177,11 @@ class Aircraft_Manager(commands.Cog):
 
         sql = "SELECT id, type, location, currentPax, currentCargo, registration FROM AircraftList WHERE airlineId = ? AND registration = ?"
         aircraft_cursor.execute(sql, (airline_id, aircraft))
-        aircraft = aircraft_cursor.fetchone()       # 0 = id, 1 = type 2, = location, 3 = currentpax, 4 = currentCargo, 5 = registration
+        aircraft = aircraft_cursor.fetchone()       # 0 = id, 1 = type 2 = location, 3 = currentpax, 4 = currentCargo, 5 = registration
+
+        if aircraft[2] is not mission_data[0]:
+            await interaction.followup.send(f"This aircraft `{aircraft[2]}` is not at the same airport as the mission departure `{mission_data[0]}`")
+            return
 
         sql = "SELECT type, paxCapacity, cargoCapacity, motw, empty FROM Aircraft WHERE type = ?"
         aircraft_cursor.execute(sql, (aircraft[1],))
@@ -208,10 +213,6 @@ class Aircraft_Manager(commands.Cog):
         mission_db.close()
 
         await interaction.followup.send(f"`{aircraft[5]}` has been loaded with the mission's cargo. You can check it's data on the aircraft's menu with `/aircraft *registration*`")
-
-
-
-
 
 
 async def setup(bot):
