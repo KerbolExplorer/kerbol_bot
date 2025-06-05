@@ -7,6 +7,7 @@ import os
 
 DB_AIRLINE_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airlines.db")
 DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
+DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
 
 class Aircraft_Manager(commands.Cog):
     def __init__(self, bot):
@@ -129,8 +130,88 @@ class Aircraft_Manager(commands.Cog):
 
         await interaction.followup.send(embed=embed, view=Buttons())
     
-    async def load_aircraft(self, mission_id):  #This allows you to load the aircraft with cargo, you should also be allowed to partially load cargo
-        pass
+    @app_commands.command(name="load-aircraft", description="Loads an aircraft with a mission's cargo")
+    @app_commands.describe(
+        aircraft="The registration of the plane",
+        mission_id="The id of the mission to load"
+    )
+    async def load_aircraft(self, interaction:discord.Interaction, aircraft:str, mission_id:int):  #This allows you to load the aircraft with cargo, you should also be allowed to partially load cargo
+        await interaction.response.defer(ephemeral=True)
+
+        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        missions_cursor = mission_db.cursor()
+
+        sql = "SELECT departure, pax, cargo, needPlane, airline, planeId FROM Missions WHERE id = ?"
+
+        missions_cursor.execute(sql, (mission_id,))
+        mission_data = missions_cursor.fetchone()   #0 = departure, 1 = pax, 2 = cargo, 3 = needPlane, 4 = airline, 5 = planeId
+
+        if mission_data == None:
+            await interaction.followup.send("This mission does not exist.")
+            return
+        elif mission_data[3] == True:
+            await interaction.followup.send("This mission cannot be loaded on a plane.")
+            return
+        elif mission_data[5] != -1:
+            await interaction.followup.send("This mission has already been loaded on another plane")
+
+        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        aircraft_cursor = aircraft_db.cursor()
+
+        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_cursor = airline_db.cursor()
+
+        owner = interaction.user.id
+
+        sql = "SELECT airlineId FROM Airline WHERE owner = ?"
+        airline_cursor.execute(sql, (owner,))
+        airline_id = airline_cursor.fetchone()[0]
+
+        if airline_id != mission_data[4]:
+            await interaction.followup.send("You did not accept this mission.")
+            return
+
+        airline_cursor.close()
+        airline_db.close()
+
+        sql = "SELECT id, type, location, currentPax, currentCargo, registration FROM AircraftList WHERE airlineId = ? AND registration = ?"
+        aircraft_cursor.execute(sql, (airline_id, aircraft))
+        aircraft = aircraft_cursor.fetchone()       # 0 = id, 1 = type 2, = location, 3 = currentpax, 4 = currentCargo, 5 = registration
+
+        sql = "SELECT type, paxCapacity, cargoCapacity, motw, empty FROM Aircraft WHERE type = ?"
+        aircraft_cursor.execute(sql, (aircraft[1],))
+        aircraft_data = aircraft_cursor.fetchone()  #0 = type, 1 = paxCapacity, 2 = cargoCapacity, 3 = motw, 4 = empty
+
+        # Check if this won't exceed the capacity of the plane
+        new_pax = aircraft[3] + mission_data[1]
+        new_cargo = aircraft[4] +  mission_data[2]
+
+        if new_pax > aircraft_data[1] or new_cargo > aircraft_data[2]:
+            await interaction.followup.send("⚠️The pax/cargo for this mission doesn't fit in this aircraft")
+            return
+        elif (new_pax * 80) + new_cargo + aircraft_data[4] > aircraft_data[3]:
+            await interaction.followup.send("⚠️Can't load pax/cargo, motw exceeded") 
+            return
+        
+        sql = "UPDATE AircraftList SET currentPax = ?, currentCargo = ? WHERE id = ?"
+        aircraft_cursor.execute(sql, (new_pax, new_cargo, aircraft[0]))
+
+        sql = "UPDATE Missions SET planeId = ? WHERE id = ?"
+        mission_db.execute(sql, (aircraft[0], mission_id))
+
+        aircraft_db.commit()
+        aircraft_cursor.close()
+        aircraft_db.close()
+
+        mission_db.commit()
+        missions_cursor.close()
+        mission_db.close()
+
+        await interaction.followup.send(f"`{aircraft[5]}` has been loaded with the mission's cargo. You can check it's data on the aircraft's menu with `/aircraft *registration*`")
+
+
+
+
 
 
 async def setup(bot):

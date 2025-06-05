@@ -54,7 +54,7 @@ class Mission_System(commands.Cog):
         
         now = int(time.time())
         MISSION_EXPIRATION = 86400
-        sql = "DELETE FROM Missions WHERE ? - createdAt > ?"
+        sql = "DELETE FROM Missions WHERE ? - createdAt > ? AND airline != -1"
         cursor.execute(sql, (now, MISSION_EXPIRATION))
         db.commit()
         db.close()
@@ -112,13 +112,13 @@ class Mission_System(commands.Cog):
                         mission_list.append(mission)
                     else:
                         distance = flight[2]
-                        plane_type = "C172"
+                        plane_type = "C172"     #TODO grab a random SMALL plane from all possible aircraft
                         mission = MissionType(mission, flight[0], flight[1], 0, 0, distance, True, plane_type)
                         mission_list.append(mission)
                     counter += 1
 
-                    sql = "INSERT INTO 'Missions' (type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-                    missions_cursor.execute(sql, (mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, int(time.time())))
+                    sql = "INSERT INTO 'Missions' (type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward, airline, createdAt, planeId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    missions_cursor.execute(sql, (mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, -1, int(time.time()), -1))
 
         departure_embed = discord.Embed(
             title=f"Missions from `{airport[0][1]}`",
@@ -137,7 +137,7 @@ class Mission_System(commands.Cog):
         missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
         for result in results:
-            if result[8] is None:
+            if result[8] == -1:
                 departure_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
             else:
                 departure_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}` ✈️", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
@@ -146,7 +146,7 @@ class Mission_System(commands.Cog):
         missions_cursor.execute(sql, (airport[0][1],))
         results = missions_cursor.fetchall()
         for result in results:
-            if result[8] is None:
+            if result[8] == -1:
                 arrival_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}`", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
             else:
                 arrival_embed.add_field(name=f"{result[0]}, {result[1]} `{result[2]}` - `{result[3]}` ✈️", value=f"{result[4]} passengers, {result[5]} cargo. {result[6]}nm. Reward:{result[7]}")
