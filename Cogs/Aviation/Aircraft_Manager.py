@@ -148,12 +148,18 @@ class Aircraft_Manager(commands.Cog):
 
         if mission_data == None:
             await interaction.followup.send("This mission does not exist.")
+            missions_cursor.close()
+            mission_db.close()  
             return
         elif mission_data[3] == True:
             await interaction.followup.send("This mission cannot be loaded on a plane.")
+            missions_cursor.close()
+            mission_db.close()  
             return
         elif mission_data[5] != -1:
             await interaction.followup.send("This mission has already been loaded on another plane")
+            missions_cursor.close()
+            mission_db.close()  
             return
 
         aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
@@ -170,6 +176,12 @@ class Aircraft_Manager(commands.Cog):
 
         if airline_id != mission_data[4]:
             await interaction.followup.send("You did not accept this mission.")
+            missions_cursor.close()
+            mission_db.close()
+            airline_cursor.close()
+            airline_db.close()
+            aircraft_cursor.close()
+            aircraft_db.close()
             return
 
         airline_cursor.close()
@@ -179,8 +191,12 @@ class Aircraft_Manager(commands.Cog):
         aircraft_cursor.execute(sql, (airline_id, aircraft))
         aircraft = aircraft_cursor.fetchone()       # 0 = id, 1 = type 2 = location, 3 = currentpax, 4 = currentCargo, 5 = registration
 
-        if aircraft[2] is not mission_data[0]:
+        if aircraft[2] != mission_data[0]:
             await interaction.followup.send(f"This aircraft `{aircraft[2]}` is not at the same airport as the mission departure `{mission_data[0]}`")
+            missions_cursor.close()
+            mission_db.close()
+            aircraft_cursor.close()
+            aircraft_db.close()
             return
 
         sql = "SELECT type, paxCapacity, cargoCapacity, motw, empty FROM Aircraft WHERE type = ?"
@@ -193,9 +209,17 @@ class Aircraft_Manager(commands.Cog):
 
         if new_pax > aircraft_data[1] or new_cargo > aircraft_data[2]:
             await interaction.followup.send("⚠️The pax/cargo for this mission doesn't fit in this aircraft")
+            missions_cursor.close()
+            mission_db.close()
+            aircraft_cursor.close()
+            aircraft_db.close()
             return
         elif (new_pax * 80) + new_cargo + aircraft_data[4] > aircraft_data[3]:
             await interaction.followup.send("⚠️Can't load pax/cargo, motw exceeded") 
+            missions_cursor.close()
+            mission_db.close()
+            aircraft_cursor.close()
+            aircraft_db.close()
             return
         
         sql = "UPDATE AircraftList SET currentPax = ?, currentCargo = ? WHERE id = ?"
@@ -214,6 +238,95 @@ class Aircraft_Manager(commands.Cog):
 
         await interaction.followup.send(f"`{aircraft[5]}` has been loaded with the mission's cargo. You can check it's data on the aircraft's menu with `/aircraft *registration*`")
 
+    @app_commands.command(name="unload-aircraft", description="Unloads a mission from an aircraft")
+    @app_commands.describe(
+        aircraft="The registration of the plane",
+        mission_id="The id of the mission to unload"
+    )
+    async def unload_aircraft(self, interaction:discord.Interaction, aircraft:str, mission_id:int):
+        await interaction.response.defer(ephemeral=True)
+
+        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        missions_cursor = mission_db.cursor()
+
+        sql = "SELECT arrival, pax, cargo, needPlane, airline, planeId, reward FROM Missions WHERE id = ?"
+
+        missions_cursor.execute(sql, (mission_id,))
+        mission_data = missions_cursor.fetchone()   #0 = departure, 1 = pax, 2 = cargo, 3 = needPlane, 4 = airline, 5 = planeId, 6 = reward
+
+        if mission_data == None:
+            await interaction.followup.send("This mission does not exist.")
+            missions_cursor.close()
+            mission_db.close()            
+            return
+        elif mission_data[5] == -1:
+            await interaction.followup.send("This mission has not been loaded on any aircraft")
+            missions_cursor.close()
+            mission_db.close()
+            return
+
+        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        aircraft_cursor = aircraft_db.cursor()
+
+        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_cursor = airline_db.cursor()
+
+        owner = interaction.user.id
+
+        sql = "SELECT airlineId, money FROM Airline WHERE owner = ?"
+        airline_cursor.execute(sql, (owner,))
+        result = airline_cursor.fetchone()
+
+        airline_id = result[0]
+
+        if airline_id != mission_data[4]:
+            await interaction.followup.send("You did not accept this mission.")
+
+            missions_cursor.close()
+            mission_db.close()
+            airline_cursor.close()
+            airline_db.close()
+            aircraft_cursor.close()
+            aircraft_db.close()
+            return
+
+        sql = "SELECT id, type, location, currentPax, currentCargo, registration FROM AircraftList WHERE airlineId = ? AND registration = ?"
+        aircraft_cursor.execute(sql, (airline_id, aircraft))
+        aircraft = aircraft_cursor.fetchone()       # 0 = id, 1 = type 2 = location, 3 = currentpax, 4 = currentCargo, 5 = registration
+
+        new_cargo = aircraft[4] -  mission_data[2]
+        new_pax = aircraft[3] - mission_data[1]
+        sql = "UPDATE AircraftList SET currentPax = ?, currentCargo = ? WHERE id = ?"
+        aircraft_cursor.execute(sql, (new_pax, new_cargo, aircraft[0]))
+
+        sql = "UPDATE Missions SET planeId = ?, airline = ? WHERE id = ?"
+        mission_db.execute(sql, (-1, -1, mission_id))
+
+        #if the aircraft is at the same airport as the destination of the mission, it's a mission complete
+        if aircraft[2] == mission_data[0]:
+            sql = "UPDATE Airline SET money = ? WHERE airlineId = ?"
+            new_total = result[1] + mission_data[6]
+            airline_cursor.execute(sql, (new_total, airline_id))
+            
+            sql = "DELETE FROM Missions WHERE id = ?"
+            missions_cursor.execute(sql, (mission_id))
+            await interaction.followup.send("The mission has been marked as completed and the reward has been added to your account")
+        else:
+            await interaction.followup.send("The mission has been sucessfully unloaded from the aircraft")
+
+        aircraft_db.commit()
+        aircraft_cursor.close()
+        aircraft_db.close()
+
+        mission_db.commit()
+        missions_cursor.close()
+        mission_db.close()
+
+
+    @app_commands.command(name="aircraft-info", description="Shows information about an owned plane")
+    @app_commands.describe(aircraft="The registration of the aircraft")
+    async def aircraft_info(self, interaction:discord.Interaction, aircraft:str):
+        pass
 
 async def setup(bot):
     await bot.add_cog(Aircraft_Manager(bot))
