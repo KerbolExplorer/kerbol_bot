@@ -120,12 +120,12 @@ class Airline_Manager(commands.Cog):
         fleet_embed = discord.Embed(color=interaction.user.accent_color, title="Airline fleet")
         aircraft_db = sqlite3.connect(db_aircraft_path)
         aircraft_cursor = aircraft_db.cursor()
-        sql = f"SELECT * FROM AircraftList WHERE airlineId = ?"
+        sql = f"SELECT type, registration, hours, location FROM AircraftList WHERE airlineId = ?"
         aircraft_cursor.execute(sql, (airline_info[0][0],))
         results = aircraft_cursor.fetchall()
         string = ""
         for result in results:
-            string += f"\nType:{result[0]}, Registration:{result[1]}, Flight hours:{result[2]}, Current Location:{result[3]}, Home Base:{result[4]}"
+            string += f"\nType:{result[0]}, Registration:{result[1]}, Flight hours:{result[2]}, Current Location:{result[3]}"
         
         if len(string) == 0:
             string = "You own no aircraft, do `/aircraft_market` to browse some."

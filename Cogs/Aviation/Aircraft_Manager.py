@@ -326,7 +326,11 @@ class Aircraft_Manager(commands.Cog):
     @app_commands.command(name="aircraft-info", description="Shows information about an owned plane")
     @app_commands.describe(aircraft="The registration of the aircraft")
     async def aircraft_info(self, interaction:discord.Interaction, aircraft:str):
-        pass
+        await interaction.response.send_message("Not implemented")
+
+    @app_commands.command(name="move-aircraft", description="Moves an aircraft from one airport to the other")
+    async def move_aircraft(self, interaction:discord.Interaction):
+        await interaction.response.send_message("Not implemented")
 
 async def setup(bot):
     await bot.add_cog(Aircraft_Manager(bot))
