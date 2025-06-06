@@ -80,6 +80,8 @@ class Aircraft_Manager(commands.Cog):
         
         airline_id = airline_result[1]
         new_money = abs(aircraft_result[1] - airline_result[0]) 
+
+        user = interaction.user.id
         
         class Buttons(discord.ui.View):
             def __init__(self, *, timeout = 180):
@@ -87,6 +89,12 @@ class Aircraft_Manager(commands.Cog):
 
             @discord.ui.button(label="✅", style=discord.ButtonStyle.green)
             async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
+                if interaction.user.id != user:
+                    await interaction.response.defer(ephemeral=True)
+                    await interaction.followup.send("You need to be the one that started the game to do this", ephemeral=True)
+                    return
+                
+                await self.disable_buttons(self, interaction)
                 
                 sql = f"INSERT INTO AircraftList (airlineId, type, registration, hours, currentPax, currentCargo, location, homeBase, status, engineStatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 aircraft_cursor.execute(sql, (airline_id, type, registration, 0, 0, 0, home_base, home_base, 100, 100))
@@ -104,10 +112,21 @@ class Aircraft_Manager(commands.Cog):
 
             @discord.ui.button(label="❌", style=discord.ButtonStyle.red)
             async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
+                if interaction.user.id != user:
+                    await interaction.response.defer(ephemeral=True)
+                    await interaction.followup.send("You need to be the one that started the game to do this", ephemeral=True)
+                    return
+                
+                await self.disable_buttons(self, interaction)
                 aircraft_db.close()
                 airline_db.close()
                 await interaction.response.send_message(f"Purchase cancelled", ephemeral=True)
                 return
+            
+            async def disable_buttons(self, child:discord.ui.Button, interaction: discord.Interaction):
+                for child in self.children:
+                    child.disabled = True
+                await interaction.message.edit(view=self)
 
         embed = discord.Embed(
             title=f"Purchasing {type}",
