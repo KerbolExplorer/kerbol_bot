@@ -103,7 +103,7 @@ class Aircraft_Manager(commands.Cog):
             @discord.ui.button(label="❌", style=discord.ButtonStyle.red)
             async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
                 aircraft_db.close()
-                aircraft_db.close()
+                airline_db.close()
                 await interaction.response.send_message(f"Purchase cancelled", ephemeral=True)
                 return
 
@@ -226,7 +226,7 @@ class Aircraft_Manager(commands.Cog):
         aircraft_cursor.execute(sql, (new_pax, new_cargo, aircraft[0]))
 
         sql = "UPDATE Missions SET planeId = ? WHERE id = ?"
-        mission_db.execute(sql, (aircraft[0], mission_id))
+        missions_cursor.execute(sql, (aircraft[0], mission_id))
 
         aircraft_db.commit()
         aircraft_cursor.close()
@@ -300,7 +300,7 @@ class Aircraft_Manager(commands.Cog):
         aircraft_cursor.execute(sql, (new_pax, new_cargo, aircraft[0]))
 
         sql = "UPDATE Missions SET planeId = ?, airline = ? WHERE id = ?"
-        mission_db.execute(sql, (-1, -1, mission_id))
+        missions_cursor.execute(sql, (-1, -1, mission_id))
 
         #if the aircraft is at the same airport as the destination of the mission, it's a mission complete
         if aircraft[2] == mission_data[0]:
@@ -329,8 +329,44 @@ class Aircraft_Manager(commands.Cog):
         await interaction.response.send_message("Not implemented")
 
     @app_commands.command(name="move-aircraft", description="Moves an aircraft from one airport to the other")
-    async def move_aircraft(self, interaction:discord.Interaction):
-        await interaction.response.send_message("Not implemented")
+    @app_commands.describe(aircraft="Registration of the aircraft", destination="Icao code of the destination")
+    async def move_aircraft(self, interaction:discord.Interaction, aircraft:str, destination:str):
+        await interaction.response.defer(ephemeral=True)
+        destination = destination.upper()
+
+        if airport_lookup(destination) == False:
+            await interaction.followup.send(f"The airport {destination} is not in my database.")
+            return
+
+        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        aircraft_cursor = aircraft_db.cursor()
+
+        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_cursor = airline_db.cursor()
+
+        sql = "SELECT airlineId FROM Airline WHERE owner = ?"
+        airline_cursor.execute(sql, (interaction.user.id,))
+        airline_id = airline_cursor.fetchone()[0]
+
+        sql = "SELECT id FROM AircraftList WHERE registration = ? AND airlineId = ?"
+        aircraft_cursor.execute(sql, (aircraft, airline_id))
+        aircraft_id = aircraft_cursor.fetchone()[0]
+
+        if aircraft_id == None:
+            await interaction.followup.send(f"You do not own any aircraft registered as {aircraft}")
+            return
+
+        airline_cursor.close()
+        airline_db.close()
+        sql = "UPDATE AircraftList SET location = ? WHERE id = ?"
+
+        aircraft_cursor.execute(sql, (destination, aircraft_id))
+
+        aircraft_db.commit()
+        aircraft_cursor.close()
+        aircraft_db.close()
+
+        await interaction.followup.send(f"Aircraft {aircraft} has been moved to {destination}")
 
 async def setup(bot):
     await bot.add_cog(Aircraft_Manager(bot))
