@@ -191,6 +191,14 @@ class Aircraft_Manager(commands.Cog):
         aircraft_cursor.execute(sql, (airline_id, aircraft))
         aircraft = aircraft_cursor.fetchone()       # 0 = id, 1 = type 2 = location, 3 = currentpax, 4 = currentCargo, 5 = registration
 
+        if aircraft == None:
+            await interaction.followup.send("You have no aircraft with that registration")
+            missions_cursor.close()
+            mission_db.close()
+            aircraft_cursor.close()
+            aircraft_db.close()
+            return     
+
         if aircraft[2] != mission_data[0]:
             await interaction.followup.send(f"This aircraft `{aircraft[2]}` is not at the same airport as the mission departure `{mission_data[0]}`")
             missions_cursor.close()
@@ -294,6 +302,16 @@ class Aircraft_Manager(commands.Cog):
         aircraft_cursor.execute(sql, (airline_id, aircraft))
         aircraft = aircraft_cursor.fetchone()       # 0 = id, 1 = type 2 = location, 3 = currentpax, 4 = currentCargo, 5 = registration
 
+        if aircraft == None:
+            await interaction.followup.send("You have no aircraft with that registration")
+            missions_cursor.close()
+            mission_db.close()
+            airline_cursor.close()
+            airline_db.close()
+            aircraft_cursor.close()
+            aircraft_db.close()
+            return     
+
         new_cargo = aircraft[4] -  mission_data[2]
         new_pax = aircraft[3] - mission_data[1]
         sql = "UPDATE AircraftList SET currentPax = ?, currentCargo = ? WHERE id = ?"
@@ -309,7 +327,7 @@ class Aircraft_Manager(commands.Cog):
             airline_cursor.execute(sql, (new_total, airline_id))
             
             sql = "DELETE FROM Missions WHERE id = ?"
-            missions_cursor.execute(sql, (mission_id))
+            missions_cursor.execute(sql, (mission_id,))
             await interaction.followup.send("The mission has been marked as completed and the reward has been added to your account")
         else:
             await interaction.followup.send("The mission has been sucessfully unloaded from the aircraft")
@@ -321,6 +339,10 @@ class Aircraft_Manager(commands.Cog):
         mission_db.commit()
         missions_cursor.close()
         mission_db.close()
+
+        airline_db.commit()
+        airline_cursor.close()
+        airline_db.close()
 
 
     @app_commands.command(name="aircraft-info", description="Shows information about an owned plane")
@@ -350,11 +372,13 @@ class Aircraft_Manager(commands.Cog):
 
         sql = "SELECT id FROM AircraftList WHERE registration = ? AND airlineId = ?"
         aircraft_cursor.execute(sql, (aircraft, airline_id))
-        aircraft_id = aircraft_cursor.fetchone()[0]
+        aircraft_id = aircraft_cursor.fetchone()
 
         if aircraft_id == None:
             await interaction.followup.send(f"You do not own any aircraft registered as {aircraft}")
             return
+        
+        aircraft_id = aircraft_id[0]
 
         airline_cursor.close()
         airline_db.close()
@@ -366,7 +390,7 @@ class Aircraft_Manager(commands.Cog):
         aircraft_cursor.close()
         aircraft_db.close()
 
-        await interaction.followup.send(f"Aircraft {aircraft} has been moved to {destination}")
+        await interaction.followup.send(f"Aircraft `{aircraft}` has been moved to `{destination}`")
 
 async def setup(bot):
     await bot.add_cog(Aircraft_Manager(bot))
