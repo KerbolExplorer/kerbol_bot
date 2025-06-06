@@ -418,24 +418,24 @@ class Aircraft_Manager(commands.Cog):
         
         sql = "SELECT * FROM Aircraft WHERE type = ?"
         aircraft_cursor.execute(sql, (aircraft_data[2],))
-        airframe_data = aircraft_cursor.fetchone()  # type = 0, range = 1, paxCapacity = 2, cargoCapacity = 3, motw = 5, empty = 6, price = 7, cruise_speed = 8, airfield = 9, size = 10
+        airframe_data = aircraft_cursor.fetchone()  # type = 0, range = 1, paxCapacity = 2, cargoCapacity = 3, motw = 4, empty = 5, price = 6, cruise_speed = 7, airfield = 8, size = 9
         
         embed = discord.Embed(
             title=aircraft_data[2]
         )
 
-        current_weight = airframe_data[6] + aircraft_data[5] * 80 + aircraft_data[6]
+        current_weight = airframe_data[5] + aircraft_data[5] * 80 + aircraft_data[6]
         
-        embed.add_field(name="Airframe hours", value=aircraft_data[3])
+        embed.add_field(name="Airframe hours", value=aircraft_data[4])
         embed.add_field(name="Range", value=f"{airframe_data[1]}nm")
-        embed.add_field(name="Cruise speed", value=f"{airframe_data[8]}nm")
+        embed.add_field(name="Cruise speed", value=f"{airframe_data[7]}")
         embed.add_field(name="Current pax/capacity", value=f"{aircraft_data[5]}/{airframe_data[2]}")
         embed.add_field(name="Current cargo/capacity", value=f"{aircraft_data[6]}/{airframe_data[3]}")
-        embed.add_field(name="Current weight/max", value=f"{current_weight}/{airframe_data[5]}")
+        embed.add_field(name="Current weight/max", value=f"{current_weight}/{airframe_data[4]}")
         embed.add_field(name="Current location", value=aircraft_data[7])
         embed.add_field(name="Assigned base", value=aircraft_data[8])
 
-        embed.set_footer(text=f"Aircraft id: {aircraft_data[0]}, registered to airline id {aircraft_data[0]}")
+        embed.set_footer(text=f"Aircraft id: {aircraft_data[0]}, registered to airline id {aircraft_data[1]}")
 
         await interaction.followup.send(embed=embed)
 
