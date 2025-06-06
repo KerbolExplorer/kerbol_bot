@@ -374,7 +374,7 @@ class Aircraft_Manager(commands.Cog):
     @app_commands.command(name="aircraft-info", description="Shows information about an owned plane")
     @app_commands.describe(aircraft="The registration of the aircraft")
     async def aircraft_info(self, interaction:discord.Interaction, aircraft:str):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
         aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
         aircraft_cursor = aircraft_db.cursor()
 
@@ -421,11 +421,13 @@ class Aircraft_Manager(commands.Cog):
         airframe_data = aircraft_cursor.fetchone()  # type = 0, range = 1, paxCapacity = 2, cargoCapacity = 3, motw = 4, empty = 5, price = 6, cruise_speed = 7, airfield = 8, size = 9
         
         embed = discord.Embed(
-            title=aircraft_data[2]
+            title=aircraft_data[3],
+            color=0xf1c40f
         )
 
         current_weight = airframe_data[5] + aircraft_data[5] * 80 + aircraft_data[6]
         
+        embed.add_field(name="Airframe type", value=aircraft_data[2])
         embed.add_field(name="Airframe hours", value=aircraft_data[4])
         embed.add_field(name="Range", value=f"{airframe_data[1]}nm")
         embed.add_field(name="Cruise speed", value=f"{airframe_data[7]}")
@@ -444,7 +446,7 @@ class Aircraft_Manager(commands.Cog):
     @app_commands.command(name="move-aircraft", description="Moves an aircraft from one airport to the other")
     @app_commands.describe(aircraft="Registration of the aircraft", destination="Icao code of the destination")
     async def move_aircraft(self, interaction:discord.Interaction, aircraft:str, destination:str):
-        await interaction.response.defer(ephemeral=True)
+        await interaction.response.defer()
         destination = destination.upper()
 
         if airport_lookup(destination) == False:
