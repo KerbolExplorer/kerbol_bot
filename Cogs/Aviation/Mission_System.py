@@ -54,8 +54,9 @@ class Mission_System(commands.Cog):
         
         now = int(time.time())
         MISSION_EXPIRATION = 86400
-        sql = "DELETE FROM Missions WHERE ? - createdAt > ? AND airline != -1"
-        cursor.execute(sql, (now, MISSION_EXPIRATION))
+        expiration_cutoff = now - MISSION_EXPIRATION
+        sql = "DELETE FROM Missions WHERE createdAt < ? AND airline != -1"
+        cursor.execute(sql, (expiration_cutoff,))
         db.commit()
         db.close()
     

@@ -73,13 +73,13 @@ class Airline_Manager(commands.Cog):
         sql = "SELECT * FROM Airline WHERE airlineName = ?"
         airline_cursor.execute(sql, (airline_name,))
 
-        airline_info = airline_cursor.fetchall()
+        airline_info = airline_cursor.fetchone()
 
         if airline_info == []:
             await interaction.response.send_message("This airline doesn't exist", ephemeral=True)
             return
 
-        if airline_info[0][4] != interaction.user.id:
+        if airline_info[4] != interaction.user.id:
             await interaction.response.send_message("You can't delete an airline that isn't yours!", ephemeral=True)
             return
 
@@ -87,8 +87,8 @@ class Airline_Manager(commands.Cog):
         airline_cursor.execute(sql, (airline_name,))
         aircraft_db = sqlite3.connect(db_aircraft_path)
         aircraft_cursor = aircraft_db.cursor()
-        sql = f"DROP TABLE '{airline_info[0][0]}'"
-        aircraft_cursor.execute(sql)
+        sql = f"DELETE FROM AircraftList WHERE airlineId = ?"
+        aircraft_cursor.execute(sql, (airline_info[0],))
 
         aircraft_db.commit()
         airline_db.commit()

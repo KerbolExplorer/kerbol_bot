@@ -9,7 +9,28 @@ DB_AIRLINE_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", 
 DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
 DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
 
-#TODO add helped functions
+#TODO add helper functions
+def open_databases(airline=True, aircraft=True, missions=True):
+        mission_db = aircraft_db = airline_db = None
+
+        if missions:
+            mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+
+        if aircraft:
+            aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        
+        if airline:
+            airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+
+        return (mission_db, aircraft_db, airline_db)
+
+def close_databases(mission_db=None, aircraft_db=None, airline_db=None):
+    if mission_db:
+        mission_db.close()
+    if aircraft_db:
+        aircraft_db.close()
+    if airline_db:
+        airline_db.close()
 
 class Aircraft_Manager(commands.Cog):
     def __init__(self, bot):
@@ -42,9 +63,10 @@ class Aircraft_Manager(commands.Cog):
         )
     async def buy_aircraft(self, interaction:discord.Interaction, type:str, registration:str, home_base:str):
         await interaction.response.defer()
-        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        databases = open_databases()
+        airline_db = databases[2]
         airline_cursor = airline_db.cursor()
-        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        aircraft_db = databases[1]
         aircraft_cursor = aircraft_db.cursor()
 
 
@@ -57,20 +79,17 @@ class Aircraft_Manager(commands.Cog):
         aircraft_result = aircraft_cursor.fetchone()
 
         if airline_result == None:
-            airline_db.close()
-            aircraft_db.close()
+            close_databases(airline_db=airline_db, aircraft_db=aircraft_db)
             await interaction.followup.send("You do not own an airline", ephemeral=True)
             return
         
         if aircraft_result == None:
-            aircraft_db.close()
-            airline_db.close()
+            close_databases(airline_db=airline_db, aircraft_db=aircraft_db)
             await interaction.followup.send(f"The aircraft type `{type}` does not exist in my database.", ephemeral=True)
             return
 
         if airline_result[0] < aircraft_result[1]:
-            aircraft_db.close()
-            airline_db.close()
+            close_databases(airline_db=airline_db, aircraft_db=aircraft_db)
             await interaction.followup.send(f"Your airline does not have enough money to buy this aircraft.", ephemeral=True)
             return
         
@@ -91,7 +110,7 @@ class Aircraft_Manager(commands.Cog):
             async def confirm(self, interaction: discord.Interaction, button: discord.ui.Button):
                 if interaction.user.id != user:
                     await interaction.response.defer(ephemeral=True)
-                    await interaction.followup.send("You need to be the one that started the game to do this", ephemeral=True)
+                    await interaction.followup.send("You are not the person purchasing the aircraft", ephemeral=True)
                     return
                 
                 await self.disable_buttons(self, interaction)
@@ -105,8 +124,7 @@ class Aircraft_Manager(commands.Cog):
                 await interaction.response.send_message(f"The aircraft `{registration}` type `{type}` has been purchased, it's waiting for you at `{home_base}`!")
                 airline_db.commit()
                 aircraft_db.commit()
-                airline_db.close()
-                aircraft_db.close()
+                close_databases(airline_db=airline_db, aircraft_db=aircraft_db)
                 return
 
 
@@ -114,12 +132,11 @@ class Aircraft_Manager(commands.Cog):
             async def cancel(self, interaction: discord.Interaction, button: discord.ui.Button):
                 if interaction.user.id != user:
                     await interaction.response.defer(ephemeral=True)
-                    await interaction.followup.send("You need to be the one that started the game to do this", ephemeral=True)
+                    await interaction.followup.send("You are not the person purchasing the aircraft", ephemeral=True)
                     return
                 
                 await self.disable_buttons(self, interaction)
-                aircraft_db.close()
-                airline_db.close()
+                close_databases(airline_db=airline_db, aircraft_db=aircraft_db)
                 await interaction.response.send_message(f"Purchase cancelled", ephemeral=True)
                 return
             
@@ -159,7 +176,9 @@ class Aircraft_Manager(commands.Cog):
     async def load_aircraft(self, interaction:discord.Interaction, aircraft:str, mission_id:int):  #This allows you to load the aircraft with cargo, you should also be allowed to partially load cargo
         await interaction.response.defer(ephemeral=True)
 
-        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        databases = open_databases(aircraft=False, airline=False)
+
+        mission_db = databases[0]
         missions_cursor = mission_db.cursor()
 
         sql = "SELECT departure, pax, cargo, needPlane, airline, planeId FROM Missions WHERE id = ?"
@@ -169,24 +188,23 @@ class Aircraft_Manager(commands.Cog):
 
         if mission_data == None:
             await interaction.followup.send("This mission does not exist.")
-            missions_cursor.close()
-            mission_db.close()  
+            close_databases(mission_db=mission_db) 
             return
         elif bool(mission_data[3]) == True:
             await interaction.followup.send("This mission cannot be loaded on a plane.")
-            missions_cursor.close()
-            mission_db.close()  
+            close_databases(mission_db=mission_db)  
             return
         elif mission_data[5] != -1:
             await interaction.followup.send("This mission has already been loaded on another plane")
-            missions_cursor.close()
-            mission_db.close()  
+            close_databases(mission_db=mission_db)  
             return
 
-        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        databases = open_databases(missions=False)
+
+        aircraft_db = databases[1]
         aircraft_cursor = aircraft_db.cursor()
 
-        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_db = databases[2]
         airline_cursor = airline_db.cursor()
 
         owner = interaction.user.id
@@ -198,24 +216,14 @@ class Aircraft_Manager(commands.Cog):
         if result == None:
             await interaction.followup.send(f"You do not own any airline")
 
-            aircraft_cursor.close()
-            aircraft_db.close()
-            missions_cursor.close()
-            mission_db.close()
-            airline_db.close()
-            airline_cursor.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
         
         airline_id = result[0]
 
         if airline_id != mission_data[4]:
             await interaction.followup.send("You did not accept this mission.")
-            missions_cursor.close()
-            mission_db.close()
-            airline_cursor.close()
-            airline_db.close()
-            aircraft_cursor.close()
-            aircraft_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
 
         airline_cursor.close()
@@ -227,18 +235,12 @@ class Aircraft_Manager(commands.Cog):
 
         if aircraft == None:
             await interaction.followup.send("You have no aircraft with that registration")
-            missions_cursor.close()
-            mission_db.close()
-            aircraft_cursor.close()
-            aircraft_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return     
 
         if aircraft[2] != mission_data[0]:
             await interaction.followup.send(f"This aircraft `{aircraft[2]}` is not at the same airport as the mission departure `{mission_data[0]}`")
-            missions_cursor.close()
-            mission_db.close()
-            aircraft_cursor.close()
-            aircraft_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
 
         sql = "SELECT type, paxCapacity, cargoCapacity, motw, empty FROM Aircraft WHERE type = ?"
@@ -251,17 +253,11 @@ class Aircraft_Manager(commands.Cog):
 
         if new_pax > aircraft_data[1] or new_cargo > aircraft_data[2]:
             await interaction.followup.send("⚠️The pax/cargo for this mission doesn't fit in this aircraft")
-            missions_cursor.close()
-            mission_db.close()
-            aircraft_cursor.close()
-            aircraft_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
         elif (new_pax * 80) + new_cargo + aircraft_data[4] > aircraft_data[3]:
             await interaction.followup.send("⚠️Can't load pax/cargo, motw exceeded") 
-            missions_cursor.close()
-            mission_db.close()
-            aircraft_cursor.close()
-            aircraft_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
         
         sql = "UPDATE AircraftList SET currentPax = ?, currentCargo = ? WHERE id = ?"
@@ -271,12 +267,9 @@ class Aircraft_Manager(commands.Cog):
         missions_cursor.execute(sql, (aircraft[0], mission_id))
 
         aircraft_db.commit()
-        aircraft_cursor.close()
-        aircraft_db.close()
 
         mission_db.commit()
-        missions_cursor.close()
-        mission_db.close()
+        close_databases(aircraft_db, airline_db, mission_db)
 
         await interaction.followup.send(f"`{aircraft[5]}` has been loaded with the mission's cargo. You can check it's data on the aircraft's menu with `/aircraft *registration*`")
 
@@ -288,7 +281,9 @@ class Aircraft_Manager(commands.Cog):
     async def unload_aircraft(self, interaction:discord.Interaction, aircraft:str, mission_id:int):
         await interaction.response.defer(ephemeral=True)
 
-        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        databases = open_databases(aircraft=False, airline=False)
+
+        mission_db = databases[0]
         missions_cursor = mission_db.cursor()
 
         sql = "SELECT arrival, pax, cargo, needPlane, airline, planeId, reward FROM Missions WHERE id = ?"
@@ -298,19 +293,19 @@ class Aircraft_Manager(commands.Cog):
 
         if mission_data == None:
             await interaction.followup.send("This mission does not exist.")
-            missions_cursor.close()
-            mission_db.close()            
+            close_databases(mission_db=mission_db)           
             return
         elif mission_data[5] == -1:
             await interaction.followup.send("This mission has not been loaded on any aircraft")
-            missions_cursor.close()
-            mission_db.close()
+            close_databases(mission_db=mission_db)
             return
 
-        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        databases = open_databases(missions=False)
+
+        aircraft_db = databases[1]
         aircraft_cursor = aircraft_db.cursor()
 
-        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_db = databases[2]
         airline_cursor = airline_db.cursor()
 
         owner = interaction.user.id
@@ -322,12 +317,7 @@ class Aircraft_Manager(commands.Cog):
         if result == None:
             await interaction.followup.send(f"You do not own any airline")
 
-            aircraft_cursor.close()
-            aircraft_db.close()
-            missions_cursor.close()
-            mission_db.close()
-            airline_db.close()
-            airline_cursor.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
 
         airline_id = result[0]
@@ -335,12 +325,7 @@ class Aircraft_Manager(commands.Cog):
         if airline_id != mission_data[4]:
             await interaction.followup.send("You did not accept this mission.")
 
-            missions_cursor.close()
-            mission_db.close()
-            airline_cursor.close()
-            airline_db.close()
-            aircraft_cursor.close()
-            aircraft_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
 
         sql = "SELECT id, type, location, currentPax, currentCargo, registration FROM AircraftList WHERE airlineId = ? AND registration = ?"
@@ -349,12 +334,7 @@ class Aircraft_Manager(commands.Cog):
 
         if aircraft == None:
             await interaction.followup.send("You have no aircraft with that registration")
-            missions_cursor.close()
-            mission_db.close()
-            airline_cursor.close()
-            airline_db.close()
-            aircraft_cursor.close()
-            aircraft_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return     
 
         new_cargo = aircraft[4] -  mission_data[2]
@@ -378,29 +358,25 @@ class Aircraft_Manager(commands.Cog):
             await interaction.followup.send("The mission has been sucessfully unloaded from the aircraft")
 
         aircraft_db.commit()
-        aircraft_cursor.close()
-        aircraft_db.close()
-
         mission_db.commit()
-        missions_cursor.close()
-        mission_db.close()
-
         airline_db.commit()
-        airline_cursor.close()
-        airline_db.close()
+        close_databases(aircraft_db, airline_db, mission_db)
 
 
     @app_commands.command(name="aircraft-info", description="Shows information about an owned plane")
     @app_commands.describe(aircraft="The registration of the aircraft")
     async def aircraft_info(self, interaction:discord.Interaction, aircraft:str):
         await interaction.response.defer()
-        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+
+        databases = open_databases()
+
+        aircraft_db = databases[1]
         aircraft_cursor = aircraft_db.cursor()
 
-        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_db = databases[2]
         airline_cursor = airline_db.cursor()
 
-        mission_db = sqlite3.connect(DB_MISSIONS_PATH)
+        mission_db = databases[0]
         missions_cursor = mission_db.cursor()
 
         sql = "SELECT airlineId FROM Airline WHERE owner = ?"
@@ -410,14 +386,7 @@ class Aircraft_Manager(commands.Cog):
         if result == None:
             await interaction.followup.send(f"You do not own any airline")
 
-            aircraft_cursor.close()
-            aircraft_db.close()
-
-            missions_cursor.close()
-            mission_db.close()
-
-            airline_db.close()
-            airline_cursor.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
 
         airline_id = result[0]
@@ -427,12 +396,7 @@ class Aircraft_Manager(commands.Cog):
         aircraft_data = aircraft_cursor.fetchone() #id = 0, airlineid = 1, type = 2, registration = 3, hours = 4, currentPax = 5, currentCargo = 6, location = 7, base = 8, status = 9, engine = 10 
         if aircraft_data == None:
             await interaction.followup.send(f"You do not own any aircraft called `{aircraft}`")
-            aircraft_cursor.close()
-            aircraft_db.close()
-            missions_cursor.close()
-            mission_db.close()
-            airline_cursor.close()
-            airline_db.close()
+            close_databases(aircraft_db, airline_db, mission_db)
             return
         
         sql = "SELECT * FROM Aircraft WHERE type = ?"
@@ -461,7 +425,6 @@ class Aircraft_Manager(commands.Cog):
         await interaction.followup.send(embed=embed)
 
 
-
     @app_commands.command(name="move-aircraft", description="Moves an aircraft from one airport to the other")
     @app_commands.describe(aircraft="Registration of the aircraft", destination="Icao code of the destination")
     async def move_aircraft(self, interaction:discord.Interaction, aircraft:str, destination:str):
@@ -472,10 +435,12 @@ class Aircraft_Manager(commands.Cog):
             await interaction.followup.send(f"The airport {destination} is not in my database.")
             return
 
-        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        databases = open_databases(missions=False)
+
+        aircraft_db = databases[1]
         aircraft_cursor = aircraft_db.cursor()
 
-        airline_db = sqlite3.connect(DB_AIRLINE_PATH)
+        airline_db = databases[2]
         airline_cursor = airline_db.cursor()
 
         sql = "SELECT airlineId FROM Airline WHERE owner = ?"
@@ -484,13 +449,10 @@ class Aircraft_Manager(commands.Cog):
 
         if result == None:
             await interaction.followup.send(f"You do not own any airline")
-            aircraft_cursor.close()
-            aircraft_db.close()
-            airline_db.close()
-            airline_cursor.close()
+            close_databases(aircraft_db, airline_db)
             return
         
-        airline_id = result
+        airline_id = result[0]
 
         sql = "SELECT id FROM AircraftList WHERE registration = ? AND airlineId = ?"
         aircraft_cursor.execute(sql, (aircraft, airline_id))
@@ -501,16 +463,12 @@ class Aircraft_Manager(commands.Cog):
             return
         
         aircraft_id = aircraft_id[0]
-
-        airline_cursor.close()
-        airline_db.close()
         sql = "UPDATE AircraftList SET location = ? WHERE id = ?"
 
         aircraft_cursor.execute(sql, (destination, aircraft_id))
 
         aircraft_db.commit()
-        aircraft_cursor.close()
-        aircraft_db.close()
+        close_databases(aircraft_db, airline_db)
 
         await interaction.followup.send(f"Aircraft `{aircraft}` has been moved to `{destination}`")
 
