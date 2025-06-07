@@ -9,7 +9,7 @@ DB_AIRLINE_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", 
 DB_AIRCRAFT_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
 DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
 
-#TODO add helper functions
+#Helper functions
 def open_databases(airline=True, aircraft=True, missions=True):
         mission_db = aircraft_db = airline_db = None
 
@@ -31,6 +31,14 @@ def close_databases(mission_db=None, aircraft_db=None, airline_db=None):
         aircraft_db.close()
     if airline_db:
         airline_db.close()
+
+def get_airline_id(cursor:sqlite3.Cursor, owner):
+    cursor.execute("SELECT airlineId FROM Airline WHERE owner = ?", (owner,))
+    return cursor.fetchone()
+
+def get_aircraft(cursor:sqlite3.Cursor, airline_id, registration):
+    cursor.execute("SELECT * FROM AircraftList WHERE airlineId = ? AND registration = ?", (airline_id, registration))
+    return cursor.fetchone()
 
 class Aircraft_Manager(commands.Cog):
     def __init__(self, bot):
@@ -208,18 +216,13 @@ class Aircraft_Manager(commands.Cog):
         airline_cursor = airline_db.cursor()
 
         owner = interaction.user.id
+        
+        airline_id = get_airline_id(cursor=airline_cursor, owner=owner)[0]
 
-        sql = "SELECT airlineId FROM Airline WHERE owner = ?"
-        airline_cursor.execute(sql, (owner,))
-        result = airline_cursor.fetchone()
-
-        if result == None:
+        if airline_id == None:
             await interaction.followup.send(f"You do not own any airline")
-
             close_databases(aircraft_db, airline_db, mission_db)
             return
-        
-        airline_id = result[0]
 
         if airline_id != mission_data[4]:
             await interaction.followup.send("You did not accept this mission.")
@@ -271,7 +274,7 @@ class Aircraft_Manager(commands.Cog):
         mission_db.commit()
         close_databases(aircraft_db, airline_db, mission_db)
 
-        await interaction.followup.send(f"`{aircraft[5]}` has been loaded with the mission's cargo. You can check it's data on the aircraft's menu with `/aircraft *registration*`")
+        await interaction.followup.send(f"`{aircraft[5]}` has been loaded with the mission's cargo. You can check it's data on the aircraft's menu with `/aircraft-info *registration*`")
 
     @app_commands.command(name="unload-aircraft", description="Unloads a mission from an aircraft")
     @app_commands.describe(
@@ -379,17 +382,12 @@ class Aircraft_Manager(commands.Cog):
         mission_db = databases[0]
         missions_cursor = mission_db.cursor()
 
-        sql = "SELECT airlineId FROM Airline WHERE owner = ?"
-        airline_cursor.execute(sql, (interaction.user.id,))
-        result = airline_cursor.fetchone()
+        airline_id = get_airline_id(cursor=airline_cursor, owner=interaction.user.id)[0]
 
-        if result == None:
+        if airline_id == None:
             await interaction.followup.send(f"You do not own any airline")
-
             close_databases(aircraft_db, airline_db, mission_db)
             return
-
-        airline_id = result[0]
         
         sql = "SELECT * FROM AircraftList WHERE registration = ? AND airlineId = ?"
         aircraft_cursor.execute(sql, (aircraft, airline_id))
