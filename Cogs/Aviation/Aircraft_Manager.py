@@ -2,6 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from .Aviation_Utils.Aviation_Utils import airport_lookup
+from .Aviation_Utils.Airline_Utils import get_aircraft
 import sqlite3
 import os
 
@@ -34,11 +35,35 @@ def close_databases(mission_db=None, aircraft_db=None, airline_db=None):
 
 def get_airline_id(cursor:sqlite3.Cursor, owner):
     cursor.execute("SELECT airlineId FROM Airline WHERE owner = ?", (owner,))
-    return cursor.fetchone()
+    return cursor.fetchone()[0]
 
-def get_aircraft(cursor:sqlite3.Cursor, airline_id, registration):
-    cursor.execute("SELECT * FROM AircraftList WHERE airlineId = ? AND registration = ?", (airline_id, registration))
-    return cursor.fetchone()
+async def aircraft_autocomplete(interaction: discord.Interaction, current_input: str) -> list[app_commands.Choice[str]]:
+    import traceback
+    try:
+        database = open_databases(airline=True, aircraft=False, missions=False)[2]
+
+        cursor = database.cursor()
+
+        airline_id = get_airline_id(cursor, interaction.user.id)
+
+        close_databases(database)
+
+        available_aircraft = get_aircraft(airline_id)
+
+        registrations = []
+
+        for aircraft in available_aircraft:
+            registrations.append(aircraft[3])
+
+        matches = [
+            app_commands.Choice(name=aircraft, value=aircraft)
+            for aircraft in registrations
+            if current_input in aircraft
+        ]
+
+        return matches[:25]
+    except Exception:
+        traceback.print_exc()
 
 class Aircraft_Manager(commands.Cog):
     def __init__(self, bot):
@@ -217,7 +242,7 @@ class Aircraft_Manager(commands.Cog):
 
         owner = interaction.user.id
         
-        airline_id = get_airline_id(cursor=airline_cursor, owner=owner)[0]
+        airline_id = get_airline_id(cursor=airline_cursor, owner=owner)
 
         if airline_id == None:
             await interaction.followup.send(f"You do not own any airline")
@@ -368,6 +393,7 @@ class Aircraft_Manager(commands.Cog):
 
     @app_commands.command(name="aircraft-info", description="Shows information about an owned plane")
     @app_commands.describe(aircraft="The registration of the aircraft")
+    @app_commands.autocomplete(aircraft=aircraft_autocomplete)
     async def aircraft_info(self, interaction:discord.Interaction, aircraft:str):
         await interaction.response.defer()
 
@@ -382,7 +408,7 @@ class Aircraft_Manager(commands.Cog):
         mission_db = databases[0]
         missions_cursor = mission_db.cursor()
 
-        airline_id = get_airline_id(cursor=airline_cursor, owner=interaction.user.id)[0]
+        airline_id = get_airline_id(cursor=airline_cursor, owner=interaction.user.id)
 
         if airline_id == None:
             await interaction.followup.send(f"You do not own any airline")
