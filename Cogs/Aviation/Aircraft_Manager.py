@@ -206,6 +206,7 @@ class Aircraft_Manager(commands.Cog):
         aircraft="The registration of the plane",
         mission_id="The id of the mission to load"
     )
+    @app_commands.autocomplete(aircraft=aircraft_autocomplete)
     async def load_aircraft(self, interaction:discord.Interaction, aircraft:str, mission_id:int):  #This allows you to load the aircraft with cargo, you should also be allowed to partially load cargo
         await interaction.response.defer(ephemeral=True)
 
@@ -306,6 +307,7 @@ class Aircraft_Manager(commands.Cog):
         aircraft="The registration of the plane",
         mission_id="The id of the mission to unload"
     )
+    @app_commands.autocomplete(aircraft=aircraft_autocomplete)
     async def unload_aircraft(self, interaction:discord.Interaction, aircraft:str, mission_id:int):
         await interaction.response.defer(ephemeral=True)
 
@@ -451,6 +453,7 @@ class Aircraft_Manager(commands.Cog):
 
     @app_commands.command(name="move-aircraft", description="Moves an aircraft from one airport to the other")
     @app_commands.describe(aircraft="Registration of the aircraft", destination="Icao code of the destination")
+    @app_commands.autocomplete(aircraft=aircraft_autocomplete)
     async def move_aircraft(self, interaction:discord.Interaction, aircraft:str, destination:str):
         await interaction.response.defer()
         destination = destination.upper()
