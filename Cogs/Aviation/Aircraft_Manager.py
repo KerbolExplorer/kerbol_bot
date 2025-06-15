@@ -38,32 +38,28 @@ def get_airline_id(cursor:sqlite3.Cursor, owner):
     return cursor.fetchone()[0]
 
 async def aircraft_autocomplete(interaction: discord.Interaction, current_input: str) -> list[app_commands.Choice[str]]:
-    import traceback
-    try:
-        database = open_databases(airline=True, aircraft=False, missions=False)[2]
+    database = open_databases(airline=True, aircraft=False, missions=False)[2]
 
-        cursor = database.cursor()
+    cursor = database.cursor()
 
-        airline_id = get_airline_id(cursor, interaction.user.id)
+    airline_id = get_airline_id(cursor, interaction.user.id)
 
-        close_databases(database)
+    close_databases(database)
 
-        available_aircraft = get_aircraft(airline_id)
+    available_aircraft = get_aircraft(airline_id)
 
-        registrations = []
+    registrations = []
 
-        for aircraft in available_aircraft:
-            registrations.append(aircraft[3])
+    for aircraft in available_aircraft:
+        registrations.append(aircraft[3])
 
-        matches = [
-            app_commands.Choice(name=aircraft, value=aircraft)
-            for aircraft in registrations
-            if current_input in aircraft
-        ]
+    matches = [
+        app_commands.Choice(name=aircraft, value=aircraft)
+        for aircraft in registrations
+        if current_input in aircraft
+    ]
 
-        return matches[:25]
-    except Exception:
-        traceback.print_exc()
+    return matches[:25]
 
 class Aircraft_Manager(commands.Cog):
     def __init__(self, bot):
@@ -148,7 +144,7 @@ class Aircraft_Manager(commands.Cog):
                 
                 await self.disable_buttons(self, interaction)
                 
-                sql = f"INSERT INTO AircraftList (airlineId, type, registration, hours, currentPax, currentCargo, location, homeBase, status, engineStatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                sql = "INSERT INTO AircraftList (airlineId, type, registration, hours, currentPax, currentCargo, location, homeBase, status, engineStatus) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                 aircraft_cursor.execute(sql, (airline_id, type, registration, 0, 0, 0, home_base, home_base, 100, 100))
 
                 sql = "UPDATE Airline SET money = ? WHERE owner = ?"
