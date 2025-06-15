@@ -8,6 +8,7 @@ import os
 db_airline_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airlines.db")
 db_aircraft_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "aircraft.db")
 DB_MISSIONS_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "missions.db")
+DB_BANK_PATH = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "bank.db")
 
 class Airline_Manager(commands.Cog):
     def __init__(self, bot):
@@ -152,8 +153,23 @@ class Airline_Manager(commands.Cog):
         schedules_embed.description = string
 
 
+        bank_db = sqlite3.connect(DB_BANK_PATH)
+        bank_cursor = bank_db.cursor()
+
+        sql = "SELECT * FROM Loans WHERE airlineId = ?"
+        bank_cursor.execute(sql, (airline_info[0][0],))
+
+        loan_info = bank_cursor.fetchone()
+
         economy_embed = discord.Embed(color=interaction.user.accent_color, title="Airline Economy")
+        
         economy_embed.add_field(name="Money", value=airline_info[0][5])
+
+        if loan_info:
+            economy_embed.add_field(name="Money Loaned", value=loan_info[1])
+            economy_embed.add_field(name="Money remaining to pay", value=loan_info[2])
+            economy_embed.add_field(name="Daily cost", value=loan_info[4])
+
         
         embeds = (general_embed, fleet_embed, hubs_embed, schedules_embed, economy_embed)
 
@@ -205,6 +221,7 @@ class Airline_Manager(commands.Cog):
         airline_db.close()
         aircraft_db.close()
         missions_db.close()
+        bank_db.close()
 
 async def setup(bot):
     await bot.add_cog(Airline_Manager(bot))
