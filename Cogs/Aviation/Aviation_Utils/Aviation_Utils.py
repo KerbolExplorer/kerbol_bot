@@ -6,6 +6,7 @@ Current functions are:
     * airport_distance: Returns the distance between two airports in nautical miles.
     * get_metar: Returns the metar for an airport.
     * get_current_zulu: Returns the current zulu time.
+    * registration_creator  creates a random registration.
 
 """
 
@@ -268,3 +269,241 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     cursor.close()
     airport_db.close()
     return (departing_airport, arrival_airport, distance)
+
+
+def registration_creator(iso_code, type = None):
+    """Creates a random registration.
+
+
+    Parameters
+    ----------
+    String
+        Iso code of the country of the registration.
+    
+    Returns
+    ----------
+    String
+        A random registration.
+    """
+    import string
+    import random
+
+    country_prefixes = {
+    "AF": ["YA"],
+    "AL": ["ZA"],
+    "DZ": ["7T"],
+    "AO": ["D2"],
+    "AG": ["V2"],
+    "AR": ["LV", "LQ"],
+    "AM": ["EK"],
+    "AW": ["P4"],
+    "AU": ["VH"],
+    "AT": ["OE"],
+    "AZ": ["4K"],
+    "BS": ["C6"],
+    "BH": ["A9C"],
+    "BD": ["S2"],
+    "BB": ["8P"],
+    "BY": ["EW"],
+    "BE": ["OO"],
+    "BZ": ["V3"],
+    "BT": ["A5"],
+    "BO": ["CP"],
+    "BA": ["E7"],
+    "BW": ["A2"],
+    "BR": ["PP", "PR", "PS", "PT"],
+    "BN": ["V8"],
+    "BG": ["LZ"],
+    "KH": ["XU"],
+    "CM": ["TJ"],
+    "CA": ["C", "CF"],
+    "CV": ["D4"],
+    "KY": ["VP-C", "VR-C"],
+    "CL": ["CC"],
+    "CN": ["B"],
+    "CO": ["HK", "HJ"],
+    "KM": ["D6"],
+    "CG": ["TN"],
+    "CD": ["9Q"],
+    "CR": ["TI"],
+    "HR": ["9A"],
+    "CU": ["CU"],
+    "CY": ["5B"],
+    "CZ": ["OK"],
+    "DK": ["OY"],
+    "DJ": ["J2"],
+    "DM": ["J7"],
+    "DO": ["HI"],
+    "EC": ["HC"],
+    "EG": ["SU"],
+    "SV": ["YS"],
+    "GQ": ["3C"],
+    "ER": ["E3"],
+    "EE": ["ES"],
+    "ET": ["ET"],
+    "FK": ["VP-F"],
+    "FI": ["OH"],
+    "FR": ["F"],
+    "GA": ["TR"],
+    "GM": ["C5"],
+    "GE": ["4L"],
+    "DE": ["D"],
+    "GH": ["9G"],
+    "GR": ["SX"],
+    "GD": ["J3"],
+    "GT": ["TG"],
+    "GN": ["3X"],
+    "GW": ["J5"],
+    "GY": ["8R"],
+    "HT": ["HH"],
+    "HN": ["HR"],
+    "HU": ["HA"],
+    "IS": ["TF"],
+    "IN": ["VT"],
+    "ID": ["PK"],
+    "IR": ["EP"],
+    "IQ": ["YI"],
+    "IE": ["EI", "EJ"],
+    "IM": ["M"],
+    "IL": ["4X"],
+    "IT": ["I"],
+    "JM": ["6Y"],
+    "JP": ["JA"],
+    "JO": ["JY"],
+    "KZ": ["UP", "UN"],
+    "KE": ["5Y"],
+    "KW": ["9K"],
+    "LA": ["RDPL"],
+    "LV": ["YL"],
+    "LB": ["OD"],
+    "LR": ["EL"],
+    "LY": ["5A"],
+    "LT": ["LY"],
+    "LU": ["LX"],
+    "MO": ["CR-M"],
+    "MK": ["Z3"],
+    "MG": ["5R"],
+    "MW": ["7Q"],
+    "MY": ["9M"],
+    "MV": ["8Q"],
+    "ML": ["TZ"],
+    "MT": ["9H"],
+    "MH": ["V7"],
+    "MR": ["5T"],
+    "MU": ["3B"],
+    "MX": ["XA", "XB", "XC"],
+    "FM": ["V6"],
+    "MD": ["ER"],
+    "MC": ["3A"],
+    "MN": ["JU"],
+    "ME": ["4O"],
+    "MS": ["VP-M"],
+    "MA": ["CN"],
+    "MZ": ["C9"],
+    "MM": ["XY", "XZ"],
+    "NA": ["V5"],
+    "NR": ["C2"],
+    "NP": ["9N"],
+    "NL": ["PH"],
+    "AN": ["PJ"],
+    "NZ": ["ZK", "ZL", "ZM"],
+    "NI": ["YN"],
+    "NE": ["5U"],
+    "NG": ["5N"],
+    "NO": ["LN"],
+    "OM": ["A40"],
+    "PK": ["AP"],
+    "PA": ["HP"],
+    "PG": ["P2"],
+    "PY": ["ZP"],
+    "PE": ["OB"],
+    "PH": ["RP"],
+    "PL": ["SP"],
+    "PT": ["CS"],
+    "QA": ["A7"],
+    "RO": ["YR"],
+    "RU": ["RA"],
+    "KN": ["V4"],
+    "LC": ["J6"],
+    "VC": ["J8"],
+    "WS": ["5W"],
+    "SM": ["T7"],
+    "SA": ["HZ"],
+    "SN": ["6V", "6W"],
+    "RS": ["YU"],
+    "SC": ["S7"],
+    "SL": ["9L"],
+    "SG": ["9V"],
+    "SK": ["OM"],
+    "SI": ["S5"],
+    "SB": ["H4"],
+    "SO": ["6O"],
+    "ZA": ["ZS", "ZT", "ZU"],
+    "KR": ["HL"],
+    "ES": ["EC"],
+    "LK": ["4R"],
+    "SD": ["ST"],
+    "SR": ["PZ"],
+    "SE": ["SE"],
+    "CH": ["HB"],
+    "SY": ["YK"],
+    "TW": ["B"],
+    "TZ": ["5H"],
+    "TH": ["HS"],
+    "TG": ["5V"],
+    "TN": ["TS"],
+    "TR": ["TC"],
+    "TM": ["EZ"],
+    "UG": ["5X"],
+    "UA": ["UR"],
+    "AE": ["A6"],
+    "GB": ["G"],
+    "US": ["N"],
+    "UY": ["CX"],
+    "UZ": ["UK"],
+    "VU": ["YJ"],
+    "VA": ["HV"],
+    "VE": ["YV"],
+    "VN": ["VN"],
+    "YE": ["7O"],
+    "ZM": ["9J"],
+    "ZW": ["Z"]
+}
+
+    def random_letters(length):
+        return ''.join(random.choices(string.ascii_uppercase, k=length))
+    
+    def random_numbers(length):
+        return ''.join(random.choices(string.digits, k=length))
+
+    prefix = country_prefixes[iso_code]
+
+    if len(prefix) > 1:
+        prefix = random.choice(prefix)
+    else:
+        prefix = prefix[0]
+    
+    if iso_code == "US":
+        choices = [
+            prefix + "-" + random_numbers(5),
+            prefix + "-" + random_numbers(3) + random_letters(2),
+            prefix + "-" + random_numbers(1) + random_letters(3),
+        ]
+        registration = random.choice(choices)
+    elif iso_code == "CN":
+        registration = prefix + "-" + random_numbers(4)
+    elif iso_code == "JA":
+        registration = prefix + "-" + random_numbers(4)
+    elif iso_code == "KR":
+        registration = prefix + random_numbers(4)
+    elif iso_code == "RU":
+        registration = prefix + "-" + random_numbers(5)
+    else:
+        registration = prefix + "-" + random_letters(4)
+
+    return registration
+
+if __name__ == "__main__":
+    while True:
+        code = input("Insert country code: ")
+        print(registration_creator(code))
