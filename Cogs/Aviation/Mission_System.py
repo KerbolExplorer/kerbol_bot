@@ -74,6 +74,13 @@ class Mission_System(commands.Cog):
         mission_db = sqlite3.connect(DB_MISSIONS_PATH)
         missions_cursor = mission_db.cursor()
 
+        aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+        aircraft_cursor = aircraft_db.cursor()
+
+        sql = "SELECT type FROM Aircraft"
+        aircraft_cursor.execute(sql)
+        plane_types = aircraft_cursor.fetchall()
+
         def generate_missions(airport, country, direction):
             mission_types = ("Cargo transport", "Passenger transport", "Ferry flight\n")
             mission_list = []
@@ -113,8 +120,8 @@ class Mission_System(commands.Cog):
                         mission_list.append(mission)
                     else:
                         distance = flight[2]
-                        plane_type = "C172"     #TODO grab a random SMALL plane from all possible aircraft
-                        mission = MissionType(mission, flight[0], flight[1], 0, 0, distance, True, plane_type)
+                        plane_type = random.choice(plane_types)[0]    #TODO grab a random SMALL plane from all possible aircraft
+                        mission = MissionType(mission + "-" + plane_type, flight[0], flight[1], 0, 0, distance, True, plane_type)
                         mission_list.append(mission)
                     counter += 1
 
@@ -156,6 +163,7 @@ class Mission_System(commands.Cog):
         departure_embed.set_footer(text="To accept a mission do S!mission *mission id*. A ✈️ besides a mission means that someone has already accepted it.")
         mission_db.commit()
         mission_db.close()
+        aircraft_db.close()
 
         embeds = (departure_embed, arrival_embed)
 
