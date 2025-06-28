@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-from .Aviation_Utils.Aviation_Utils import airport_lookup
+from .Aviation_Utils.Aviation_Utils import airport_lookup, registration_creator
 from .Aviation_Utils.Airline_Utils import get_aircraft
 import sqlite3
 import os

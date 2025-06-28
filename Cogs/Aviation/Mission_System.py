@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import time
-from .Aviation_Utils.Aviation_Utils import airport_lookup, airport_distance, random_flight
+from .Aviation_Utils.Aviation_Utils import airport_lookup, airport_distance, random_flight, registration_creator, get_current_time
 import sqlite3
 import random
 import os
@@ -81,7 +81,7 @@ class Mission_System(commands.Cog):
         aircraft_cursor.execute(sql)
         plane_types = aircraft_cursor.fetchall()
 
-        def generate_missions(airport, country, direction):
+        async def generate_missions(airport, country, direction):
             mission_types = ("Cargo transport", "Passenger transport", "Ferry flight\n")
             mission_list = []
 
@@ -104,7 +104,6 @@ class Mission_System(commands.Cog):
                     else:
                         flight = random_flight(country=country, arrival_airport=airport, min_distance=50, max_distance=300, type="small_airport")
                     if not flight:
-                        counter += 1
                         continue
 
                     mission = random.choice(mission_types)
@@ -120,13 +119,17 @@ class Mission_System(commands.Cog):
                         mission_list.append(mission)
                     else:
                         distance = flight[2]
-                        plane_type = random.choice(plane_types)[0]    #TODO grab a random SMALL plane from all possible aircraft
+                        plane_type = random.choice(plane_types)[0]
                         mission = MissionType(mission + "-" + plane_type, flight[0], flight[1], 0, 0, distance, True, plane_type)
                         mission_list.append(mission)
                     counter += 1
 
                     sql = "INSERT INTO 'Missions' (type, departure, arrival, pax, cargo, distance, needPlane, planeType, reward, airline, createdAt, planeId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
                     missions_cursor.execute(sql, (mission.type, mission.departure[1], mission.arrival[1], mission.pax, mission.cargo, mission.distance, mission.requires_plane, mission.aircraft_type, mission.reward, -1, int(time.time()), -1))
+                
+                if len(mission_list) == 0:
+                    await interaction.response.send_message("Unable to generate any missions for this airport")
+                    return
 
         departure_embed = discord.Embed(
             title=f"Missions from `{airport[0][1]}`",
@@ -138,8 +141,8 @@ class Mission_System(commands.Cog):
             color=0xf1c40f
         )
 
-        generate_missions(airport[0][1], airport[0][8], "From")
-        generate_missions(airport[0][1], airport[0][8], "To")
+        await generate_missions(airport[0][1], airport[0][8], "From")
+        await generate_missions(airport[0][1], airport[0][8], "To")
 
         sql = "SELECT id, type, departure, arrival, pax, cargo, distance, reward, airline FROM Missions WHERE departure = ?"
         missions_cursor.execute(sql, (airport[0][1],))
@@ -248,9 +251,25 @@ class Mission_System(commands.Cog):
                 super().__init__(timeout=timeout)
             @discord.ui.button(label="✅", style=discord.ButtonStyle.green)
             async def confirmed(self, interaction:discord.Interaction, button:discord.ui.Button):
-                sql = "UPDATE Missions SET airline = ? WHERE id = ?"
-                mission_cursor.execute(sql, (airline_result[0], mission))
-                await interaction.response.send_message("You have accepted the mission, good luck!", ephemeral=True)
+                if result[7]:
+                    destination = airport_lookup(result[3])
+                    registration = registration_creator(iso_code=destination[0][8])
+                    sql = "INSERT INTO AircraftList (airlineId, type, registration, hours, currentPax, currentCargo, location, homeBase, status, engineStatus, isRented, returnAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+                    aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+                    aircraft_cursor = aircraft_db.cursor()
+                    aircraft_cursor.execute(sql, (airline_result[0], result[8], registration, 0, 0, 0, result[2], result[3], 100, 100, True, get_current_time() + 86400))
+                    sql = "SELECT id FROM AircraftList WHERE registration = ? AND airlineId = ? AND type = ? and location = ? AND isRented = 1" # If this ever bugs I'm kms
+                    aircraft_cursor.execute(sql, (registration, airline_result[0], result[8], result[2]))
+                    aircraft_id = aircraft_cursor.fetchone()[0]
+                    aircraft_db.commit()
+                    aircraft_db.close()
+                    sql = "UPDATE Missions SET planeId = ?, airline = ? WHERE id = ?"
+                    mission_cursor.execute(sql, (aircraft_id, airline_result[0], mission))
+                    await interaction.response.send_message(f"You have accepted the mission, the aircraft is waiting for you at {result[2]}, you have 24 hours to deliver it. Good luck!", ephemeral=True)
+                else:
+                    sql = "UPDATE Missions SET airline = ? WHERE id = ?"
+                    mission_cursor.execute(sql, (airline_result[0], mission))
+                    await interaction.response.send_message("You have accepted the mission, good luck!", ephemeral=True)
                 mission_db.commit()
                 mission_db.close()
                 airline_db.close()
@@ -328,7 +347,7 @@ class Mission_System(commands.Cog):
         
         mission_db = sqlite3.connect(DB_MISSIONS_PATH)
         mission_cursor = mission_db.cursor()
-        sql = "SELECT id, airline FROM Missions WHERE id = ?"
+        sql = "SELECT id, airline, planeId FROM Missions WHERE id = ?"
         mission_cursor.execute(sql, (mission,))
         result = mission_cursor.fetchone()
 
@@ -344,7 +363,18 @@ class Mission_System(commands.Cog):
             mission_db.close()
             return
         
-        sql = "UPDATE Missions SET airline = NULL WHERE id = ?"
+        try:    
+            if result[2] != -1:
+                sql = "DELETE FROM AircraftList WHERE id = ?"
+                aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+                aircraft_db.cursor().execute(sql, (result[2],))
+                aircraft_db.commit()
+                aircraft_db.close()
+        except Exception as e:
+            print(e)
+            raise Exception("lol")
+        
+        sql = "UPDATE Missions SET airline = -1, planeId = -1 WHERE id = ?"
         mission_cursor.execute(sql, (mission,))
         mission_db.commit()
         mission_db.close()
