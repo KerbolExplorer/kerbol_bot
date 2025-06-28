@@ -6,6 +6,7 @@ Current functions are:
     * airport_distance: Returns the distance between two airports in nautical miles.
     * get_metar: Returns the metar for an airport.
     * get_current_zulu: Returns the current zulu time.
+    * get_time: Returns the current time in unix.
     * registration_creator  creates a random registration.
 
 """
@@ -270,6 +271,9 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     airport_db.close()
     return (departing_airport, arrival_airport, distance)
 
+def get_current_time():
+    return int(datetime.now(timezone.utc).timestamp())
+
 
 def registration_creator(iso_code, type = None):
     """Creates a random registration.
@@ -502,8 +506,3 @@ def registration_creator(iso_code, type = None):
         registration = prefix + "-" + random_letters(4)
 
     return registration
-
-if __name__ == "__main__":
-    while True:
-        code = input("Insert country code: ")
-        print(registration_creator(code))

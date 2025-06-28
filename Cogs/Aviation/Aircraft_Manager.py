@@ -78,7 +78,7 @@ class Aircraft_Manager(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, airlineId INTEGER, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER, location TEXT, homeBase TEXT, status INTEGER, engineStatus INTEGER)"
+            sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, airlineId INTEGER, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER, location TEXT, homeBase TEXT, status INTEGER, engineStatus INTEGER, isRented BOOLEAN, returnAt INTEGER)"
             cursor.execute(sql)
         
         db.commit()
@@ -189,10 +189,10 @@ class Aircraft_Manager(commands.Cog):
         embed.add_field(name="Cargo capacity:", value=result[3])
         embed.add_field(name="motw:", value=str(result[4]) + "kg")
         embed.add_field(name="Empty:", value=str(result[5]) + "kg")
-        embed.add_field(name="Runway type:", value=result[6])
+        embed.add_field(name="Runway type:", value=result[8])
         embed.add_field(name="Cruise speed:", value=result[7])
         embed.add_field(name="Home Base:", value=home_base)
-        embed.add_field(name="Price:", value=result[8])
+        embed.add_field(name="Price:", value=result[6])
         embed.set_footer(text="Plane will be delivered to it's home base")
 
         await interaction.followup.send(embed=embed, view=Buttons())
@@ -494,6 +494,12 @@ class Aircraft_Manager(commands.Cog):
         close_databases(aircraft_db, airline_db)
 
         await interaction.followup.send(f"Aircraft `{aircraft}` has been moved to `{destination}`")
+
+    @app_commands.command(name="aircraft_market", description="Shows the available aircraft for sale/rent at an airport")
+    async def aircraft_market(self, interaction:discord.Interaction, airport:str):
+        await interaction.response.defer()
+
+        
 
 async def setup(bot):
     await bot.add_cog(Aircraft_Manager(bot))

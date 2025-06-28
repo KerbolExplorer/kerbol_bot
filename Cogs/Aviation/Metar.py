@@ -52,7 +52,8 @@ class Metar(commands.Cog):
                     'BKN' : 'Broken clouds', 
                     'OVC' : 'Overcast clouds', 
                     'CB' : 'Cumulonimbus clouds', 
-                    'TCU' : 'Towering cumulus clouds'
+                    'TCU' : 'Towering cumulus clouds',
+                    'OVX' : 'Overcast Sky'
                                }
                 for layer in metar['clouds']:
                     try:

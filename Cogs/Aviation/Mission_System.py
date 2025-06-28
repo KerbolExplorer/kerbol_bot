@@ -224,11 +224,12 @@ class Mission_System(commands.Cog):
         if result[7]:
             embed = discord.Embed(
             title=f"{result[1]} from `{result[2]}` to `{result[3]}` ({result[6]})",
-            description="Ferry flights do not require your own plane",
+            description='Ferry flights will add the plane to your airline with the "rented" condition. You are free to do with them as you please as long as they arrive at their destination in 24 hours. If you fail to deliver the plane on time a penalty will be substracted from your reward based on the distance. It can hit the negatives',
             color=0xf1c40f
             )
             embed.add_field(name="Aircraft:", value=result[8])
             embed.add_field(name="Reward:", value=result[9])
+            embed.add_field(name="Late Penalty:", value="50 per nm")
         else:    
             embed = discord.Embed(
             title=f"{result[1]} from `{result[2]}` to `{result[3]}`",
@@ -237,8 +238,8 @@ class Mission_System(commands.Cog):
             )
             embed.add_field(name="Passengers:", value=result[4])
             embed.add_field(name="Cargo:", value=result[5])
+            embed.add_field(name="Reward:", value=result[9])
 
-        embed.add_field(name="Reward:", value=result[9])
         embed.set_footer(text="You can cancel a mission with S!mission_cancel id")
 
 
