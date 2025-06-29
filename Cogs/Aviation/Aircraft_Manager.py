@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
-from discord.ext import commands
-from .Aviation_Utils.Aviation_Utils import airport_lookup, registration_creator
+from discord.ext import commands, tasks
+from .Aviation_Utils.Aviation_Utils import airport_lookup, registration_creator, get_current_time, airport_distance
 from .Aviation_Utils.Airline_Utils import get_aircraft
 import sqlite3
 import os
@@ -78,8 +78,11 @@ class Aircraft_Manager(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, airlineId INTEGER, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER, location TEXT, homeBase TEXT, status INTEGER, engineStatus INTEGER, isRented BOOLEAN, returnAt INTEGER)"
+            sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, airlineId INTEGER, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER, location TEXT, homeBase TEXT, status INTEGER, engineStatus INTEGER, isRented BOOLEAN, returnAt INTEGER, rentPrice INTEGER, nextPayment INTEGER)"
             cursor.execute(sql)
+        
+        if not self.check_rents.is_running():
+            self.check_rents.start()
         
         db.commit()
         db.close()
@@ -312,10 +315,10 @@ class Aircraft_Manager(commands.Cog):
         mission_db = databases[0]
         missions_cursor = mission_db.cursor()
 
-        sql = "SELECT arrival, pax, cargo, needPlane, airline, planeId, reward FROM Missions WHERE id = ?"
+        sql = "SELECT arrival, pax, cargo, needPlane, airline, planeId, reward, departure FROM Missions WHERE id = ?"
 
         missions_cursor.execute(sql, (mission_id,))
-        mission_data = missions_cursor.fetchone()   #0 = departure, 1 = pax, 2 = cargo, 3 = needPlane, 4 = airline, 5 = planeId, 6 = reward
+        mission_data = missions_cursor.fetchone()   #0 = arrival, 1 = pax, 2 = cargo, 3 = needPlane, 4 = airline, 5 = planeId, 6 = reward, 7 = departure
 
         if mission_data == None:
             await interaction.followup.send("This mission does not exist.")
@@ -368,8 +371,8 @@ class Aircraft_Manager(commands.Cog):
         sql = "UPDATE AircraftList SET currentPax = ?, currentCargo = ? WHERE id = ?"
         aircraft_cursor.execute(sql, (new_pax, new_cargo, aircraft[0]))
 
-        sql = "UPDATE Missions SET planeId = ?, airline = ? WHERE id = ?"
-        missions_cursor.execute(sql, (-1, -1, mission_id))
+        sql = "UPDATE Missions SET planeId = ?, departure = ? WHERE id = ?"
+        missions_cursor.execute(sql, (-1, mission_data[7], mission_id))
 
         #if the aircraft is at the same airport as the destination of the mission, it's a mission complete
         if aircraft[2] == mission_data[0]:
@@ -381,6 +384,7 @@ class Aircraft_Manager(commands.Cog):
             missions_cursor.execute(sql, (mission_id,))
             await interaction.followup.send("The mission has been marked as completed and the reward has been added to your account")
         else:
+            # we need to change the location of the cargo lmao
             await interaction.followup.send("The mission has been sucessfully unloaded from the aircraft")
 
         aircraft_db.commit()
@@ -498,6 +502,107 @@ class Aircraft_Manager(commands.Cog):
     @app_commands.command(name="aircraft_market", description="Shows the available aircraft for sale/rent at an airport")
     async def aircraft_market(self, interaction:discord.Interaction, airport:str):
         await interaction.response.defer()
+    
+
+    @tasks.loop(hours=1)
+    async def check_rents(self):
+        databases = open_databases()
+
+        airline_db = databases[0]
+        aircraft_db = databases[1]
+        mission_db = databases[2]
+
+        aircraft_cursor = aircraft_db.cursor()
+        sql = "SELECT * FROM AircraftList WHERE isRented = 1"
+        aircraft_cursor.execute(sql)
+        rented_aircraft = aircraft_cursor.fetchall()
+
+        mission_cursor = mission_db.cursor()
+        airline_cursor = airline_db.cursor()
+
+        if rented_aircraft != []:
+            current_time = get_current_time()
+            for aircraft in rented_aircraft:
+
+                # check if the plane is part of a mission
+                sql = "SELECT * FROM Missions WHERE planeId = ?"
+                plane_id = aircraft[0]
+                mission_cursor.execute(sql, (plane_id,))
+                mission_data = mission_cursor.fetchone()
+                if mission_data is not None:
+                    # there is a mission with this plane, lets check if it's expired
+                    if aircraft[12] < mission_data[11]:
+                        at_destination = False
+                        # mission is expired. We check if the plane is at it's destination and apply a penalty if not.
+                        if aircraft[7] == mission_data[3]:
+                            # Plane is at it's destination so all good :3
+                            sql = "UPDATE Airline SET money = money + ? WHERE airlineId = ?"
+                            airline_cursor.execute(sql, (mission_data[9], mission_data[10]))
+                            at_destination = True
+                        else:
+                            departure_airport = airport_lookup(mission_data[2])
+                            arrival_airport = airport_lookup(mission_data[3])
+                            distance = airport_distance((departure_airport[4], departure_airport[5]), (arrival_airport[4], arrival_airport[5]))     
+                            penalty = (distance * 100)
+                            reward = mission_data[9] - penalty
+                            sql = "UPDATE Airline SET money = money + ? WHERE airlineId = ?"
+                            airline_cursor.execute(sql, (reward, mission_data[10]))
+                        
+                        sql = "DELETE FROM AircraftList WHERE id = ?"
+                        aircraft_cursor.execute(sql, (aircraft[0],))
+                        
+                        sql = "DELETE FROM Missions WHERE id = ?"
+                        mission_cursor.execute(sql, (mission_data[0],))
+
+                        # if the plane had any assigned missions, we unasign them
+                        sql = "UPDATE Missions SET planeId = -1, departure = ? WHERE planeId = ?"
+                        mission_cursor.execute(sql, (mission_data[2], aircraft[0]))
+
+                        sql = "SELECT owner FROM Airlines WHERE airlineId = ?"
+                        airline_cursor.execute(sql, (aircraft[1],))
+                        
+                        user_target = await self.bot.fetch_user(int(airline_cursor.fetchone()[0]))
+
+                        if at_destination:
+                            await user_target.send(f"Hello, the aircraft {aircraft[3]} has been sucessfully delivered. The mission reward has been added to your account. If you had any cargo/pax on this aircraft it has been unloaded and can be added to another aircraft")
+                        else:
+                            await user_target.send(f"Hello, the aircraft {aircraft[3]} was not delivered on time to it's destination. It's currently {distance}nm away from it's destination. The penalty is {penalty}, so the reward for this mission has been reduced to {reward}. If you had any cargo/pax on this aircraft it has been unloaded and can be added to another aircraft")
+                else:
+                    # If the plane is rented by normal means. Check if there's a fee overdue
+                    if aircraft[13] <= current_time:
+                        sql = "SELECT rentPrice FROM aircraft WHERE type = ?"
+                        aircraft_cursor.execute(sql, (aircraft[3],))
+                        rent_cost = aircraft_cursor.fetchone()[0]
+
+                        sql = "UPDATE Airline SET money = money - ? WHERE airlineId = ?"
+                        airline_cursor.execute(sql, (rent_cost, aircraft[1]))
+                        
+                        returned = False
+                        if aircraft[12] <= current_time: #check here also how far the plane is from it's base.
+                            sql = "DELETE FROM AircraftList WHERE id = ?"
+                            aircraft_cursor.execute(sql, (aircraft_cursor[0],))
+
+                            # if the plane had any assigned missions, we unasign them
+                            sql = "UPDATE Missions SET planeId = -1, departure = ? WHERE planeId = ?"
+                            mission_cursor.execute(sql, (mission_data[2], aircraft[0]))
+                            returned = True
+                        else:
+                            sql = "UPDATE AircraftList SET nextPayment = ? WHERE id = ?"
+                            mission_cursor.execute(sql, (current_time + 60, aircraft[0])) #CHANGE THIS TO 604800
+                        
+                        sql = "SELECT owner FROM Airlines WHERE airlineId = ?"
+                        airline_cursor.execute(sql, (aircraft[1],))
+                        
+                        user_target = await self.bot.fetch_user(int(airline_cursor.fetchone()[0]))
+
+                        if returned:
+                            await user_target.send(f"Hello, the rent for {aircraft[3]} has ended. The aircraft has been removed from your airline and all loaded missions have been unloaded. We hope you've enjoyed your time with it!")
+                        else:
+                            await user_target.send(f"Hello, the weekly payment for {aircraft[3]} has been completed. {rent_cost} has been removed from your account.")
+
+
+
+        close_databases(mission_db, aircraft_db, airline_db)
 
         
 

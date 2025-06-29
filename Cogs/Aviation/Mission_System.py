@@ -103,7 +103,7 @@ class Mission_System(commands.Cog):
                         flight = random_flight(country=country, departing_airport=airport, min_distance=50, max_distance=300, type="small_airport")
                     else:
                         flight = random_flight(country=country, arrival_airport=airport, min_distance=50, max_distance=300, type="small_airport")
-                    if not flight:
+                    if not flight or flight == 1 or flight == 2 or flight == 3:
                         continue
 
                     mission = random.choice(mission_types)
@@ -232,7 +232,7 @@ class Mission_System(commands.Cog):
             )
             embed.add_field(name="Aircraft:", value=result[8])
             embed.add_field(name="Reward:", value=result[9])
-            embed.add_field(name="Late Penalty:", value="50 per nm")
+            embed.add_field(name="Late Penalty:", value="100 per nm")
         else:    
             embed = discord.Embed(
             title=f"{result[1]} from `{result[2]}` to `{result[3]}`",
@@ -362,17 +362,13 @@ class Mission_System(commands.Cog):
             airline_db.close()
             mission_db.close()
             return
-        
-        try:    
-            if result[2] != -1:
-                sql = "DELETE FROM AircraftList WHERE id = ?"
-                aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
-                aircraft_db.cursor().execute(sql, (result[2],))
-                aircraft_db.commit()
-                aircraft_db.close()
-        except Exception as e:
-            print(e)
-            raise Exception("lol")
+           
+        if result[2] != -1:
+            sql = "DELETE FROM AircraftList WHERE id = ?"
+            aircraft_db = sqlite3.connect(DB_AIRCRAFT_PATH)
+            aircraft_db.cursor().execute(sql, (result[2],))
+            aircraft_db.commit()
+            aircraft_db.close()
         
         sql = "UPDATE Missions SET airline = -1, planeId = -1 WHERE id = ?"
         mission_cursor.execute(sql, (mission,))

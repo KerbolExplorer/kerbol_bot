@@ -69,12 +69,12 @@ class Dev_commands(commands.Cog):
     # Adds an airframe to aircraft.db so the plane can be bought later on
     # Example: S!add_aircraft PC12 1800 9 1000 4740 5300000 528 ALL
     @commands.command()
-    async def add_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str):
+    async def add_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str, rent_price:int):
         if self.verify_messenger(ctx.author.id) == True:
             db = sqlite3.connect(DB_AIRCRAFT_PATH)
             cursor = db.cursor()
-            sql = "INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, empty, price, cruise_speed, airfield_type, size) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            cursor.execute(sql, (type, range, pax_capacity, cargo_capacity, motw, empty, price, cruise_speed, airfield_type, size))
+            sql = "INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, empty, price, cruise_speed, airfield_type, size, rentPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            cursor.execute(sql, (type, range, pax_capacity, cargo_capacity, motw, empty, price, cruise_speed, airfield_type, size, rent_price))
             await ctx.message.add_reaction("✅")
             db.commit()
             db.close()
@@ -82,11 +82,11 @@ class Dev_commands(commands.Cog):
             await ctx.message.add_reaction("❌")
 
     @commands.command()
-    async def edit_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str, new_type:str):
+    async def edit_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str, rent_price:int, new_type:str):
         if self.verify_messenger(ctx.author.id) == True:
             db = sqlite3.connect(DB_AIRCRAFT_PATH)
             cursor = db.cursor()
-            sql = "UPDATE Aircraft SET type = ?, range = ?, paxCapacity = ?, cargoCapacity = ?, motw = ?, empty = ?, price = ?, cruise_speed = ?, airfield_type = ?, size = ? WHERE type = ?"
+            sql = "UPDATE Aircraft SET type = ?, range = ?, paxCapacity = ?, cargoCapacity = ?, motw = ?, empty = ?, price = ?, cruise_speed = ?, airfield_type = ?, size = ?, rentPrice = ? WHERE type = ?"
             cursor.execute(sql, (new_type, range, pax_capacity, cargo_capacity, motw, empty, price, cruise_speed, airfield_type, size, type))
             await ctx.message.add_reaction("✅")
             db.commit()
