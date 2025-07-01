@@ -41,7 +41,7 @@ async def on_ready():
     cogs_list_lvl = ('Cogs.Level_System.Level_System', 'Cogs.Level_System.Level', 'Cogs.Level_System.Profile', 'Cogs.Level_System.Leaderboard')
     cogs_list_games = ('Cogs.Games.rps', 'Cogs.Games.Chance_Games', 'Cogs.Games.Gunslingers')
     cogs_list_aviation = ('Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Airline_Manager', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar', 'Cogs.Aviation.Aircraft_Manager', 'Cogs.Aviation.Mission_System', 'Cogs.Aviation.Economy_System')
-    cogs_list_util = ('Cogs.Util.Server', 'Cogs.Util.About', 'Cogs.Util.Reminder')
+    cogs_list_util = ('Cogs.Util.Server', 'Cogs.Util.About', 'Cogs.Util.Reminder', 'Cogs.Util.Mods')
     cogs_list_misc = ('Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.Responses', 'Cogs.Misc.Rate')
 
     for cog in cogs_list_Test_Commands:
