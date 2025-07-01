@@ -6,7 +6,7 @@ class Mods(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command()
+    @commands.command(aliases=["lc"])
     async def lethal(self, ctx : commands.Context):
         guild_id = ctx.guild.id
         if guild_id == 671398463287722006:
@@ -14,7 +14,15 @@ class Mods(commands.Cog):
             await ctx.send(string)
         else:
             await ctx.send("This server does not have any modding instructions for this game. Please contact Kerbol to add them")
-
+    
+    @commands.command(aliases=["Left4Dead2"])
+    async def l4d2(self, ctx : commands.Context):
+        guild_id = ctx.guild.id
+        if guild_id == 671398463287722006:
+            string = """**ACTUALIZADO EL 1/7/2025**\nLink a lista de mods:https://steamcommunity.com/sharedfiles/filedetails/?id=3391726295 (La lista de mods es privada, tienes q ser amigo de espejismo para poder accederla)\n\nComo usar: Abre el enlace en steam, y clikea en subscribirse a todos. Una vez descargado los mods, abre l4d2 y comprobaras que en el menu principal, hay un circulo rojo al lado de 'ADDONS' ESPERA A QUE EL CIRCULO SE VAYA. Si no los mods no se cargaran y no apareceran el la partida. Para activar los mods entra en addons y tendras la lista de mods instalados. Simplemente cliquea en los mods para activarlos. Debido a que hay varios mods que cambian al mismo personaje, no puedes simplemente activar toda la lista, asi que configura los mods como sean necesarios en esta sesión.\n-# En el caso de que el codigo este desactualizado, avisen a Kerbol"""
+            await ctx.send(string)
+        else:
+            await ctx.send("This server does not have any modding instructions for this game. Please contact Kerbol to add them")
 
 async def setup(bot):
     await bot.add_cog(Mods(bot))
