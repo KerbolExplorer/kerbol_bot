@@ -11,3 +11,4 @@ test.py
 AV_databaseinit.py
 reminders.db
 missions.db
+bank.db
