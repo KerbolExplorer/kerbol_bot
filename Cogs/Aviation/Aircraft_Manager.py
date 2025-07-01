@@ -3,6 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from .Aviation_Utils.Aviation_Utils import airport_lookup, registration_creator, get_current_time, airport_distance
 from .Aviation_Utils.Airline_Utils import get_aircraft
+import random
 import sqlite3
 import os
 
@@ -71,7 +72,7 @@ class Aircraft_Manager(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()  
         if not result:
-            sql = "CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, empty INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT, size TEXT)" #if the database doesn't have any table we create it
+            sql = "CREATE TABLE 'Aircraft' (type TEXT, range INTEGER, paxCapacity INTEGER, cargoCapacity INTEGER, motw INTEGER, empty INTEGER, price INTEGER, cruise_speed INTEGER, airfield_type TEXT, size TEXT, rentPrice INTEGER, rarity FLOAT)" #if the database doesn't have any table we create it
             cursor.execute(sql)
 
         sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='AircraftList'"
@@ -79,6 +80,13 @@ class Aircraft_Manager(commands.Cog):
         result = cursor.fetchall()
         if not result:
             sql = "CREATE TABLE 'AircraftList' (id INTEGER PRIMARY KEY AUTOINCREMENT, airlineId INTEGER, type TEXT, registration TEXT, hours TEXT, currentPax INTEGER, currentCargo INTEGER, location TEXT, homeBase TEXT, status INTEGER, engineStatus INTEGER, isRented BOOLEAN, returnAt INTEGER, rentPrice INTEGER, nextPayment INTEGER)"
+            cursor.execute(sql)
+        
+        sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='AircraftRent'"
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        if not result:
+            sql = "CREATE TABLE 'AircraftRent' (type TEXT, registration TEXT, rentPrice INTEGER, location INTEGER, expires INTEGER)"
             cursor.execute(sql)
         
         if not self.check_rents.is_running():
@@ -499,9 +507,52 @@ class Aircraft_Manager(commands.Cog):
 
         await interaction.followup.send(f"Aircraft `{aircraft}` has been moved to `{destination}`")
 
+    async def generate_aircrafts(self, airport:str, size:str, country:str):
+        aircraft_database = open_databases(airline=False, missions=False)
+        cursor : sqlite3.Cursor = aircraft_database[1].cursor()
+        GENERATION_LIMIT = 5
+
+        sql = "SELECT type FROM AircraftRent WHERE location = ?"
+        cursor.execute(sql, (airport,))
+        current_length = len(cursor.fetchall())
+
+        aircraft_list = []
+
+        if current_length < GENERATION_LIMIT:
+            sql = "SELECT type, rarity, rentPrice FROM Aircraft WHERE size = ?"
+            cursor.execute(sql, (size,))
+            possible_aircraft = cursor.fetchall()
+
+
+            possible_weights = []
+            for aircraft in possible_aircraft:
+                possible_weights.extend([aircraft] * int(aircraft[1]))
+
+            while current_length < GENERATION_LIMIT:
+                current_length += 1
+                aircraft = random.choice(possible_weights)
+
+                registration = registration_creator(country)
+                cost = aircraft[2]
+                expires = get_current_time() + 604800
+
+                sql = "INSERT INTO AircraftRent (type, registration, rentPrice, location, expires) VALUES (?, ?, ?, ?, ?)"
+                cursor.execute(sql, (aircraft[0], registration, cost, airport, expires))
+                aircraft_list.append(aircraft)
+        aircraft_database[1].commit()
+        close_databases(aircraft_db=aircraft_database[1])
+        return aircraft_list
+
+
     @app_commands.command(name="aircraft_market", description="Shows the available aircraft for sale/rent at an airport")
     async def aircraft_market(self, interaction:discord.Interaction, airport:str):
         await interaction.response.defer()
+        airport = airport_lookup(airport)
+        if airport == False:
+            await interaction.followup.send("The airport is not in my database.")
+        else:
+            aircraft_list = await self.generate_aircrafts(airport[0][1], "SMALL", airport[0][7])
+            await interaction.followup.send(aircraft_list)
     
 
     @tasks.loop(hours=1)
@@ -570,9 +621,7 @@ class Aircraft_Manager(commands.Cog):
                 else:
                     # If the plane is rented by normal means. Check if there's a fee overdue
                     if aircraft[13] <= current_time:
-                        sql = "SELECT rentPrice FROM aircraft WHERE type = ?"
-                        aircraft_cursor.execute(sql, (aircraft[3],))
-                        rent_cost = aircraft_cursor.fetchone()[0]
+                        rent_cost = aircraft[14]
 
                         sql = "UPDATE Airline SET money = money - ? WHERE airlineId = ?"
                         airline_cursor.execute(sql, (rent_cost, aircraft[1]))

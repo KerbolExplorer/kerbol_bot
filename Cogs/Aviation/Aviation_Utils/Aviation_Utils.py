@@ -480,7 +480,10 @@ def registration_creator(iso_code, type = None):
     def random_numbers(length):
         return ''.join(random.choices(string.digits, k=length))
 
-    prefix = country_prefixes[iso_code]
+    try:
+        prefix = country_prefixes[iso_code]
+    except KeyError:
+        prefix = "US"
 
     if len(prefix) > 1:
         prefix = random.choice(prefix)
