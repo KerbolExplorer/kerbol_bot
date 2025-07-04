@@ -66,47 +66,29 @@ class Dev_commands(commands.Cog):
         else:
             return
     
-    # Adds an airframe to aircraft.db so the plane can be bought later on
-    # Example: S!add_aircraft PC12 1800 9 1000 4740 5300000 528 ALL
+    #This command will update databases as required
     @commands.command()
-    async def add_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str, rent_price:int):
-        if self.verify_messenger(ctx.author.id) == True:
-            db = sqlite3.connect(DB_AIRCRAFT_PATH)
-            cursor = db.cursor()
-            sql = "INSERT INTO Aircraft (type, range, paxCapacity, cargoCapacity, motw, empty, price, cruise_speed, airfield_type, size, rentPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-            cursor.execute(sql, (type, range, pax_capacity, cargo_capacity, motw, empty, price, cruise_speed, airfield_type, size, rent_price))
-            await ctx.message.add_reaction("✅")
-            db.commit()
-            db.close()
-        else:
-            await ctx.message.add_reaction("❌")
+    async def update(self, ctx):
+        try:
+            user_id = ctx.author.id
+            if self.verify_messenger(user_id) == True:
+                db = sqlite3.connect("db_exp.db")
+                cursor = db.cursor()
 
-    @commands.command()
-    async def edit_aircraft(self, ctx, type:str, range:int, pax_capacity:int, cargo_capacity:int, motw:int, empty:int, price:int, cruise_speed:int, airfield_type:str, size:str, rent_price:int, new_type:str):
-        if self.verify_messenger(ctx.author.id) == True:
-            db = sqlite3.connect(DB_AIRCRAFT_PATH)
-            cursor = db.cursor()
-            sql = "UPDATE Aircraft SET type = ?, range = ?, paxCapacity = ?, cargoCapacity = ?, motw = ?, empty = ?, price = ?, cruise_speed = ?, airfield_type = ?, size = ?, rentPrice = ? WHERE type = ?"
-            cursor.execute(sql, (new_type, range, pax_capacity, cargo_capacity, motw, empty, price, cruise_speed, airfield_type, size, type))
-            await ctx.message.add_reaction("✅")
-            db.commit()
-            db.close()
-        else:
-            await ctx.message.add_reaction("❌")
+                sql = "ALTER TABLE '606456281469026305' ADD COLUMN role INTEGER"
+                cursor.execute(sql)
+                sql = "ALTER TABLE '671398463287722006' ADD COLUMN role INTEGER"
+                cursor.execute(sql)
+                db.commit()
+                db.close()
+                await ctx.message.add_reaction("✅")
+            else:
+                return
+        except Exception as e:
+            print(e)
 
-    @commands.command()
-    async def remove_aircraft(self, ctx, type:str):
-        if self.verify_messenger(ctx.author.id) == True:
-            db = sqlite3.connect(DB_AIRCRAFT_PATH)
-            cursor = db.cursor()
-            sql = "DELETE FROM Aircraft WHERE type = ?"
-            cursor.execute(sql, (type,))
-            await ctx.message.add_reaction("✅")
-            db.commit()
-            db.close()
-        else:
-            await ctx.message.add_reaction("❌")   
-    
+
+    # S!add_airport KAVX small_airport "Catalina Airport" 33.404 -118.414878 1541 NA US Avalon US-CA no
     @commands.command()
     async def add_airport(self, ctx, ident, type, name, latitude, longitude, elevation:int, continent, country, location, region, scheduled_service):
         if self.verify_messenger(ctx.author.id) == True:

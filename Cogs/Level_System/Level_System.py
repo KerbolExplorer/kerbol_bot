@@ -16,7 +16,7 @@ class Level_System(commands.Cog):
         cursor.execute(sql)
         result = cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE 'Guilds' (id INTEGER, cooldown INTEGER, minGain INTEGER, maxGain INTEGER)"
+            sql = "CREATE TABLE 'Guilds' (id INTEGER, cooldown INTEGER, minGain INTEGER, maxGain INTEGER, customRoles BOOLEAN)"
             cursor.execute(sql)
             db.commit()
             db.close()
@@ -60,11 +60,11 @@ class Level_System(commands.Cog):
             result = cursor.fetchall()
             
             if result == []:    # If the guild is not on the database, create it
-                sql = "INSERT INTO Guilds (id, cooldown, minGain, maxGain) VALUES (?, ?, ?, ?)"    # We add the guild data to the guilds table
-                cursor.execute(sql, (guild_id, 60, 15, 25))
+                sql = "INSERT INTO Guilds (id, cooldown, minGain, maxGain, customRoles) VALUES (?, ?, ?, ?, ?)"    # We add the guild data to the guilds table
+                cursor.execute(sql, (guild_id, 60, 15, 25, False))
                 
                 # We then create the guilds own table to store it's users
-                sql = f"CREATE TABLE '{guild_id}' (userId INTEGER, xp INTEGER, xpNext INTEGER, level INTEGER, cooldownEnd INTEGER)" 
+                sql = f"CREATE TABLE '{guild_id}' (userId INTEGER, xp INTEGER, xpNext INTEGER, level INTEGER, cooldownEnd INTEGER, role INTEGER)" 
                 cursor.execute(sql)
 
             sql = f"SELECT * FROM '{guild_id}' WHERE userId = ?"
@@ -102,6 +102,7 @@ class Level_System(commands.Cog):
             cursor.execute(sql)
         except Exception:
             await interaction.response.send_message("This server is not in my database. Please send a message so I can register it", ephemeral=True)
+            db.close()
             return
         db.commit()
         db.close()
