@@ -74,7 +74,9 @@ class Dev_commands(commands.Cog):
                 db = sqlite3.connect("db_exp.db")
                 cursor = db.cursor()
 
-                sql = "UPDATE '606456281469026305' SET cooldownEnd = 0 WHERE userId = 442728041115025410"
+                sql = "ALTER TABLE '606456281469026305' ADD COLUMN role INTEGER"
+                cursor.execute(sql)
+                sql = "ALTER TABLE '671398463287722006' ADD COLUMN role INTEGER"
                 cursor.execute(sql)
                 db.commit()
                 db.close()
