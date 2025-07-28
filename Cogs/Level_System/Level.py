@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
+import aiosqlite
 
 class Level(commands.Cog):
     def __init__(self, bot):
@@ -14,28 +14,28 @@ class Level(commands.Cog):
         if member == None:
             member = interaction.user
 
-        db = sqlite3.connect("db_exp.db")
-        cursor = db.cursor()
+        db = await aiosqlite.connect("db_exp.db")
+        cursor = await db.cursor()
 
         guild_id = interaction.guild_id
 
         sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{guild_id}'" #check if the guild has a table
-        cursor.execute(sql)
-        result = cursor.fetchall()  
+        await cursor.execute(sql)
+        result = await cursor.fetchall()  
         if not result:
             await interaction.response.send_message("I don't have any information about this server in my database.", ephemeral=True)
-            db.close()
+            await db.close()
             return
 
         sql = f'SELECT * FROM "{guild_id}" WHERE userId = ?'
-        cursor.execute(sql, (member.id,))
-        result = cursor.fetchall()
+        await cursor.execute(sql, (member.id,))
+        result = await cursor.fetchall()
         if result == []:
             await interaction.response.send_message("I don't have information about this user.", ephemeral=True)
         else:
             await interaction.response.send_message(f"{member.name} is level {result[0][3]} and needs {abs(result[0][1] - result[0][2])}xp to reach the next level.")
 
-        db.close()
+        await db.close()
 
 
 async def setup(bot):

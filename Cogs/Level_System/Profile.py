@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
+import aiosqlite
 
 class Profile(commands.Cog):
     def __init__(self, bot):
@@ -14,19 +14,19 @@ class Profile(commands.Cog):
         if member == None:
             member = interaction.user
 
-        db = sqlite3.connect("db_exp.db")
-        cursor = db.cursor()
+        db = await aiosqlite.connect("db_exp.db")
+        cursor = await db.cursor()
 
         guild_id = interaction.guild_id
         sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{guild_id}'" #check if the guild has a table
-        cursor.execute(sql)
-        result = cursor.fetchall()  
+        await cursor.execute(sql)
+        result = await cursor.fetchall()  
         if not result:
             result = [(None,"0", "100", "1")]
         else:
             sql = f'SELECT * FROM "{guild_id}" WHERE userId = ?'
-            cursor.execute(sql, (member.id,))
-            result = cursor.fetchall()
+            await cursor.execute(sql, (member.id,))
+            result = await cursor.fetchall()
             if result == []:
                 result = [(None,"0", "100", "1")]
 
@@ -46,7 +46,7 @@ class Profile(commands.Cog):
         embed.add_field(name="XP", value=f"XP: {result[0][1]}/{result[0][2]}")
         embed.set_footer(text=f"Requested by {interaction.user.display_name}")
         await interaction.response.send_message(embed=embed)
-        db.close() 
+        await db.close() 
 
     @app_commands.command(name="banner", description="Shows the banner of a user")
     @app_commands.describe(member="The member we want to check")

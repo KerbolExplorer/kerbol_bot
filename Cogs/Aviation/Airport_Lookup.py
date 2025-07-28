@@ -46,31 +46,31 @@ class Airport_Lookup(commands.Cog):
         second_airport="The icao code of the second airport"
     )
     async def airport_distance(self, interaction:discord.Interaction, first_airport: str, second_airport: str):
-        import sqlite3
+        import aiosqlite
 
         await interaction.response.defer()
 
         first_airport = first_airport.upper()
         second_airport = second_airport.upper()
 
-        db = sqlite3.connect(db_path)
-        cursor = db.cursor()
+        db = await aiosqlite.connect(db_path)
+        cursor = await db.cursor()
 
         sql = "SELECT ident, latitude_deg, longitude_deg FROM airports WHERE ident = ?"
-        cursor.execute(sql, (first_airport,))
-        first_airport = cursor.fetchone()
+        await cursor.execute(sql, (first_airport,))
+        first_airport = await cursor.fetchone()
         if first_airport == []:
-            db.close()
+            await db.close()
             interaction.followup.send(f"Airport {first_airport} is not valid")
             return
         else:
             first_cords = (first_airport[1], first_airport[2])
         
         sql = "SELECT ident, latitude_deg, longitude_deg FROM airports WHERE ident = ?"
-        cursor.execute(sql, (second_airport,))
-        second_airport = cursor.fetchone()
+        await cursor.execute(sql, (second_airport,))
+        second_airport = await cursor.fetchone()
         if second_airport == []:
-            db.close()
+            await db.close()
             interaction.followup.send(f"Airport {second_airport} is not valid")
             return
         else:

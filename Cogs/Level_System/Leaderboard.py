@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
+import aiosqlite
 
 class Leaderboard(commands.Cog):
     def __init__(self, bot):
@@ -13,22 +13,22 @@ class Leaderboard(commands.Cog):
 
         guild_id = interaction.guild_id
         cap = 0
-        db = sqlite3.connect("db_exp.db")
-        cursor = db.cursor()
+        db = await aiosqlite.connect("db_exp.db")
+        cursor = await db.cursor()
 
         sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{guild_id}'" #check if the guild has a table
-        cursor.execute(sql)
-        result = cursor.fetchall()  
+        await cursor.execute(sql)
+        result = await cursor.fetchall()  
         if not result:
             await interaction.followup.send("I don't have any information about this server in my database.", ephemeral=True)
-            db.close()
+            await db.close()
             return
 
         sql = f'SELECT * FROM "{guild_id}"'
 
-        cursor.execute(sql)
-        result = cursor.fetchall()
-        db.close()
+        await cursor.execute(sql)
+        result = await cursor.fetchall()
+        await db.close()
         result.sort(key=lambda x: x[3], reverse=True)
         member_list = []
 

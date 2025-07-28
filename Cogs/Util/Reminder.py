@@ -4,25 +4,27 @@ from discord.ext import commands, tasks
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 import asyncio
-import sqlite3
+import aiosqlite
 
 class Reminder(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.loop.create_task(self.setup_database())
 
         if not self.send_reminder.is_running():
             self.send_reminder.start()
 
-        reminder_db = sqlite3.connect("reminders.db")
-        reminder_cursor = reminder_db.cursor()
+    async def setup_database(self):
+        reminder_db = await aiosqlite.connect("reminders.db")
+        reminder_cursor = await reminder_db.cursor()
         sql = "SELECT name FROM sqlite_master WHERE type= 'table' AND name= 'Reminders'"
-        reminder_cursor.execute(sql)
-        result = reminder_cursor.fetchall()
+        await reminder_cursor.execute(sql)
+        result = await reminder_cursor.fetchall()
         if not result:
             sql = "CREATE TABLE 'Reminders' (reminderId INTEGER, userId INTEGER, name TEXT, description TEXT, time TEXT, unixTime INTEGER)"
-            reminder_cursor.execute(sql)
-        reminder_db.commit()
-        reminder_db.close()
+            await reminder_cursor.execute(sql)
+        await reminder_db.commit()
+        await reminder_db.close()
 
     def get_time(self):
         return int(datetime.now(timezone.utc).timestamp())
@@ -71,23 +73,23 @@ class Reminder(commands.Cog):
                 await interaction.response.send_message("You have selected a time from the past...", ephemeral=True)
                 return
 
-            reminder_db = sqlite3.connect("reminders.db")
-            reminder_cursor = reminder_db.cursor()
+            reminder_db = await aiosqlite.connect("reminders.db")
+            reminder_cursor = await reminder_db.cursor()
 
             sql = "SELECT * FROM Reminders ORDER BY reminderId DESC LIMIT 1"
-            reminder_cursor.execute(sql)
-            reminder_id = reminder_cursor.fetchall()
+            await reminder_cursor.execute(sql)
+            reminder_id = await reminder_cursor.fetchall()
             if reminder_id == []:
                 reminder_id = 0
             else:
                 reminder_id = (reminder_id[0][0] + 1)
 
             sql = "INSERT INTO Reminders (reminderId, userId, name, description, time, unixTime) VALUES (?, ?, ?, ?, ?, ?)"
-            reminder_cursor.execute(sql, (reminder_id, interaction.user.id, self.name.value, self.description.value, reminder_time, unix_time))
+            await reminder_cursor.execute(sql, (reminder_id, interaction.user.id, self.name.value, self.description.value, reminder_time, unix_time))
 
             await interaction.response.send_message(f"Reminder **{self.name}**, successfully set! I'll notify you on {self.date}", ephemeral=True)
-            reminder_db.commit()
-            reminder_db.close()
+            await reminder_db.commit()
+            await reminder_db.close()
 
     @app_commands.command(name="remindme", description="Have Solgaleo remind you of something")
     async def remindme(self, interaction:discord.Interaction):
@@ -96,16 +98,16 @@ class Reminder(commands.Cog):
     @app_commands.command(name="quick_remind", description="Set a quick reminder for the immediate future")
     @app_commands.describe(title="The title of the reminder", time="How many seconds until I remind you")
     async def quick_remind(self, interaction:discord.Interaction, title:str, time:int):
-            reminder_db = sqlite3.connect("reminders.db")
-            reminder_cursor = reminder_db.cursor()
+            reminder_db = await aiosqlite.connect("reminders.db")
+            reminder_cursor = await reminder_db.cursor()
 
             if time < 60:
                 await interaction.response.send_message("Reminders need to be at least 60 seconds away", ephemeral=True)
                 return
             else:
                 sql = "SELECT * FROM Reminders ORDER BY reminderId DESC LIMIT 1"
-                reminder_cursor.execute(sql)
-                reminder_id = reminder_cursor.fetchall()
+                await reminder_cursor.execute(sql)
+                reminder_id = await reminder_cursor.fetchall()
                 if reminder_id == []:
                     reminder_id = 0
                 else:
@@ -115,20 +117,20 @@ class Reminder(commands.Cog):
                 formated_time = datetime.fromtimestamp(unix_time).strftime("%d-%m-%Y %H:%M")
 
                 sql = "INSERT INTO Reminders (reminderId, userId, name, description, time, unixTime) VALUES (?, ?, ?, ?, ?, ?)"
-                reminder_cursor.execute(sql, (reminder_id, interaction.user.id, title, "", formated_time, unix_time))
+                await reminder_cursor.execute(sql, (reminder_id, interaction.user.id, title, "", formated_time, unix_time))
             
             await interaction.response.send_message(f"Reminder **{title}**, has been successfully set! I'll remind you in {time} seconds")
-            reminder_db.commit()
-            reminder_db.close()
+            await reminder_db.commit()
+            await reminder_db.close()
 
     @app_commands.command(name="remind_list", description="Shows a list with all your current reminders")
     async def remind_list(self, interaction:discord.Interaction):
-        reminder_db = sqlite3.connect("reminders.db")
-        reminder_cursor = reminder_db.cursor()
+        reminder_db = await aiosqlite.connect("reminders.db")
+        reminder_cursor = await reminder_db.cursor()
 
         sql = "SELECT * FROM Reminders WHERE userId = ?"
-        reminder_cursor.execute(sql, (interaction.user.id,))
-        result = reminder_cursor.fetchall()
+        await reminder_cursor.execute(sql, (interaction.user.id,))
+        result = await reminder_cursor.fetchall()
         if result == []:
             await interaction.response.send_message("You do not have any reminders", ephemeral=True)
         else:
@@ -142,7 +144,7 @@ class Reminder(commands.Cog):
             embed.description=reminders
             await interaction.response.send_message("Here are your reminders: ", embed=embed, ephemeral=True)
         
-        reminder_db.close()
+        await reminder_db.close()
 
     @app_commands.command(name="remind_cancel", description="Cancels a chosen reminder")
     @app_commands.describe(
@@ -150,34 +152,34 @@ class Reminder(commands.Cog):
         delete_all="Write anything here to delete all reminders"
         )
     async def remind_cancel(self, interaction:discord.Interaction, id: int, delete_all:str = "False"):
-        reminder_db = sqlite3.connect("reminders.db")
-        reminder_cursor = reminder_db.cursor()
+        reminder_db = await aiosqlite.connect("reminders.db")
+        reminder_cursor = await reminder_db.cursor()
 
         sql = "SELECT * FROM Reminders WHERE userId = ?"
-        reminder_cursor.execute(sql, (interaction.user.id,))
-        result = reminder_cursor.fetchall()
+        await reminder_cursor.execute(sql, (interaction.user.id,))
+        result = await reminder_cursor.fetchall()
         if result == []:
             await interaction.response.send_message("You do not have any reminders", ephemeral=True)
         else:
             if delete_all != "False":
                 sql = "DELETE FROM Reminders WHERE userId = ?"
-                reminder_cursor.execute(sql, (interaction.user.id,))
+                await reminder_cursor.execute(sql, (interaction.user.id,))
                 await interaction.response.send_message("All your reminders have been deleted", ephemeral=True)
             else:
                 sql = "DELETE FROM Reminders WHERE userId = ? AND reminderId = ?"
-                reminder_cursor.execute(sql, (interaction.user.id, id))
+                await reminder_cursor.execute(sql, (interaction.user.id, id))
                 await interaction.response.send_message(f"The request with id **{id}** has been deleted")
 
-        reminder_db.commit()
-        reminder_db.close()
+        await reminder_db.commit()
+        await reminder_db.close()
 
     @tasks.loop(minutes=1)
     async def send_reminder(self):
-        reminder_db = sqlite3.connect("reminders.db")
-        reminder_cursor = reminder_db.cursor()
+        reminder_db = await aiosqlite.connect("reminders.db")
+        reminder_cursor = await reminder_db.cursor()
         sql = "SELECT * FROM Reminders"
-        reminder_cursor.execute(sql)
-        users = reminder_cursor.fetchall()
+        await reminder_cursor.execute(sql)
+        users = await reminder_cursor.fetchall()
         current_time = self.get_time()
 
         if users != []:
@@ -200,13 +202,13 @@ class Reminder(commands.Cog):
                     await user_target.send(f"Hello!", embed=embed)
                     
                     sql = "DELETE FROM Reminders WHERE reminderId = ?"
-                    reminder_cursor.execute(sql, (user[0],))
-                    reminder_db.commit()
+                    await reminder_cursor.execute(sql, (user[0],))
+                    await reminder_db.commit()
                 else:
                     continue
 
-        reminder_db = sqlite3.connect("reminders.db")
-        reminder_cursor = reminder_db.cursor()
+        await reminder_db.commit()
+        await reminder_cursor.close()
 
 
 

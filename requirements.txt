@@ -2,3 +2,4 @@ discord.py
 pynacl
 requests
 dotenv
+aiosqlite

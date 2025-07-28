@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from datetime import datetime, timezone
 import asyncio
-import sqlite3
+import aiosqlite
 import os
 from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu
 from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
@@ -13,20 +13,22 @@ db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases",
 class Metar(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.loop.create_task(self.setup_database())
 
         if not self.send_metar.is_running():
             self.send_metar.start()
 
-        request_db = sqlite3.connect(db_requests_path)
-        request_cursor = request_db.cursor()
+    async def setup_database(self):    
+        request_db = await aiosqlite.connect(db_requests_path)
+        request_cursor = await request_db.cursor()
         sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='Requests'"
-        request_cursor.execute(sql)
-        result = request_cursor.fetchall()
+        await request_cursor.execute(sql)
+        result = await request_cursor.fetchall()
         if not result:
             sql = "CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER)"
-            request_cursor.execute(sql)
-        request_db.commit()
-        request_db.close()
+            await request_cursor.execute(sql)
+        await request_db.commit()
+        await request_db.close()
 
     def get_metar_embed(self, metar):
             # Getting the proper zulu time
@@ -110,23 +112,23 @@ class Metar(commands.Cog):
         elif metar == None:
             await interaction.followup.send("This metar is not available.")
         else:
-            request_db = sqlite3.connect(db_requests_path)
-            request_cursor = request_db.cursor()
+            request_db = await aiosqlite.connect(db_requests_path)
+            request_cursor = await request_db.cursor()
             sql = "SELECT * FROM Requests WHERE userId = ? AND airportICAO = ?"
-            request_cursor.execute(sql, (interaction.user.id, airport.upper()))
-            result = request_cursor.fetchall()
+            await request_cursor.execute(sql, (interaction.user.id, airport.upper()))
+            result = await request_cursor.fetchall()
 
             next_call = self.get_time()
             next_call += 3600
             if result == []:
                 sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
-                request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
+                await request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
             else:
                 await interaction.followup.send(f"You already have a request for `{airport.upper()}`!")
-                request_db.close()
+                await request_db.close()
                 return
-            request_db.commit()
-            request_db.close()
+            await request_db.commit()
+            await request_db.close()
 
             await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport.upper()}` during {hours} hours. If you wish to cancel, do `/metar_stop`")
 
@@ -135,43 +137,43 @@ class Metar(commands.Cog):
         airport="The airport you want to cancel the request for, leave empty if you wish to cancel all the requests"
     )
     async def metar_stop(self, interaction:discord.Interaction, airport:str = None):
-        request_db = sqlite3.connect(db_requests_path)
-        request_cursor = request_db.cursor()
+        request_db = await aiosqlite.connect(db_requests_path)
+        request_cursor = await request_db.cursor()
 
         #Check if the user has any metar requests
         sql = "SELECT * FROM Requests WHERE userId = ?"
-        request_cursor.execute(sql, (interaction.user.id,))
-        result = request_cursor.fetchall()
+        await request_cursor.execute(sql, (interaction.user.id,))
+        result = await request_cursor.fetchall()
         if result == []:
             await interaction.response.send_message("You don't have any metar requests", ephemeral=True)
         else:
             if airport == None:
                 sql = "DELETE FROM Requests WHERE userId = ?"
-                request_cursor.execute(sql, (interaction.user.id,))
+                await request_cursor.execute(sql, (interaction.user.id,))
                 await interaction.response.send_message("All of your metar requests have been cancelled", ephemeral=True)
             else:
                 sql = "SELECT * FROM Requests WHERE userId = ? AND airportICAO = ?"
-                request_cursor.execute(sql, (interaction.user.id, airport.upper()))
-                result = request_cursor.fetchall()
+                await request_cursor.execute(sql, (interaction.user.id, airport.upper()))
+                result = await request_cursor.fetchall()
                 if result == []:
                     await interaction.response.send_message(f"I Couldn't find any metar requests for `{airport.upper()}`", ephemeral=True)
                 else:
                     sql= "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
-                    request_cursor.execute(sql, (interaction.user.id, airport.upper()))
+                    await request_cursor.execute(sql, (interaction.user.id, airport.upper()))
                     await interaction.response.send_message(f"Alright, I've cancelled the metar requests for `{airport.upper()}`", ephemeral=True)
 
-        request_db.commit()
-        request_db.close()
+        await request_db.commit()
+        await request_db.close()
 
     @app_commands.command(name="metar_list", description="Returns a list of the metars you requested")
     async def metar_list(self, interaction:discord.Interaction):
-        request_db = sqlite3.connect(db_requests_path)
-        request_cursor = request_db.cursor()    
+        request_db = await aiosqlite.connect(db_requests_path)
+        request_cursor = await request_db.cursor()    
 
         #Check if the user has any metar requests
         sql = "SELECT * FROM Requests WHERE userId = ?"
-        request_cursor.execute(sql, (interaction.user.id,))
-        result = request_cursor.fetchall()
+        await request_cursor.execute(sql, (interaction.user.id,))
+        result = await request_cursor.fetchall()
         if result == []:
             await interaction.response.send_message("You don't have any metar requests", ephemeral=True)
         else:
@@ -186,7 +188,7 @@ class Metar(commands.Cog):
             embed.description=requests
             await interaction.response.send_message("Here are your requests: ", embed=embed, ephemeral=True)
         
-        request_db.close()
+        await request_db.close()
     
     @app_commands.command(name="zulu_time", description="Returns the current zulu time")
     async def zulu_time(self, interaction:discord.Interaction):
@@ -209,11 +211,11 @@ class Metar(commands.Cog):
 
     @tasks.loop(minutes=1)
     async def send_metar(self):
-        request_db = sqlite3.connect(db_requests_path)
-        request_cursor = request_db.cursor()
+        request_db = await aiosqlite.connect(db_requests_path)
+        request_cursor = await request_db.cursor()
         sql = "SELECT * FROM Requests"
-        request_cursor.execute(sql)
-        users = request_cursor.fetchall()
+        await request_cursor.execute(sql)
+        users = await request_cursor.fetchall()
 
         current_time = self.get_time()
 
@@ -242,16 +244,16 @@ class Metar(commands.Cog):
                     
                     if user[2] == 1:
                         sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
-                        request_cursor.execute(sql, (user[0], user[1]))
+                        await request_cursor.execute(sql, (user[0], user[1]))
                     else:
                         sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ?"
                         next_call = self.get_time() + 3600
-                        request_cursor.execute(sql, ((user[2] - 1), next_call, user[0], user[1]))
+                        await request_cursor.execute(sql, ((user[2] - 1), next_call, user[0], user[1]))
                 else:
                     continue
 
-        request_db.commit()
-        request_db.close()
+        await request_db.commit()
+        await request_db.close()
 
              
 async def setup(bot):
