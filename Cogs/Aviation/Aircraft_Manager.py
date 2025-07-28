@@ -541,7 +541,6 @@ class Aircraft_Manager(commands.Cog):
                 aircraft_list.append(aircraft)
         aircraft_database[1].commit()
         close_databases(aircraft_db=aircraft_database[1])
-        return aircraft_list
 
 
     @app_commands.command(name="aircraft_market", description="Shows the available aircraft for sale/rent at an airport")
@@ -551,8 +550,11 @@ class Aircraft_Manager(commands.Cog):
         if airport == False:
             await interaction.followup.send("The airport is not in my database.")
         else:
-            aircraft_list = await self.generate_aircrafts(airport[0][1], "SMALL", airport[0][7])
-            await interaction.followup.send(aircraft_list)
+            self.generate_aircrafts(airport[0][1], "SMALL", airport[0][7])
+            db = sqlite3.connect(DB_AIRCRAFT_PATH)
+            cursor = db.cursor()
+
+            
     
 
     @tasks.loop(hours=1)
