@@ -82,7 +82,7 @@ async def morning_call():
     admin_user = await bot.fetch_user(admin)
     if current_time == target_time:
         greetings = (
-            "Morning bud!", "Morning!", "Morning snack~", "Hey hey!", "Morning, I require headpats", "Morning!, slept well?", "Morning!, I hope you have a nice day!"
+            "Morning bud!", "Morning!", "Hey hey!", "Morning, I require headpats", "Morning!, slept well?", "Morning!, I hope you have a nice day!"
             )
         chosen_greeting = random.randint(0, (len(greetings) -1))
         await admin_user.send(greetings[chosen_greeting])
