@@ -42,7 +42,7 @@ async def on_ready():
     cogs_list_games = ('Cogs.Games.rps', 'Cogs.Games.Chance_Games', 'Cogs.Games.Gunslingers')
     cogs_list_aviation = ('Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar')
     cogs_list_util = ('Cogs.Util.Server', 'Cogs.Util.About', 'Cogs.Util.Reminder', 'Cogs.Util.Mods', 'Cogs.Util.Roles')
-    cogs_list_misc = ('Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.Responses', 'Cogs.Misc.Rate')
+    cogs_list_misc = ('Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.Responses', 'Cogs.Misc.Rate', 'Cogs.Misc.Random_commands')
 
     for cog in cogs_list_Test_Commands:
         await bot.load_extension(cog)
