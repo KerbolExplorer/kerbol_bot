@@ -208,7 +208,7 @@ class Reminder(commands.Cog):
                     continue
 
         await reminder_db.commit()
-        await reminder_cursor.close()
+        await reminder_db.close()
 
 
 

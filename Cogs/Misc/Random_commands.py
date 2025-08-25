@@ -19,5 +19,9 @@ class Random_commands(commands.Cog):
         await db.close()
         await ctx.send(f"This server has sinned {sin_count[0]} times.")
 
+    @commands.command()
+    async def amogus(self, ctx):
+        await ctx.send(chr(sum(range(ord(min(str(not())))))))
+
 async def setup(bot):
     await bot.add_cog(Random_commands(bot))

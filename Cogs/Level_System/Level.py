@@ -29,11 +29,29 @@ class Level(commands.Cog):
 
         sql = f'SELECT * FROM "{guild_id}" WHERE userId = ?'
         await cursor.execute(sql, (member.id,))
-        result = await cursor.fetchall()
-        if result == []:
+        result = await cursor.fetchone()
+
+        if result == None:
             await interaction.response.send_message("I don't have information about this user.", ephemeral=True)
-        else:
-            await interaction.response.send_message(f"{member.name} is level {result[0][3]} and needs {abs(result[0][1] - result[0][2])}xp to reach the next level.")
+            await db.close()
+            return
+
+        bar_length = 20
+        filled_length = int(round(bar_length * result[1]/result[2]))
+        percentage = int(round((result[1]*100)/result[2]))
+
+        bar = "█" * filled_length + "░" * (bar_length - filled_length)
+        string = f"[{bar}] {percentage}%"
+
+        embed = discord.Embed(
+            title=f"Level {result[3]}",
+            color=member.color,
+            description=f"You need {abs(result[1] - result[2])}xp to reach the next level."
+        )
+        embed.add_field(name="\u200b", value=string, inline=False)
+        embed.set_thumbnail(url=member.display_avatar)
+
+        await interaction.response.send_message(embed=embed)
 
         await db.close()
 

@@ -100,9 +100,9 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
         f"Message: `{str(error)}`"
                         )
     try:
-        await interaction.response.send_message(f"Something went wrong while doing this command, I have notified {admin_user.display_name} about it", ephemeral=True)
+        await interaction.response.send_message(f"Something went wrong while doing this command. I have notified {admin_user.display_name} about it", ephemeral=True)
     except discord.InteractionResponded:
-        await interaction.followup.send(f"Something went wrong while doing this command, I have notified {admin_user.display_name} about it", ephemeral=True)
+        await interaction.followup.send(f"Something went wrong while doing this command. I have notified {admin_user.display_name} about it", ephemeral=True)
 
     print(f"\nException occurred in command: {interaction.command.name}")
     traceback.print_exception(type(error), error, error.__traceback__)
