@@ -35,6 +35,8 @@ class Metar(commands.Cog):
             zulu_time = datetime.fromtimestamp(metar['obsTime'], tz=timezone.utc)
             zulu_time = zulu_time.strftime("%H%MZ")
 
+            """"
+            OLD WAY TO HANDLE METAR
             # Handles how the wind is displayed, depending on gusts or vrb winds
             if metar['wgst'] is not None:
                 wind = f"From {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
@@ -42,10 +44,16 @@ class Metar(commands.Cog):
                 wind = f"Variable winds at {metar['wspd']}kt\n"
             else:
                 wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
-            
+            """
+
+            if metar['wdir'] == "VRB":
+                wind = f"Variable winds at {metar['wspd']}kt\n"
+            else:
+                wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
+
             # Cloud cover handling
             clouds = ""
-            if metar['clouds'][0]['cover'] == 'CAVOK' or metar['clouds'][0]['cover'] == 'CLR':
+            if metar['cover'] == 'CAVOK' or metar['cover'] == 'CLR':
                 clouds = "Clear skies"
             else:
                 cover_types = {
@@ -76,7 +84,8 @@ class Metar(commands.Cog):
                 f"**Temperature** : {metar['temp']}ºC\n"
                 f"**Dew Point** : {metar['dewp']}ºC\n"
                 f"**Altimeter** : {int(metar['altim'])}hpa ({hpa_to_inhg(float(metar['altim']))}inhg)\n"
-                f"**Clouds**: {clouds}"
+                f"**Clouds** : {clouds}\n"
+                f"**Category** :{metar["fltCat"]}"
             ), inline=False)
             embed.set_footer(text="For flight simulation use only. Source: https://aviationweather.gov/api/data/metar")
             return embed
