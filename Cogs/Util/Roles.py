@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
+import aiosqlite
 
 class Roles(commands.Cog):
     def __init__(self, bot):
@@ -11,18 +11,18 @@ class Roles(commands.Cog):
     @commands.has_guild_permissions(manage_messages=True)
     @app_commands.describe(input="True if you want to enable them, False if not")
     async def enable_roles(self, interaction:discord.Interaction, input:bool):
-        db = sqlite3.connect("db_exp.db")
-        cursor = db.cursor()
+        db = await aiosqlite.connect("db_exp.db")
+        cursor = await db.cursor()
 
         sql = "UPDATE Guilds SET customRoles = ? WHERE id = ?"
         try:
-            cursor.execute(sql, (input, interaction.guild.id))
+            await cursor.execute(sql, (input, interaction.guild.id))
         except Exception:
-            await interaction.response.send_message("This server is not in my database. Pleas send a message so I can register it", ephemeral=True)
-            db.close()
+            await interaction.response.send_message("This server is not in my database. Please send a message so I can register it", ephemeral=True)
+            await db.close()
             return
-        db.commit()
-        db.close()
+        await db.commit()
+        await db.close()
         if input == True:
             await interaction.response.send_message("Custom roles have been enabled in this server.")
         else:
@@ -37,20 +37,20 @@ class Roles(commands.Cog):
         await interaction.response.defer()
         guild = interaction.guild
 
-        db = sqlite3.connect("db_exp.db")
-        cursor = db.cursor()
+        db = await aiosqlite.connect("db_exp.db")
+        cursor = await db.cursor()
 
         sql = f"SELECT role FROM '{guild.id}' WHERE userId = ?"
-        cursor.execute(sql, (interaction.user.id,))
-        role_id = cursor.fetchone()[0]
+        await cursor.execute(sql, (interaction.user.id,))
+        role_id = (await cursor.fetchone())[0]
 
         sql = "SELECT customRoles FROM Guilds WHERE id = ?"
-        cursor.execute(sql, (guild.id,))
-        allow_roles = cursor.fetchone()[0]
+        await cursor.execute(sql, (guild.id,))
+        allow_roles = (await cursor.fetchone())[0]
 
         if allow_roles == False or allow_roles == None:
             await interaction.followup.send("This server does not have custom roles enabled.")
-            db.close()
+            await db.close()
             return
 
         try:
@@ -62,8 +62,8 @@ class Roles(commands.Cog):
             return
         
         sql = f"SELECT role FROM '{guild.id}' WHERE userId = ?"
-        cursor.execute(sql, (interaction.user.id,))
-        role_id = cursor.fetchone()[0]
+        await cursor.execute(sql, (interaction.user.id,))
+        role_id = (await cursor.fetchone())[0]
 
         if role_id:
             role = guild.get_role(role_id)
@@ -76,9 +76,9 @@ class Roles(commands.Cog):
                 if remove:
                     await role.delete(reason="Asked by the user")
                     sql = f"UPDATE '{guild.id}' SET role = NULL WHERE userId = ?"
-                    cursor.execute(sql, (interaction.user.id,))
-                    db.commit()
-                    db.close()
+                    await cursor.execute(sql, (interaction.user.id,))
+                    await db.commit()
+                    await db.close()
                     await interaction.followup.send("I have deleted your role.")
                     return
                 # Update role
@@ -90,13 +90,49 @@ class Roles(commands.Cog):
                 await interaction.followup.send(f"I have created your role {name}, with the color {color}")
             
             sql = f"UPDATE '{guild.id}' SET role = ? WHERE userId = ?"
-            cursor.execute(sql, (role.id, interaction.user.id))
-            db.commit()
-            db.close()
+            await cursor.execute(sql, (role.id, interaction.user.id))
+            await db.commit()
+            await db.close()
 
         except discord.Forbidden:
             await interaction.followup.send("I do not have the permission to modify roles.")
-            db.close()
+            await db.close()
+    
+    # Links roles with the users
+    @commands.command()
+    async def sync(self, ctx : commands.Context):
+        if not ctx.author.guild_permissions.manage_roles:
+            await ctx.send("You need to have the manage roles permission to use this command")
+            return
+        substring = "unlinked"
+        guild = ctx.guild
+
+        matching_roles = []
+
+        db = await aiosqlite.connect("db_exp.db")
+        cursor = await db.cursor()
+
+        for role in guild.roles:
+            if substring in role.name:
+                matching_roles.append(role)
+
+        if len(matching_roles) == 0:
+            await ctx.send("No unlinked roles found")
+            return
+
+        for role in matching_roles:
+            if len(role.members) > 1:
+                await ctx.send(f"Did not link role {role} because more than 1 member has it")
+                continue
+            for member in role.members:
+                sql = f"UPDATE '{guild.id}' SET role = ? WHERE userId = ?"
+                await cursor.execute(sql, (role.id, member.id))
+                clean_name = role.name.replace(substring, "")
+                await role.edit(name=clean_name)
+        await db.commit()
+        await db.close()
+        await ctx.send("Valid roles have been linked.")
+
         
 
 async def setup(bot):
