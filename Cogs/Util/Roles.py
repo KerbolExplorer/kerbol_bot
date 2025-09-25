@@ -33,8 +33,13 @@ class Roles(commands.Cog):
         color="Hexadecimal value of the color of the role",
         remove="DELETES your role. If this is True, then it doesn't matter what you put in color"
         )
-    async def custom_role(self, interaction:discord.Interaction, name:str, color:str, remove:bool=False):
-        await interaction.response.defer()
+    async def custom_role(self, interaction:discord.Interaction, name:str=None, color:str=None, remove:bool=False):
+        await interaction.response.defer(ephemeral=True)
+
+        if name is None and color is None and remove is False:
+            await interaction.followup.send("You need to at least edit something")
+            return
+
         guild = interaction.guild
 
         db = await aiosqlite.connect("db_exp.db")
@@ -52,14 +57,6 @@ class Roles(commands.Cog):
             await interaction.followup.send("This server does not have custom roles enabled.")
             await db.close()
             return
-
-        try:
-            if not color.startswith("#"):
-                color = "#" + color
-            role_color = discord.Color(int(color.strip("#"), 16))
-        except ValueError:
-            await interaction.followup.send("Invalid hex color format. Use something like `#ff0000`")
-            return
         
         sql = f"SELECT role FROM '{guild.id}' WHERE userId = ?"
         await cursor.execute(sql, (interaction.user.id,))
@@ -69,6 +66,20 @@ class Roles(commands.Cog):
             role = guild.get_role(role_id)
         else:
             role = None
+        
+        if name == None:
+            name = role.name
+        
+        if color == None:
+            color = str(hex(role.color.value))
+
+        try:
+            if not color.startswith("#"):
+                color = "#" + color
+            role_color = discord.Color(int(color.strip("#"), 16))
+        except ValueError:
+            await interaction.followup.send("Invalid hex color format. Use something like `#ff0000`")
+            return
         
         try:
             if role:
