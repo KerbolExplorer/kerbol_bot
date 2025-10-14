@@ -35,21 +35,16 @@ class Metar(commands.Cog):
             zulu_time = datetime.fromtimestamp(metar['obsTime'], tz=timezone.utc)
             zulu_time = zulu_time.strftime("%H%MZ")
 
-            """"
-            OLD WAY TO HANDLE METAR
+    
+            try:
             # Handles how the wind is displayed, depending on gusts or vrb winds
-            if metar['wgst'] is not None:
-                wind = f"From {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
-            elif metar['wdir'] == "VRB":
-                wind = f"Variable winds at {metar['wspd']}kt\n"
-            else:
-                wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
-            """
-
-            if metar['wdir'] == "VRB":
-                wind = f"Variable winds at {metar['wspd']}kt\n"
-            else:
-                wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
+                if metar['wgst'] is not None:
+                    wind = f"From {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
+            except KeyError:
+                if metar['wdir'] == "VRB":
+                    wind = f"Variable winds at {metar['wspd']}kt\n"
+                else:
+                    wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
 
             # Cloud cover handling
             clouds = ""
@@ -61,6 +56,7 @@ class Metar(commands.Cog):
                     'SCT' : 'Scattered clouds', 
                     'BKN' : 'Broken clouds', 
                     'OVC' : 'Overcast clouds', 
+                    'OVX' : 'Overcast clouds',
                     'CB' : 'Cumulonimbus clouds', 
                     'TCU' : 'Towering cumulus clouds'
                                }
@@ -71,10 +67,19 @@ class Metar(commands.Cog):
                         clouds = f"⚠️Could not match cloud type {layer['cover']}"
                         break
 
+            colors = {
+                'VFR' : discord.Color.green(),
+                'MVFR' : discord.Color.blue(),
+                'IFR' : discord.Color.red(),
+                'LIFR' : discord.Color.purple()
+            }
+
+            #TODO: Treat key errors
+
             embed = discord.Embed(
                 title=f"METAR: `{metar['icaoId']}`",
                 description=f"**Raw Report**\n```{metar['rawOb']}```",
-                color=discord.Color.blue()
+                color=colors[metar['fltCat']]
             )
             embed.add_field(name="**Data Summary**", value=(
                 f"**Station** : {metar['icaoId']} ({metar['name']})\n"
@@ -85,10 +90,17 @@ class Metar(commands.Cog):
                 f"**Dew Point** : {metar['dewp']}ºC\n"
                 f"**Altimeter** : {int(metar['altim'])}hpa ({hpa_to_inhg(float(metar['altim']))}inhg)\n"
                 f"**Clouds** : {clouds}\n"
-                f"**Category** :{metar["fltCat"]}"
+                f"**Category** : {metar["fltCat"]}"
             ), inline=False)
             embed.set_footer(text="For flight simulation use only. Source: https://aviationweather.gov/api/data/metar")
             return embed
+
+    # Debug metar command, delete or comment after it's done.
+    @commands.command()
+    async def debugmetar(self, ctx:commands.Context, icao:str):
+        icao = icao.capitalize()
+
+        await ctx.send(f"```{get_metar(icao, False)}```")
     
     def get_time(self):
         return int(datetime.now(timezone.utc).timestamp())

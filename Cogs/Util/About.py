@@ -14,6 +14,7 @@ class About(commands.Cog):
             **Known Issues**:
             -> The music commands have been removed indefinetely due to issues with youtube.
             -> Leaderboard is limited to top 10 users. Might also take a while to load.
+            -> If a ⚠️shows up in a metar command. Use S!debugmetar `icao` and send it to Kerbol to add whichever is missing.
             """
             )
 
