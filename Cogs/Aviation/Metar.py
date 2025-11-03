@@ -74,7 +74,7 @@ class Metar(commands.Cog):
                 'LIFR' : discord.Color.purple()
             }
 
-            #TODO: Treat key errors
+            #TODO: Treat key errors with .get()
 
             embed = discord.Embed(
                 title=f"METAR: `{metar['icaoId']}`",
@@ -226,6 +226,20 @@ class Metar(commands.Cog):
         else:
             converted = inhg_to_hpa(value)
             await interaction.response.send_message(f"{value:.2f} in inhg would be: {int(converted)} hpa")
+    
+    @app_commands.command(name="temp_converter", description="Converts a temperature to it's equivalent in ºC or ºF")
+    @app_commands.describe()
+    async def temp_converter(self, interaction:discord.Interaction, celcius:float=None, farenheith:float=None):
+        if celcius is not None:
+            temperature = (celcius * 9/5) + 32
+            await interaction.response.send_message(f"{celcius}ºc is {temperature}ºf")
+        elif farenheith is not None:
+            temperature = (farenheith - 32) * 5/9
+            await interaction.response.send_message(f"{celcius}ºf is {temperature}ºc")
+        elif farenheith is not None and celcius is not None:
+            await interaction.response.send_message("One of the fields must have a value")
+        else:
+            await interaction.response.send_message("Both fields cannot have a value")
 
 
             
