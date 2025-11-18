@@ -235,7 +235,7 @@ class Metar(commands.Cog):
             await interaction.response.send_message(f"{celcius}ºc is {temperature}ºf")
         elif farenheith is not None:
             temperature = (farenheith - 32) * 5/9
-            await interaction.response.send_message(f"{celcius}ºf is {temperature}ºc")
+            await interaction.response.send_message(f"{farenheith}ºf is {temperature}ºc")
         elif farenheith is not None and celcius is not None:
             await interaction.response.send_message("One of the fields must have a value")
         else:
