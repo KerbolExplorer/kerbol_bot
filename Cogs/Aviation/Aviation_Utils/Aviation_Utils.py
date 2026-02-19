@@ -114,6 +114,46 @@ def get_metar(icao_code: str, raw_only = True):
     except ValueError:
         return False
 
+def get_navaid(navaid):
+    """Returns information belonging to a navaid(VOR, DME, Fix, etc).
+
+    Parameters
+    ----------
+    navaid : str
+        The ID of the navaid
+
+    Returns
+    ----------
+    dict
+        All information belonging to the navaid.
+    False
+        On request error.
+    None
+        If not found.
+    """
+    navaid = navaid.upper()
+    url = "https://aviationweather.gov/api/data/navaid"
+    params = {
+        "ident":navaid,
+        "format":"json"
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        navaids = response.json()
+        print(navaids)
+
+        if not navaids:
+            return None
+        
+        return navaid
+
+    except requests.RequestException:
+        return False
+    except ValueError:
+        return False
+
 def get_current_zulu():
     """Returns the current zulu time.
 
