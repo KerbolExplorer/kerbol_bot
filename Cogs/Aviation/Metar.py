@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import asyncio
 import aiosqlite
 import os
-from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu
+from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu, random_flight, airport_lookup
 from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
 
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
@@ -30,7 +30,7 @@ class Metar(commands.Cog):
         await request_db.commit()
         await request_db.close()
 
-    def get_metar_embed(self, metar):
+    def get_metar_embed(self, metar, alternate=None):
             # Getting the proper zulu time
             zulu_time = datetime.fromtimestamp(metar['obsTime'], tz=timezone.utc)
             zulu_time = zulu_time.strftime("%H%MZ")
@@ -77,10 +77,16 @@ class Metar(commands.Cog):
             #TODO: Treat key errors with .get()
 
             embed = discord.Embed(
-                title=f"METAR: `{metar['icaoId']}`",
-                description=f"**Raw Report**\n```{metar['rawOb']}```",
                 color=colors[metar['fltCat']]
             )
+
+            if alternate:
+                embed.title=f"METAR: `{metar['icaoId']}*`"
+                embed.description=f"*{alternate.upper()} NOT AVAILABLE, SHOWING {metar['icaoId']}\n**Raw Report**\n```{metar['rawOb']}```"
+            else:
+                embed.description=f"**Raw Report**\n```{metar['rawOb']}```"
+                embed.title=f"METAR: `{metar['icaoId']}`"
+
             embed.add_field(name="**Data Summary**", value=(
                 f"**Station** : {metar['icaoId']} ({metar['name']})\n"
                 f"**Observed at** : {zulu_time}\n"
@@ -105,19 +111,36 @@ class Metar(commands.Cog):
     def get_time(self):
         return int(datetime.now(timezone.utc).timestamp())
 
+    #TODO: Optimize airport lookup, too slow. Nearby icao codes can surely be grabbed quicker
     @app_commands.command(name="metar", description="Gets the metar for an airport")
-    @app_commands.describe(airport="Icao code of the airport")
-    async def metar(self, interaction:discord.Interaction, airport:str):
+    @app_commands.describe(airport="Icao code of the airport", raw="Give only raw information")
+    async def metar(self, interaction:discord.Interaction, airport:str, raw:bool=False):
         await interaction.response.defer()
         metar = get_metar(airport, False)
 
-        if metar == False:
-            await interaction.followup.send("There was an issue getting this metar.", ephemeral=True)
-        elif metar == None:
-            await interaction.followup.send("This metar is not available.", ephemeral=True)
-        else:
-            embed = self.get_metar_embed(metar)
-            await interaction.followup.send(embed=embed)
+        attempts = 10
+        while attempts > 0:
+            if metar == False or metar == None:
+                airport_data = airport_lookup(airport)
+                alternate = random_flight(airport_data[0][8], departing_airport=airport, max_distance=10, min_distance=1)
+                if alternate == None:
+                    attempts -= 1
+                    continue
+                else:
+                    alternate = alternate[1][1]
+                    alt_metar = get_metar(alternate, False)
+                    if alt_metar == False or alt_metar == None:
+                        attempts -= 1
+                        continue
+                    embed = self.get_metar_embed(alt_metar, airport)
+                    await interaction.followup.send(embed=embed) # Alternate metar
+                    return
+            else:
+                embed = self.get_metar_embed(metar)
+                await interaction.followup.send(embed=embed) # Normal metar
+                return
+
+        await interaction.followup.send("This metar is not available")
     
     @app_commands.command(name="metar_request", description="Have Solgaleo periodically send you the metar for an airport")
     @app_commands.describe(
