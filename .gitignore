@@ -12,3 +12,4 @@ AV_databaseinit.py
 reminders.db
 missions.db
 bank.db
+simbrief_dump.json

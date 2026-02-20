@@ -14,6 +14,9 @@ import sqlite3
 import os
 import requests
 from datetime import datetime, timezone
+import aiohttp
+from dataclasses import dataclass
+SIMBRIEF_URL = "https://www.simbrief.com/api/xml.fetcher.php"
 from . import Aviation_Math
 
 db_path = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "airports.db")
@@ -115,7 +118,7 @@ def get_metar(icao_code: str, raw_only = True):
         return False
 
 def get_navaid(navaid):
-    """Returns information belonging to a navaid(VOR, DME, Fix, etc).
+    """ONLY WORKS FOR US Returns information belonging to a navaid(VOR, DME, Fix, etc).
 
     Parameters
     ----------
@@ -134,7 +137,7 @@ def get_navaid(navaid):
     navaid = navaid.upper()
     url = "https://aviationweather.gov/api/data/navaid"
     params = {
-        "ident":navaid,
+        "ids":navaid,
         "format":"json"
     }
 
@@ -142,12 +145,11 @@ def get_navaid(navaid):
         response = requests.get(url, params=params)
         response.raise_for_status()
         navaids = response.json()
-        print(navaids)
 
         if not navaids:
             return None
         
-        return navaid
+        return navaids
 
     except requests.RequestException:
         return False
@@ -165,6 +167,189 @@ def get_current_zulu():
     current_time = datetime.now(timezone.utc)
     current_time = int(current_time.strftime("%H%M"))
     return current_time
+
+# Grab needed information before sending
+@dataclass
+class FlightPlan:
+    """
+    A class used to represent a Simbrief flightplan
+    ...
+    Attributes
+    ----------
+    icao_airline : str
+        icao code for the airline
+    flight_number : str
+        Flight number
+    aircraft : tuple
+        A tuple containing the information of the aircraft (Type, registration)
+    origin : str
+        icao code for the departing airport
+    destination : str
+        icao code for the arrival airport
+    alternate : str
+        icao code for the alternate airport
+    departure_time : str
+        Take off time
+    arrival_time : str
+        Arrival time
+    block_time : str
+        Block time for the flight
+    route : str
+        The Route of the flight
+    alt_route : str
+        Route for the alternate airport
+    initial_alt : str
+        Initial cruise altitude
+    cruise_mach : float
+        Cruise mach for the flight
+    cost_index : int
+        Cost index for the flight
+    stepclimbs : str
+        Step climbs for the flight
+    wind_dir : str
+        Average wind direction
+    wind_speed : str
+        Avarage wind speed
+    passengers : int
+        Passenger count
+    cargo : int
+        Cargo weight
+    zfw : int
+        Zero Fuel Weight
+    tow : int
+        Take off Weight
+    ldw : int
+        Landing Weight
+    block_fuel : int
+        Block fuel
+    air_distance : int
+        Total air distance
+    captain : str
+        Captain for the flight
+    dispatcher : str
+        Dispatcher for the flight
+    release : int
+        Release number of the flightplan
+    is_etops : bool
+        If the flightplan is etops or not
+    """
+    # Identification
+    icao_airline: str
+    flight_number: str
+    aircraft: tuple
+
+    # Airports
+    origin: str
+    destination: str
+    alternate: str
+
+    # Times
+    departure_time: str
+    arrival_time: str
+    block_time: str
+
+    # Route
+    route: str
+    alt_route: str
+    initial_alt: int
+
+    # Performance
+    cruise_mach: float
+    cost_index: int
+    stepclimbs: str
+
+    # Winds
+    wind_dir: int
+    wind_speed: int
+
+    # Weights
+    passengers: int
+    cargo: int
+    zfw: int
+    tow: int
+    ldw: int
+
+    # Fuel
+    block_fuel: int
+
+    # Distance
+    air_distance: int
+
+    # Crew
+    captain: str
+    dispatcher: str
+
+    # Misc
+    release: str
+    is_etops: bool
+
+def sanitize_times():
+    pass
+
+def __str__(self) -> str:
+    etops = "ETOPS" if self.is_etops else "NON-ETOPS"
+
+    return (
+        f"{self.icao_airline}{self.flight_number} | {self.aircraft}\n"
+        f"{self.origin} → {self.destination} (ALT {self.alternate})\n"
+        f"DEP {self.departure_time}  ARR {self.arrival_time}  ETE {self.block_time}\n"
+        f"CRZ FL{self.initial_alt}  M{self.cruise_mach:.2f}  CI {self.cost_index}  {etops}\n"
+        f"PAX {self.passengers}  CARGO {self.cargo} kg\n"
+        f"ZFW {self.zfw}  TOW {self.tow}  LDW {self.ldw}\n"
+        f"FUEL {self.block_fuel} kg  DIST {self.air_distance} nm\n"
+        f"ROUTE: {self.route}\n"
+        f"ALT RTE: {self.alt_route}\n"
+        f"CAPT {self.captain} | DSP {self.dispatcher} | REL {self.release}"
+    )
+
+
+async def fetch_flightplan(simbrief_id:str):
+
+
+    params = {
+        "username":simbrief_id,
+        "json": 1
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(SIMBRIEF_URL, params=params) as response:
+            if response.status != 200:
+                return None
+            data = await response.json()
+
+
+    
+    flightplan = FlightPlan(icao_airline=data["general"]["icao_airline"],
+                            flight_number=data["general"]["flight_number"],
+                            aircraft=(data["aircraft"]["name"], data["aircraft"]["reg"]),
+                            origin=data["origin"]["icao_code"],
+                            destination=data["destination"]["icao_code"],
+                            alternate=data["alternate"]["icao_code"],
+                            departure_time=data["times"]["sched_off"],
+                            arrival_time=data["times"]["sched_on"],
+                            block_time=data["times"]["sched_block"],
+                            route=data["general"]["route"],
+                            alt_route=data["alternate"]["route"],
+                            initial_alt=data["general"]["initial_altitude"],
+                            cruise_mach=data["general"]["cruise_mach"],
+                            cost_index=data["general"]["costindex"],
+                            stepclimbs=data["general"]["stepclimb_string"],
+                            wind_dir=data["general"]["avg_wind_dir"],
+                            wind_speed=data["general"]["avg_wind_spd"],
+                            passengers=data["general"]["passengers"],
+                            cargo=data["weights"]["cargo"],
+                            zfw=data["weights"]["est_zfw"],
+                            tow=data["weights"]["est_tow"],
+                            ldw=data["weights"]["est_ldw"],
+                            block_fuel=data["fuel"]["plan_ramp"],
+                            air_distance=data["general"]["air_distance"],
+                            captain=data["crew"]["cpt"],
+                            dispatcher=data["crew"]["dx"],
+                            release=data["general"]["release"],
+                            is_etops=data["general"]["is_etops"])
+    
+    return flightplan
+
 
 
 def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None):

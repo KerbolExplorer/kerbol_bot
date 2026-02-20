@@ -11,6 +11,7 @@ class Av_Info(commands.Cog):
     async def get_navaid(self, interaction:discord.Interaction, navaid:str):
         navaid = get_navaid(navaid)
         print(navaid)
+        await interaction.response.send_message(navaid)
 
 async def setup(bot):
     await bot.add_cog(Av_Info(bot))
