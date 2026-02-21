@@ -248,7 +248,14 @@ class FlightPlan:
     # Identification
     icao_airline: str
     flight_number: str
+    callsign: str
+
+    #Aircraft info
     aircraft: tuple
+    engines:str
+    selcal:str
+    max_passengers:int
+    equip_cat:str
 
     # Airports
     origin: str
@@ -293,6 +300,7 @@ class FlightPlan:
 
     # Fuel
     block_fuel: int
+    reserve_fuel:int
 
     # Distance
     air_distance: int
@@ -308,10 +316,13 @@ class FlightPlan:
     # Parameters with default values
     to_alternate:str=None
     rte_alternate:str=None
+    to_alt_metar:str=None
+    rte_alt_metar:str=None
+
 
 
     def sanitize_times(self, time):
-        zulu_time = datetime.fromtimestamp(time, tz=timezone.utc).strftime("%H:%MZ")
+        zulu_time = datetime.fromtimestamp(time, tz=timezone.utc).strftime("%H:%Mz")
         return zulu_time
 
     def alt_to_fl(self, altitude):
@@ -386,8 +397,15 @@ async def fetch_flightplan(simbrief_id:str):
                             rte_alternate=data.get("enroute_altn", None).get("icao_code"),
                             alt_distance=data["alternate"]["distance"],
                             alternate_metar=data["alternate"]["metar"],
-                            alternate_cat=data["alternate"]["metar_category"])
-    
+                            alternate_cat=data["alternate"]["metar_category"],
+                            engines=data["aircraft"]["engines"],
+                            callsign=data["atc"]["callsign"],
+                            max_passengers=data["aircraft"]["max_passengers"],
+                            selcal=data["aircraft"]["selcal"],
+                            equip_cat=data["aircraft"]["equip_category"],
+                            reserve_fuel=(int(data["fuel"]["reserve"])),
+                            to_alt_metar=data.get("takeoff_altn", None).get("metar"),
+                            rte_alt_metar=data.get("enroute_altn", None).get("metar"))
     return flightplan
 
 

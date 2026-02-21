@@ -47,7 +47,7 @@ class Schedule(commands.Cog):
             return
         
         general_embed = discord.Embed(
-            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - General Flightplan Information",
+            title=f"{flpn.icao_airline}{flpn.flight_number}({flpn.callsign}) | {flpn.aircraft} - General Flightplan Information",
             description=f"**Route: {flpn.origin} → {flpn.destination} (ALT {flpn.alternate}) **\n```{flpn.route}```",
             color=discord.Color.blue()
         )
@@ -66,23 +66,47 @@ class Schedule(commands.Cog):
         general_embed.set_footer(text=f"Release number: {flpn.release}")
 
         alternate_embed = discord.Embed(
-            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - Alternate Airport Information",
-            description=f"**Alternate Route:**\n ```{flpn.alt_route}```\n**Alternate METAR:`**\n```{flpn.alternate_metar}```",
+            title=f"{flpn.icao_airline}{flpn.flight_number}({flpn.callsign}) | {flpn.aircraft} - Alternate Airport Information",
+            description=f"**Alternate Route:**\n ```{flpn.alt_route}```\n**Alternate METAR:**\n```{flpn.alternate_metar}```",
             color=discord.Color.blue()
         )
         alternate_embed.add_field(name="Main Alternate:", value=flpn.alternate)
-        alternate_embed.add_field(name="Alternate Distance:", value=flpn.alt_distance)
+        alternate_embed.add_field(name="Alternate Distance:", value=f"{flpn.alt_distance}nm")
         alternate_embed.add_field(name="Alternate Category:", value=flpn.alternate_cat.upper())
         alternate_embed.add_field(name="Take Off Alternate", value=flpn.to_alternate)
         alternate_embed.add_field(name="Enroute Alternate", value=flpn.rte_alternate)
 
         performance_embed = discord.Embed(
-            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - Performance Information",
-            description="Not Implemented yet"
+            title=f"{flpn.icao_airline}{flpn.flight_number}({flpn.callsign}) | {flpn.aircraft} - Performance Information",
+            color=discord.Color.blue()
         )
+        performance_embed.add_field(name="Take Off Weight:", value=f"{flpn.tow}kg")
+        performance_embed.add_field(name="Zero Fuel Weight:", value=f"{flpn.zfw}kg")
+        performance_embed.add_field(name="Block Fuel:", value=f"{flpn.block_fuel}kg")
+        performance_embed.add_field(name="Reserve Fuel:", value=f"{flpn.reserve_fuel}kg")
+        performance_embed.add_field(name="Cargo:", value=f"{flpn.cargo}kg")
+        performance_embed.add_field(name="Cost Index:", value=flpn.cost_index)
+        performance_embed.add_field(name="Pax count:", value=f"{flpn.passengers}/{flpn.max_passengers}")
+        performance_embed.add_field(name="Engines:", value=flpn.engines)
+        performance_embed.add_field(name="Equipment Category:", value=flpn.equip_cat)
+        performance_embed.add_field(name="Cruising Altitude:", value=flpn.initial_alt)
+        performance_embed.add_field(name="Step Climbs:", value=flpn.stepclimbs)
+        performance_embed.add_field(name="Cruise Winds:", value=f"{flpn.wind_dir}º/{flpn.wind_speed}kts")
+
+
         weather_embed = discord.Embed(
-            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - Performance Information",
-            description="Not Implemented yet"
+            title=f"{flpn.icao_airline}{flpn.flight_number}({flpn.callsign}) | {flpn.aircraft} - Weather Information",
+            description=f"""**Departure Airport({flpn.origin}) METAR:**
+            ```{flpn.origin_metar}```\n
+            **Arrival Airport({flpn.destination}) METAR: **
+            ```{flpn.destination_metar}```\n
+            **Alternate({flpn.alternate}) METAR:**\n
+            ```{flpn.alternate_metar}```\n
+            **Take Off Alternate({flpn.to_alternate}) METAR:**\n
+            ```{flpn.to_alt_metar}```\n
+            **Enroute Alternate({flpn.rte_alt_metar}) METAR:**\n
+            ```{flpn.rte_alt_metar}```""",
+            color=discord.Color.blue()
         )
 
         embeds = (general_embed, performance_embed, alternate_embed, weather_embed)
