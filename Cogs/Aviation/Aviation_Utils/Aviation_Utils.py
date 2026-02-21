@@ -188,6 +188,10 @@ class FlightPlan:
         icao code for the arrival airport
     alternate : str
         icao code for the alternate airport
+    to_alternate : str
+        icao code for take off alternate airport, defaults to None
+    rte_alternate :str
+        icao code for route alternate airport, defaults to None
     departure_time : str
         Take off time
     arrival_time : str
@@ -210,6 +214,14 @@ class FlightPlan:
         Average wind direction
     wind_speed : str
         Avarage wind speed
+    origin_metar: str
+        Metar for the departure airport
+    origin_cat: str
+        Weather category for the departure airport
+    destination_metar: str
+        Metar for the arrival airport
+    destination_cat: str
+        Weather category for the arrival airport
     passengers : int
         Passenger count
     cargo : int
@@ -242,15 +254,15 @@ class FlightPlan:
     origin: str
     destination: str
     alternate: str
-
     # Times
-    departure_time: str
-    arrival_time: str
-    block_time: str
+    departure_time: int
+    arrival_time: int
+    block_time: int
 
     # Route
     route: str
     alt_route: str
+    alt_distance:str
     initial_alt: int
 
     # Performance
@@ -261,6 +273,16 @@ class FlightPlan:
     # Winds
     wind_dir: int
     wind_speed: int
+
+    # Weather
+    origin_metar: str
+    origin_cat: str
+
+    destination_metar: str
+    destination_cat: str
+
+    alternate_metar:str
+    alternate_cat:str
 
     # Weights
     passengers: int
@@ -283,24 +305,33 @@ class FlightPlan:
     release: str
     is_etops: bool
 
-def sanitize_times():
-    pass
+    # Parameters with default values
+    to_alternate:str=None
+    rte_alternate:str=None
 
-def __str__(self) -> str:
-    etops = "ETOPS" if self.is_etops else "NON-ETOPS"
 
-    return (
-        f"{self.icao_airline}{self.flight_number} | {self.aircraft}\n"
-        f"{self.origin} → {self.destination} (ALT {self.alternate})\n"
-        f"DEP {self.departure_time}  ARR {self.arrival_time}  ETE {self.block_time}\n"
-        f"CRZ FL{self.initial_alt}  M{self.cruise_mach:.2f}  CI {self.cost_index}  {etops}\n"
-        f"PAX {self.passengers}  CARGO {self.cargo} kg\n"
-        f"ZFW {self.zfw}  TOW {self.tow}  LDW {self.ldw}\n"
-        f"FUEL {self.block_fuel} kg  DIST {self.air_distance} nm\n"
-        f"ROUTE: {self.route}\n"
-        f"ALT RTE: {self.alt_route}\n"
-        f"CAPT {self.captain} | DSP {self.dispatcher} | REL {self.release}"
-    )
+    def sanitize_times(self, time):
+        zulu_time = datetime.fromtimestamp(time, tz=timezone.utc).strftime("%H:%MZ")
+        return zulu_time
+
+    def alt_to_fl(self, altitude):
+        ...
+
+    def __str__(self) -> str:
+        etops = "ETOPS" if self.is_etops else "NON-ETOPS"
+
+        return (
+            f"{self.icao_airline}{self.flight_number} | {self.aircraft}\n"
+            f"{self.origin} → {self.destination} (ALT {self.alternate})\n"
+            f"DEP {self.departure_time}  ARR {self.arrival_time}  ETE {self.block_time}\n"
+            f"CRZ FL{self.initial_alt}  M{self.cruise_mach:.2f}  CI {self.cost_index}  {etops}\n"
+            f"PAX {self.passengers}  CARGO {self.cargo} kg\n"
+            f"ZFW {self.zfw}  TOW {self.tow}  LDW {self.ldw}\n"
+            f"FUEL {self.block_fuel} kg  DIST {self.air_distance} nm\n"
+            f"ROUTE: {self.route}\n"
+            f"ALT RTE: {self.alt_route}\n"
+            f"CAPT {self.captain} | DSP {self.dispatcher} | REL {self.release}"
+        )   
 
 
 async def fetch_flightplan(simbrief_id:str):
@@ -315,7 +346,7 @@ async def fetch_flightplan(simbrief_id:str):
         async with session.get(SIMBRIEF_URL, params=params) as response:
             if response.status != 200:
                 return None
-            data = await response.json()
+            data:dict = await response.json()
 
 
     
@@ -325,9 +356,9 @@ async def fetch_flightplan(simbrief_id:str):
                             origin=data["origin"]["icao_code"],
                             destination=data["destination"]["icao_code"],
                             alternate=data["alternate"]["icao_code"],
-                            departure_time=data["times"]["sched_off"],
-                            arrival_time=data["times"]["sched_on"],
-                            block_time=data["times"]["sched_block"],
+                            departure_time=int(data["times"]["sched_off"]),
+                            arrival_time=int(data["times"]["sched_on"]),
+                            block_time=int(data["times"]["sched_block"]),
                             route=data["general"]["route"],
                             alt_route=data["alternate"]["route"],
                             initial_alt=data["general"]["initial_altitude"],
@@ -346,7 +377,16 @@ async def fetch_flightplan(simbrief_id:str):
                             captain=data["crew"]["cpt"],
                             dispatcher=data["crew"]["dx"],
                             release=data["general"]["release"],
-                            is_etops=data["general"]["is_etops"])
+                            is_etops=data["general"]["is_etops"],
+                            origin_metar=data["origin"]["metar"],
+                            origin_cat=data["origin"]["metar_category"],
+                            destination_metar=data["origin"]["metar"],
+                            destination_cat=data["origin"]["metar_category"],
+                            to_alternate=data.get("takeoff_altn", None).get("icao_code"),
+                            rte_alternate=data.get("enroute_altn", None).get("icao_code"),
+                            alt_distance=data["alternate"]["distance"],
+                            alternate_metar=data["alternate"]["metar"],
+                            alternate_cat=data["alternate"]["metar_category"])
     
     return flightplan
 

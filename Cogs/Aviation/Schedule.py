@@ -35,7 +35,10 @@ class Schedule(commands.Cog):
         else:
             await interaction.followup.send(f"A flight has been selected from {flight[0][1]} ({flight[0][0]}) to {flight[1][1]} ({flight[1][0]}) with a distance of {int(flight[2])}nm")
 
-    @app_commands.command(name="flightplan", description="Fetches a simbrief flightplan")
+    @app_commands.command(name="flightplan", description="Fetches the latest simbrief flightplan")
+    @app_commands.describe(
+        simbrief_id="Your Simbrief id, only required the first time running the command."
+    )
     async def flightplan(self, interaction:discord.Interaction, simbrief_id:str=None):
         await interaction.response.defer()
         flpn:FlightPlan = await fetch_flightplan(simbrief_id)
@@ -43,22 +46,84 @@ class Schedule(commands.Cog):
             await interaction.followup.send("No flightplan available")
             return
         
-        embed = discord.Embed(
-            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft}",
+        general_embed = discord.Embed(
+            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - General Flightplan Information",
             description=f"**Route: {flpn.origin} → {flpn.destination} (ALT {flpn.alternate}) **\n```{flpn.route}```",
             color=discord.Color.blue()
         )
-        embed.add_field(name="**Flight Summary**", value=(
-            f"DEP {flpn.departure_time}  ARR {flpn.arrival_time}  ETE {flpn.block_time}\n"
-            f"CRZ FL{flpn.initial_alt}  M{flpn.cruise_mach}  CI {flpn.cost_index}  ETOPS: {flpn.is_etops}\n"
-            f"PAX {flpn.passengers}  CARGO {flpn.cargo} kg\n"
-            f"ZFW {flpn.zfw}  TOW {flpn.tow}  LDW {flpn.ldw}\n"
-            f"FUEL {flpn.block_fuel} kg  DIST {flpn.air_distance} nm\n"
-            f"ROUTE: {flpn.route}\n"
-            f"ALT RTE: {flpn.alt_route}\n"
-            f"CAPT {flpn.captain} | DSP {flpn.dispatcher} | REL {flpn.release}"
-        ), inline = False)
-        await interaction.followup.send(embed=embed)
+        general_embed.add_field(name="Departure Time:", value=flpn.sanitize_times(flpn.departure_time))
+        general_embed.add_field(name="Arrival Time:", value=flpn.sanitize_times(flpn.arrival_time))
+        general_embed.add_field(name="Block Time:", value=flpn.sanitize_times(flpn.block_time))
+        general_embed.add_field(name="Departure Category:", value=flpn.origin_cat.upper())
+        general_embed.add_field(name="Arrival Category:", value=flpn.destination_cat.upper())
+        general_embed.add_field(name="Initial Altitude:", value=flpn.initial_alt)
+        general_embed.add_field(name="Take Off Weight:", value=f"{flpn.tow}kg")
+        general_embed.add_field(name="Zero Fuel Weight:", value=f"{flpn.zfw}kg")
+        general_embed.add_field(name="Block Fuel:", value=f"{flpn.block_fuel}kg")
+        general_embed.add_field(name="Cargo:", value=f"{flpn.cargo}kg")
+        general_embed.add_field(name="Cost Index:", value=flpn.cost_index)
+        general_embed.add_field(name="Pax count:", value=f"{flpn.passengers}")
+        general_embed.set_footer(text=f"Release number: {flpn.release}")
+
+        alternate_embed = discord.Embed(
+            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - Alternate Airport Information",
+            description=f"**Alternate Route:**\n ```{flpn.alt_route}```\n**Alternate METAR:`**\n```{flpn.alternate_metar}```",
+            color=discord.Color.blue()
+        )
+        alternate_embed.add_field(name="Main Alternate:", value=flpn.alternate)
+        alternate_embed.add_field(name="Alternate Distance:", value=flpn.alt_distance)
+        alternate_embed.add_field(name="Alternate Category:", value=flpn.alternate_cat.upper())
+        alternate_embed.add_field(name="Take Off Alternate", value=flpn.to_alternate)
+        alternate_embed.add_field(name="Enroute Alternate", value=flpn.rte_alternate)
+
+        performance_embed = discord.Embed(
+            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - Performance Information",
+            description="Not Implemented yet"
+        )
+        weather_embed = discord.Embed(
+            title=f"{flpn.icao_airline}{flpn.flight_number} | {flpn.aircraft} - Performance Information",
+            description="Not Implemented yet"
+        )
+
+        embeds = (general_embed, performance_embed, alternate_embed, weather_embed)
+
+        class EmbedView(discord.ui.View):         # select 0 = General, select 1 = Performance, select 2 = Alternate, select 3 = Weather
+            def __init__(self, embeds):
+                super().__init__()
+                self.embeds = embeds
+            
+            @discord.ui.select(
+                placeholder = "Select an option:",
+                min_values = 1,
+                max_values = 1,
+                options = [
+                    discord.SelectOption(
+                        label = "General Information",
+                        description= "Shows general information",
+                        emoji = "📝"
+                    ),
+                    discord.SelectOption(
+                        label = "Performance",
+                        description = "Shows performance data",
+                        emoji = "✈️"
+                    ),
+                    discord.SelectOption(
+                        label= "Alternates",
+                        description = "Shows weather data",
+                        emoji = "🛬"
+                    ),
+                    discord.SelectOption(
+                        label = "Weather",
+                        description = "Shows alternate data",
+                        emoji = "🌦️"
+                    )
+                ]
+            )
+            async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
+                index = ["General Information", "Performance", "Alternates", "Weather"].index(select.values[0])
+                await interaction.response.edit_message(embed=self.embeds[index], view=self)
+        
+        await interaction.followup.send(view=EmbedView(embeds), embed=general_embed)
 
 
 async def setup(bot):
