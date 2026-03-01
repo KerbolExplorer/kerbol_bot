@@ -347,7 +347,6 @@ class FlightPlan:
 
 async def fetch_flightplan(simbrief_id:str):
 
-
     params = {
         "username":simbrief_id,
         "json": 1
