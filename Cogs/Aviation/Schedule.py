@@ -56,7 +56,7 @@ class Schedule(commands.Cog):
         general_embed.add_field(name="Block Time:", value=flpn.sanitize_times(flpn.block_time))
         general_embed.add_field(name="Departure Category:", value=flpn.origin_cat.upper())
         general_embed.add_field(name="Arrival Category:", value=flpn.destination_cat.upper())
-        general_embed.add_field(name="Initial Altitude:", value=flpn.initial_alt)
+        general_embed.add_field(name="Initial Altitude:", value=flpn.fl())
         general_embed.add_field(name="Take Off Weight:", value=f"{flpn.tow}kg")
         general_embed.add_field(name="Zero Fuel Weight:", value=f"{flpn.zfw}kg")
         general_embed.add_field(name="Block Fuel:", value=f"{flpn.block_fuel}kg")
@@ -89,7 +89,7 @@ class Schedule(commands.Cog):
         performance_embed.add_field(name="Pax count:", value=f"{flpn.passengers}/{flpn.max_passengers}")
         performance_embed.add_field(name="Engines:", value=flpn.engines)
         performance_embed.add_field(name="Equipment Category:", value=flpn.equip_cat)
-        performance_embed.add_field(name="Cruising Altitude:", value=flpn.initial_alt)
+        performance_embed.add_field(name="Cruising Altitude:", value=flpn.fl())
         performance_embed.add_field(name="Step Climbs:", value=flpn.stepclimbs)
         performance_embed.add_field(name="Cruise Winds:", value=f"{flpn.wind_dir}º/{flpn.wind_speed}kts")
 

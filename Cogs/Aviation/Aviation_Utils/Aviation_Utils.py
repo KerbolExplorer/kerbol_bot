@@ -168,6 +168,22 @@ def get_current_zulu():
     current_time = int(current_time.strftime("%H%M"))
     return current_time
 
+def altitude_to_fl(altitude) -> str:
+    """Converts an altitude (in ft) to a Flight Level
+
+    Parameters
+    ----------
+    altitude : str or int
+        Altitude to convert
+    
+    Returns
+    ----------
+    String
+        The flight level
+    """
+    altitude = int(altitude)
+    return str(f"FL{int(altitude / 100):03d}")
+
 # Grab needed information before sending
 @dataclass
 class FlightPlan:
@@ -325,8 +341,8 @@ class FlightPlan:
         zulu_time = datetime.fromtimestamp(time, tz=timezone.utc).strftime("%H:%Mz")
         return zulu_time
 
-    def alt_to_fl(self, altitude):
-        ...
+    def fl(self):
+        return altitude_to_fl(self.initial_alt)
 
     def __str__(self) -> str:
         etops = "ETOPS" if self.is_etops else "NON-ETOPS"
