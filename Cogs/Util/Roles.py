@@ -6,6 +6,24 @@ import aiosqlite
 class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.msg_id = None
+
+    @app_commands.command(name="set-role-message", description="Set a message for role reactions")
+    @commands.has_guild_permissions(manage_messages=True)
+    async def set_role_message(self, interaction:discord.Interaction, message:str):
+        await interaction.response.send_message(message)
+        message = await interaction.original_response()
+
+        self.msg_id = message.id
+
+    @commands.Cog.listener()
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        if payload.message_id != self.msg_id:
+            return
+        else:
+            user = await self.bot.fetch_user(payload.user_id)
+            print(user)
+
     
     @app_commands.command(name="enable_custom_roles", description="Enables or disables custom roles on this server")
     @commands.has_guild_permissions(manage_messages=True)
