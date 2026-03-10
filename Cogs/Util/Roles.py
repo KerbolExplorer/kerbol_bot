@@ -6,18 +6,45 @@ import aiosqlite
 class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.msg_id = None
 
-    @app_commands.command(name="set-role-message", description="Set a message for role reactions")
+    @app_commands.command(name="add-reaction-role", description="Add a reaction role to a message")
     @commands.has_guild_permissions(manage_messages=True)
-    async def set_role_message(self, interaction:discord.Interaction, message:str):
-        await interaction.response.send_message(message)
-        message = await interaction.original_response()
+    @app_commands.describe(emoji="Emoji the role will be assigned to",
+                           role="Role that will be assigned upon reaction",
+                           message_link="Link to the message to add the reaction role to")
+    async def set_role_message(self, interaction:discord.Interaction, emoji:str, role:discord.Role, message_link:str):
+        try:
+            message_data = message_link.split("/")
+            message_id = message_data[-1]
+            channel_id = message_data[-2]
 
-        self.msg_id = message.id
+            channel:discord.TextChannel = await self.bot.fetch_channel(channel_id)
+
+            message:discord.Message = await channel.fetch_message(message_id)
+        except Exception as e:
+            await interaction.response.send_message("The message link was not valid")
+        
+        db = await aiosqlite.connect("roles.db")
+        cursor = await db.cursor()
+
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{channel.guild.id}'"
+        await cursor.execute(sql)
+        result = await cursor.fetchall()
+        if not result:
+            sql = f"CREATE TABLE '{channel.guild.id}' (id INTEGER, level INTEGER, msgId INTEGER, chnlId INTEGER, emoji TEXT)"
+            await cursor.execute(sql)
+        
+        sql = f"INSERT INTO '{channel.guild.id}' (id, level, msgId, chnlId, emoji) VALUES (?, ?, ?, ?, ?)"    # We add the guild data to the guilds table
+        await cursor.execute(sql, (role.id, 0, message_id, channel_id, emoji))
+        await db.commit()
+        await db.close()
+        
+        await message.add_reaction(emoji)
+        await interaction.response.send_message("Done!", ephemeral=True)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        return
         if payload.message_id != self.msg_id:
             return
         else:
