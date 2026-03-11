@@ -16,6 +16,11 @@ class Roles(commands.Cog):
                            message_link="Link to the message to add the reaction role to. The message must be sent by Orion.")
     async def set_role_message(self, interaction:discord.Interaction, emoji:str, role:discord.Role, message_link:str):
         await interaction.response.defer(ephemeral=True)
+
+        if not interaction.user.guild_permissions.manage_roles():
+            await interaction.followup.send("You do not have permissions to execute this command")
+            return
+
         try:
             message_data = message_link.split("/")
             message_id = message_data[-1]
