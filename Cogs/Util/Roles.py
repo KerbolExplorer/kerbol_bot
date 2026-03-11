@@ -17,7 +17,7 @@ class Roles(commands.Cog):
     async def set_role_message(self, interaction:discord.Interaction, emoji:str, role:discord.Role, message_link:str):
         await interaction.response.defer(ephemeral=True)
 
-        if not interaction.user.guild_permissions.manage_roles():
+        if not interaction.user.guild_permissions.manage_roles:
             await interaction.followup.send("You do not have permissions to execute this command")
             return
 
