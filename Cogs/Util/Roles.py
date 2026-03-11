@@ -3,8 +3,6 @@ from discord import app_commands
 from discord.ext import commands
 import aiosqlite
 
-
-
 class Roles(commands.Cog):
     def __init__(self, bot, db, cursor):
         self.bot = bot
@@ -45,7 +43,7 @@ class Roles(commands.Cog):
         await self.cursor.execute(sql, (channel_id, message_id, emoji))
         result = await self.cursor.fetchall()
 
-        if len(result ) >= 1:
+        if len(result) >= 1:
             await interaction.followup.send("This emoji is already being used in this message")
             return
         
@@ -103,7 +101,6 @@ class Roles(commands.Cog):
             await self.cursor.execute(sql)
             result = await self.cursor.fetchall()
             if not result:
-                await self.db.close()
                 return
 
             sql = f"SELECT * FROM '{payload.guild_id}' WHERE msgId = ? AND emoji = ?"
@@ -127,7 +124,6 @@ class Roles(commands.Cog):
             await self.cursor.execute(sql)
             result = await self.cursor.fetchall()
             if not result:
-                await self.db.close()
                 return
             
             emoji = str(payload.emoji)
