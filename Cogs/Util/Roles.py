@@ -142,10 +142,12 @@ class Roles(commands.Cog):
             member:discord.Member = await guild.fetch_member(payload.user_id)
             role = guild.get_role(role_data[0])
 
-            #channel:discord.TextChannel = self.bot.get_channel(payload.channel_id)
+            channel:discord.TextChannel = self.bot.get_channel(payload.channel_id)
             #message:discord.Message = await channel.fetch_message(payload.message_id)
-            
-            await member.remove_roles(role)
+            try:
+                await member.remove_roles(role)
+            except discord.Forbidden:
+                await channel.send("I do not have permissions to remove your role.")
 """
     @app_commands.command(name="enable_custom_roles", description="Enables or disables custom roles on this server")
     @commands.has_guild_permissions(manage_messages=True)
