@@ -7,7 +7,7 @@ class Roles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="add-reaction-role", description="Add a reaction role to a message")
+    @app_commands.command(name="add_reaction_role", description="Add a reaction role to a message")
     @commands.has_guild_permissions(manage_messages=True)
     @app_commands.describe(emoji="Emoji the role will be assigned to",
                            role="Role that will be assigned upon reaction",
@@ -47,6 +47,43 @@ class Roles(commands.Cog):
         
         await message.add_reaction(emoji)
         await interaction.response.send_message("Done!", ephemeral=True)
+    
+    @app_commands.command(name="remove_reaction_role", description="Removes a reaction role to a message")
+    @commands.has_guild_permissions(manage_messages=True)
+    async def remove_role_reaction(self, interaction:discord.Interaction, message_link:str, emoji:str):
+        try:
+            message_data = message_link.split("/")
+            message_id = message_data[-1]
+            channel_id = message_data[-2]
+
+            channel:discord.TextChannel = await self.bot.fetch_channel(channel_id)
+
+            message:discord.Message = await channel.fetch_message(message_id)
+        except Exception as e:
+            await interaction.response.send_message("The message link was not valid")
+            return
+
+        if message.author.id != self.bot.user.id:
+            await interaction.response.send_message("The message must be sent by me, use `/say` to make me send a message.", ephemeral=True)
+            return
+        
+        db = await aiosqlite.connect("roles.db")
+        cursor = await db.cursor()
+
+        sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{channel.guild.id}'"
+        await cursor.execute(sql)
+        result = await cursor.fetchall()
+        if not result:
+            await interaction.response.send_message("This guild has no reaction roles.", ephemeral=True)
+            return
+        
+        sql = f"DELETE FROM '{channel.guild.id}' WHERE chnlId = ? AND emoji = ?"
+        await cursor.execute(sql, (channel_id, emoji))
+        
+        await message.remove_reaction(member=self.bot.user, emoji=emoji)
+        await interaction.response.send_message("Done! Do note that all roles given with this reaction role must be removed manually", ephemeral=True)
+        await db.commit()
+        await db.close()
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
