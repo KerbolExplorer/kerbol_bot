@@ -13,6 +13,9 @@ class Responses(commands.Cog):
         if message.author.bot == False and self.bot.user.mentioned_in(message):
             content = message.clean_content.replace(f"@{self.bot.user.name}", "").strip().lower()
 
+            if message.mention_everyone:
+                return
+
             if content == "am i cute?":
                 await message.channel.send("Yes you are :3")
                 return
@@ -26,8 +29,8 @@ class Responses(commands.Cog):
                 await message.channel.send("ik")
                 return
             
-            #response = ("Hmm?", "Huh?", "What?", "Need anything?", "Make it quick")
-            #await message.channel.send(random.choice(response))
+            response = ("Hmm?", "Huh?", "What?", "Need anything?", "Make it quick")
+            await message.channel.send(random.choice(response))
         elif message.author.bot == False and message.guild:
             content = message.content.lower()
             if "vore" in content:
