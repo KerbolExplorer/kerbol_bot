@@ -17,6 +17,7 @@ class Roles(commands.Cog):
                            role="Role that will be assigned upon reaction",
                            message_link="Link to the message to add the reaction role to. The message must be sent by Orion.")
     async def set_role_message(self, interaction:discord.Interaction, emoji:str, role:discord.Role, message_link:str):
+        await interaction.response.defer(ephemeral=True)
         try:
             message_data = message_link.split("/")
             message_id = message_data[-1]
@@ -26,11 +27,11 @@ class Roles(commands.Cog):
 
             message:discord.Message = await channel.fetch_message(message_id)
         except Exception as e:
-            await interaction.response.send_message("The message link was not valid")
+            await interaction.followup.send("The message link was not valid")
             return
 
         if message.author.id != self.bot.user.id:
-            await interaction.response.send_message("The message must be sent by me, use `/say` to make me send a message.", ephemeral=True)
+            await interaction.followup.send("The message must be sent by me, use `/say` to make me send a message.")
             return
 
         sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{channel.guild.id}'"
@@ -45,7 +46,7 @@ class Roles(commands.Cog):
         result = await self.cursor.fetchall()
 
         if len(result ) >= 1:
-            await interaction.response.send_message("This emoji is already being used in this message", ephemeral=True)
+            await interaction.followup.send("This emoji is already being used in this message")
             return
         
         
@@ -54,11 +55,12 @@ class Roles(commands.Cog):
         await self.db.commit()
         
         await message.add_reaction(emoji)
-        await interaction.response.send_message("Done!", ephemeral=True)
+        await interaction.followup.send("Done!")
     
     @app_commands.command(name="remove_reaction_role", description="Removes a reaction role to a message")
     @commands.has_guild_permissions(manage_messages=True)
     async def remove_role_reaction(self, interaction:discord.Interaction, message_link:str, emoji:str):
+        await interaction.response.defer(ephemeral=True)
         try:
             message_data = message_link.split("/")
             message_id = message_data[-1]
@@ -68,25 +70,25 @@ class Roles(commands.Cog):
 
             message:discord.Message = await channel.fetch_message(message_id)
         except Exception as e:
-            await interaction.response.send_message("The message link was not valid")
+            await interaction.followup.send("The message link was not valid")
             return
 
         if message.author.id != self.bot.user.id:
-            await interaction.response.send_message("The message must be sent by me, use `/say` to make me send a message.", ephemeral=True)
+            await interaction.followup.send("The message must be sent by me, use `/say` to make me send a message.")
             return
 
         sql = f"SELECT name FROM sqlite_master WHERE type='table' AND name='{channel.guild.id}'"
         await self.cursor.execute(sql)
         result = await self.cursor.fetchall()
         if not result:
-            await interaction.response.send_message("This guild has no reaction roles.", ephemeral=True)
+            await interaction.followup.send("This guild has no reaction roles.")
             return
         
         sql = f"DELETE FROM '{channel.guild.id}' WHERE chnlId = ? AND emoji = ?"
         await self.cursor.execute(sql, (channel_id, emoji))
         
         await message.remove_reaction(member=self.bot.user, emoji=emoji)
-        await interaction.response.send_message("Done! Do note that all roles given with this reaction role must be removed manually", ephemeral=True)
+        await interaction.followup.send("Done! Do note that all roles given with this reaction role must be removed manually")
         await self.db.commit()
 
     @commands.Cog.listener()
