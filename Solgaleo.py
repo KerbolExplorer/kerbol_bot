@@ -21,7 +21,7 @@ async def change_activity():
         "The Elder Scrolls V: Skyrim", "Halo: The Master Chief Collection", "Halo Infinite", "Ace Combat 7: Skies Unknown",
         "Project Wingman", "Rivals of Aether", "Deep Rock Galactic", "FalconBMS", "Enter the Gungeon", "FTL: Faster Than Light", 
         "Pokerogue", "Monster Hunter Wilds", "Kerbal Space Program", "Team Fortess 2", "Metal Gear Rising: Revengance", "Starbound", 
-        "Sea of Stars", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zoteboat", "Fortnite", "Amorous",
+        "Sea of Mid", "Miitopia", "Slime Rancher", "Marvel Rivals", "Hollow Knight", "Hollow Knight: Zoteboat", "Fortnite", "Amorous",
         "Ad Astra", "Metaphor: Refantazio", "Lethal Company", "Devil May Cry 5", "Tomodatchi Life", "Frostpunk", "Xplane 12", "Balatro", 
         "The Elder Scrolls IV: Oblivion", "Pokken Tournament DX", "Super Smash Bros. Ultimate", "Minecraft", "Deltarune", "Undertale"
         )
