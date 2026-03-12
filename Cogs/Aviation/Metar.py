@@ -114,8 +114,8 @@ class Metar(commands.Cog):
     # TODO: Optimize airport lookup, too slow. Nearby icao codes can surely be grabbed quicker
     # TODO: You can write whatever the fuck you want on the metar and it'll try to grab it :sob:, fix that
     @app_commands.command(name="metar", description="Gets the metar for an airport")
-    @app_commands.describe(airport="Icao code of the airport", raw="Give only raw information")
-    async def metar(self, interaction:discord.Interaction, airport:str, raw:bool=False):
+    @app_commands.describe(airport="Icao code of the airport")
+    async def metar(self, interaction:discord.Interaction, airport:str):
         await interaction.response.defer()
         metar = get_metar(airport, False)
 
