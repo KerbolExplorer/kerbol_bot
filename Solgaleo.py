@@ -43,6 +43,7 @@ async def on_ready():
     cogs_list_aviation = ('Cogs.Aviation.Airport_Lookup', 'Cogs.Aviation.Schedule', 'Cogs.Aviation.Metar')
     cogs_list_util = ('Cogs.Util.Server', 'Cogs.Util.About', 'Cogs.Util.Reminder', 'Cogs.Util.Mods', 'Cogs.Util.Roles')
     cogs_list_misc = ('Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.Responses', 'Cogs.Misc.Rate', 'Cogs.Misc.Random_commands')
+    cogs_list_bot_utils = ('Cogs.Bot_Utils.User_db',)
 
     for cog in cogs_list_Test_Commands:
         await bot.load_extension(cog)
@@ -63,6 +64,9 @@ async def on_ready():
         await bot.load_extension(cog)
     
     for cog in cogs_list_misc:
+        await bot.load_extension(cog)
+    
+    for cog in cogs_list_bot_utils:
         await bot.load_extension(cog)
 
     print("Cogs loaded!")

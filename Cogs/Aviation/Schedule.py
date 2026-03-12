@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from discord.ext import commands
-import sqlite3
+import aiosqlite
 import random
 import os
 from .Aviation_Utils.Aviation_Utils import random_flight, fetch_flightplan, FlightPlan
@@ -41,9 +41,39 @@ class Schedule(commands.Cog):
     )
     async def flightplan(self, interaction:discord.Interaction, simbrief_id:str=None):
         await interaction.response.defer()
+
+        db = await aiosqlite.connect("db_exp.db")
+        cursor = await db.cursor()
+
+        sql = "SELECT simbrief FROM 'Users' WHERE userId == ?"
+        await cursor.execute(sql, (interaction.user.id,))
+        result = await cursor.fetchone()
+
+        has_data = False
+
+        if result is not None:
+            has_data = True
+
+        if simbrief_id == None:
+            if has_data == False:
+                await interaction.followup.send("You must provide your simbrief username when executing this command for the first time")
+                return
+            else:
+                simbrief_id = result[0]
+        else:
+            if has_data == False:
+                sql = "INSERT INTO 'Users' (userId, simbrief) VALUES (?, ?)"
+                await cursor.execute(sql, (interaction.user.id, simbrief_id))
+            else:
+                sql = "UPDATE 'Users' SET simbrief = ? WHERE userId = ?"
+                await cursor.execute(sql, (simbrief_id, interaction.user.id))
+        await db.commit()
+        await db.close()
+            
+
         flpn:FlightPlan = await fetch_flightplan(simbrief_id)
         if flpn is None:
-            await interaction.followup.send("No flightplan available")
+            await interaction.followup.send(f"No flightplan available, the username used was `{simbrief_id}`. Make sure it is up to date")
             return
         
         general_embed = discord.Embed(
