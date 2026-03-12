@@ -119,6 +119,11 @@ class Metar(commands.Cog):
         await interaction.response.defer()
         metar = get_metar(airport, False)
 
+        airport_exist = airport_lookup(airport)
+        if airport_exist == False:
+            await interaction.followup.send(f"The airport `{airport}` is not in my database")
+            return
+
         attempts = 10
         while attempts > 0:
             if metar == False or metar == None:
