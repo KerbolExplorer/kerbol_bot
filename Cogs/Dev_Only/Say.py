@@ -6,9 +6,9 @@ class Say(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @app_commands.command(name="say", description="Have Solgaleo say something for you")
+    @app_commands.command(name="say", description="Have Orion say something for you")
     @app_commands.describe(
-        message="The message Solgaleo will say",
+        message="The message Orion will say",
         message_id="The id of the message to reply to"
     )
     async def say(self, interaction:discord.Interaction, message: str, message_id: str = None):

@@ -148,7 +148,7 @@ class Metar(commands.Cog):
 
         await interaction.followup.send("This metar is not available")
     
-    @app_commands.command(name="metar_request", description="Have Solgaleo periodically send you the metar for an airport")
+    @app_commands.command(name="metar_request", description="Have Orion periodically send you the metar for an airport")
     @app_commands.describe(
         airport="Icao code of the airport",
         hours="How many hours you want to be reminded for"

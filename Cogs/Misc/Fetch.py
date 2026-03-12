@@ -7,7 +7,7 @@ class Fetch(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @app_commands.command(name="fetch", description="Throw a stick at Solgaleo and he *should* return it")
+    @app_commands.command(name="fetch", description="Throw a stick at Orion and he *should* return it")
     async def fetch(self, interaction:discord.Interaction):
         responses = (
             "Heres the stick back!", "Heres the stick back, careful with the fire on the tip!", "Uh...where did you launch it?"

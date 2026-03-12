@@ -10,11 +10,11 @@ class Run(commands.Cog):
     
     @app_commands.command(name="run", description="[DEV ONLY COMMAND], runs whatever text was given and returns the result")
     @app_commands.describe(
-        script="The code Solgaleo will execute"
+        script="The code Orion will execute"
     )
     async def run(self, interaction:discord.Interaction, script: str):
         if interaction.user.id != 442728041115025410:
-            await interaction.response.send_message("Only Kerbol can use this command!", ephemeral=True)
+            await interaction.response.send_message("Only Kobalt can use this command!", ephemeral=True)
             return
         
         output_stream = io.StringIO()

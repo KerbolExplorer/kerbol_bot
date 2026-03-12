@@ -79,7 +79,7 @@ class Help(commands.Cog):
         util_embed.add_field(name="remind_list", value="Shows a list of your current reminders")
         util_embed.add_field(name="remind_cancel", value="Cancels a reminder")
         util_embed.add_field(name="say", value="Have Orion say something")
-        util_embed.add_field(name="set_reaction_role", value="[REQUIRES MANAGE ROLE PERMS] Allows to set up a role reaction on one of Solgaleo's messages")
+        util_embed.add_field(name="set_reaction_role", value="[REQUIRES MANAGE ROLE PERMS] Allows to set up a role reaction on one of Orion's messages")
         util_embed.add_field(name="remove_reaction_role", value="[REQUIRES MANAGE ROLE PERMS] Removes a reaction role")
         util_embed.add_field(name="server", value="Shows information about the server")
 
