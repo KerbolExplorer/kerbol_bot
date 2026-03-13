@@ -109,6 +109,8 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
         await interaction.followup.send(f"Something went wrong while doing this command. I have notified {admin_user.display_name} about it", ephemeral=True)
     except discord.Forbidden:
         await interaction.followup.send("I do not have permissions to execute that command.")
+    except discord.NotFound:
+        await interaction.followup.send("Command not found. Try reloading the discord client. If the issue persists contact Kobalt.")
 
     print(f"\nException occurred in command: {interaction.command.name}")
     traceback.print_exception(type(error), error, error.__traceback__)
