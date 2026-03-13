@@ -152,11 +152,15 @@ class Roles(commands.Cog):
                 await member.remove_roles(role)
             except discord.Forbidden:
                 await channel.send("I do not have permissions to remove your role.")
-"""
+
     @app_commands.command(name="enable_custom_roles", description="Enables or disables custom roles on this server")
     @commands.has_guild_permissions(manage_messages=True)
     @app_commands.describe(input="True if you want to enable them, False if not")
     async def enable_roles(self, interaction:discord.Interaction, input:bool):
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.followup.send("You do not have permissions to execute this command")
+            return
+
         db = await aiosqlite.connect("db_exp.db")
         cursor = await db.cursor()
 
@@ -167,6 +171,7 @@ class Roles(commands.Cog):
             await interaction.response.send_message("This server is not in my database. Please send a message so I can register it", ephemeral=True)
             await db.close()
             return
+
         await db.commit()
         await db.close()
         if input == True:
@@ -181,9 +186,12 @@ class Roles(commands.Cog):
         )
     async def custom_role(self, interaction:discord.Interaction, name:str=None, color:str=None, remove:bool=False):
         await interaction.response.defer(ephemeral=True)
-
         if name is None and color is None and remove is False:
             await interaction.followup.send("You need to at least edit something")
+            return
+        
+        if "unlinked" in name:
+            await interaction.followup.send("The substring 'unlinked' is not allowed on custom roles. 'Unlinked' however, is")
             return
 
         guild = interaction.guild
@@ -207,6 +215,12 @@ class Roles(commands.Cog):
         sql = f"SELECT role FROM '{guild.id}' WHERE userId = ?"
         await cursor.execute(sql, (interaction.user.id,))
         role_id = (await cursor.fetchone())[0]
+
+        if role_id == None:
+            if name == None or color == None:
+                await interaction.followup.send("You do not have a custom role, please input a name and color to create one.")
+                await db.close()
+                return
 
         if role_id:
             role = guild.get_role(role_id)
@@ -288,7 +302,7 @@ class Roles(commands.Cog):
                 await role.edit(name=clean_name)
         await db.commit()
         await db.close()
-        await ctx.send("Valid roles have been linked.")"""
+        await ctx.send("Valid roles have been linked.")
 
 async def setup(bot):
     db = await aiosqlite.connect("roles.db")
