@@ -82,6 +82,9 @@ class Help(commands.Cog):
         util_embed.add_field(name="set_reaction_role", value="[REQUIRES MANAGE ROLE PERMS] Allows to set up a role reaction on one of Orion's messages")
         util_embed.add_field(name="remove_reaction_role", value="[REQUIRES MANAGE ROLE PERMS] Removes a reaction role")
         util_embed.add_field(name="server", value="Shows information about the server")
+        util_embed.add_field(name="enable_custom_role", value="[REQUIRES MANAGE ROLE PERMS] Enables custom roles on this server. Existing roles must be linked with the S!sync command and contain the word 'unlinked' on them. Each custom role is limited to 1 user")
+        util_embed.add_field(name="custom_role", value="Creates, Edits and Deletes custom roles")
+        
 
 
         embeds = [init_embed, av_embed, games_embed, profile_embed, misc_embed, util_embed]
