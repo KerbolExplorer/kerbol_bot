@@ -12,6 +12,7 @@ class Say(commands.Cog):
         message_id="The id of the message to reply to"
     )
     async def say(self, interaction:discord.Interaction, message: str, message_id: str = None):
+        message = message.replace("\\n", "\n")
         if message_id != None:
             reply_message = await interaction.channel.fetch_message(int(message_id))
             await interaction.channel.send(content=message, reference=reply_message)
