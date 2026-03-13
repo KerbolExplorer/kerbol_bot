@@ -26,6 +26,10 @@ class Random_commands(commands.Cog):
     @commands.command()
     async def ralsei(self, ctx:commands.Context):
         await ctx.send("<:ralseiluv:1481270587266564147>")
+    
+    @commands.command()
+    async def kerbol(self, ctx):
+        await ctx.send("<:kerbol:1312437693979955230>")
 
 
 async def setup(bot):
