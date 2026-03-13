@@ -94,7 +94,14 @@ class Level_System(commands.Cog):
     @app_commands.command(name="xp_cooldown", description="Changes the xp gain cooldown for a server")
     @commands.has_guild_permissions(manage_messages=True)
     async def xp_cooldown(self, interaction:discord.Interaction, cooldown:int):
-        db = aiosqlite.connect("db_exp.db")
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.response.send_message("You do not have permissions to execute this command")
+            return
+
+        if cooldown < 0:
+            await interaction.response.send_message("Negative numbers are not allowed")
+
+        db = await aiosqlite.connect("db_exp.db")
         cursor = await db.cursor()
         
         sql = "UPDATE Guilds SET cooldown = ? WHERE id = ?"
