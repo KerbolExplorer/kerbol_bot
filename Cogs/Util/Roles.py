@@ -64,6 +64,10 @@ class Roles(commands.Cog):
     @commands.has_guild_permissions(manage_messages=True)
     async def remove_role_reaction(self, interaction:discord.Interaction, message_link:str, emoji:str):
         await interaction.response.defer(ephemeral=True)
+
+        if not interaction.user.guild_permissions.manage_roles:
+            await interaction.followup.send("You do not have permissions to execute this command")
+            return
         try:
             message_data = message_link.split("/")
             message_id = message_data[-1]
