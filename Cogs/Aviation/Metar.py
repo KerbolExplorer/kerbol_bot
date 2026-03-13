@@ -261,10 +261,10 @@ class Metar(commands.Cog):
     async def temp_converter(self, interaction:discord.Interaction, celcius:float=None, farenheith:float=None):
         if celcius is not None:
             temperature = (celcius * 9/5) + 32
-            await interaction.response.send_message(f"{celcius}ºc is {temperature}ºf")
+            await interaction.response.send_message(f"{celcius}ºc is {temperature:.2f}ºf")
         elif farenheith is not None:
             temperature = (farenheith - 32) * 5/9
-            await interaction.response.send_message(f"{farenheith}ºf is {temperature}ºc")
+            await interaction.response.send_message(f"{farenheith}ºf is {temperature:.2f}ºc")
         elif farenheith is not None and celcius is not None:
             await interaction.response.send_message("One of the fields must have a value")
         else:
