@@ -157,14 +157,11 @@ class Roles(commands.Cog):
     @commands.has_guild_permissions(manage_messages=True)
     @app_commands.describe(input="True if you want to enable them, False if not")
     async def enable_roles(self, interaction:discord.Interaction, input:bool):
-<<<<<<< HEAD
         await interaction.response.defer()
-=======
         if not interaction.user.guild_permissions.manage_roles:
             await interaction.followup.send("You do not have permissions to execute this command")
             return
 
->>>>>>> e77d9679c62e5dfdaede51998bb43763df9e5984
         db = await aiosqlite.connect("db_exp.db")
         cursor = await db.cursor()
 
