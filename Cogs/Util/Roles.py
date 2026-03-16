@@ -11,6 +11,7 @@ class Roles(commands.Cog):
     @commands.has_guild_permissions(manage_messages=True)
     @app_commands.describe(input="True if you want to enable them, False if not")
     async def enable_roles(self, interaction:discord.Interaction, input:bool):
+        await interaction.response.defer()
         db = await aiosqlite.connect("db_exp.db")
         cursor = await db.cursor()
 
@@ -18,15 +19,15 @@ class Roles(commands.Cog):
         try:
             await cursor.execute(sql, (input, interaction.guild.id))
         except Exception:
-            await interaction.response.send_message("This server is not in my database. Please send a message so I can register it", ephemeral=True)
+            await interaction.followup.send("This server is not in my database. Please send a message so I can register it", ephemeral=True)
             await db.close()
             return
         await db.commit()
         await db.close()
         if input == True:
-            await interaction.response.send_message("Custom roles have been enabled in this server.")
+            await interaction.followup.send("Custom roles have been enabled in this server.")
         else:
-            await interaction.response.send_message("Custom roles have been disabled in this server.")
+            await interaction.followup.send("Custom roles have been disabled in this server.")
 
     @app_commands.command(name="custom_role", description="Creates or updates your role")
     @app_commands.describe(name="The name of your role",
