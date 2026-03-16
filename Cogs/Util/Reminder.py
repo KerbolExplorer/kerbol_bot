@@ -91,7 +91,7 @@ class Reminder(commands.Cog):
             await reminder_db.commit()
             await reminder_db.close()
 
-    @app_commands.command(name="remindme", description="Have Solgaleo remind you of something")
+    @app_commands.command(name="remindme", description="Have Orion remind you of something")
     async def remindme(self, interaction:discord.Interaction):
         await interaction.response.send_modal(self.Reminder_Modal())
 

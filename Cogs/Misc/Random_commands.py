@@ -23,5 +23,14 @@ class Random_commands(commands.Cog):
     async def amogus(self, ctx):
         await ctx.send(chr(sum(range(ord(min(str(not())))))))
 
+    @commands.command()
+    async def ralsei(self, ctx:commands.Context):
+        await ctx.send("<:ralseiluv:1481270587266564147>")
+    
+    @commands.command()
+    async def kerbol(self, ctx):
+        await ctx.send("<:kerbol:1312437693979955230>")
+
+
 async def setup(bot):
     await bot.add_cog(Random_commands(bot))

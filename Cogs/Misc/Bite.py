@@ -7,18 +7,18 @@ class Bite(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="bite", description="Solgaleo bites the selected user")
-    @app_commands.describe(target="The member you want solgaleo to bite")
+    @app_commands.command(name="bite", description="Orion bites the selected user")
+    @app_commands.describe(target="The member you want Orion to bite")
     async def bite(self, interaction:discord.Interaction, target:discord.Member):
         if (interaction.user.id is target.id):
             self_bite_responses = (
-                "Why do you wish for me to bite you?", "If you ask so", "I'll bite you. But I will judge you", "*Solgaleo frowns* Oh you are one of those..."
+                "Why do you wish for me to bite you?", "If you ask so", "I'll bite you. But I will judge you", "*Orion frowns* Oh you are one of those..."
                 )
             await interaction.response.send_message(self_bite_responses[random.randint(0, len(self_bite_responses) -1)])
         elif (target.id is self.bot.user.id):
             await interaction.response.send_message("I'm not biting myself")
         else:
-            await interaction.response.send_message(f"*Solgaleo bites hard on {target.display_name}!*")
+            await interaction.response.send_message(f"*Orion bites hard on {target.display_name}!*")
 
 async def setup(bot):
     await bot.add_cog(Bite(bot))

@@ -13,6 +13,9 @@ class Responses(commands.Cog):
         if message.author.bot == False and self.bot.user.mentioned_in(message):
             content = message.clean_content.replace(f"@{self.bot.user.name}", "").strip().lower()
 
+            if message.mention_everyone:
+                return
+
             if content == "am i cute?":
                 await message.channel.send("Yes you are :3")
                 return
@@ -26,11 +29,11 @@ class Responses(commands.Cog):
                 await message.channel.send("ik")
                 return
             
-            response = ("Hmm?", "Huh?", "What?", "Need anything?", "Make it quick")
+            response = ("Hmm?", "Huh?", "What?", "Need anything?", "Haiii :3", "Heyo", "hi", "hallo", "hoi")
             await message.channel.send(random.choice(response))
         elif message.author.bot == False and message.guild:
             content = message.content.lower()
-            if "vore" in content:
+            if " vore" in content:
                 await message.reply("https://tenor.com/view/warning-gif-15403397949888856290")
                 server_id = message.guild.id
 

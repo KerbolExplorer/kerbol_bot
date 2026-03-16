@@ -114,10 +114,15 @@ class Metar(commands.Cog):
     # TODO: Optimize airport lookup, too slow. Nearby icao codes can surely be grabbed quicker
     # TODO: You can write whatever the fuck you want on the metar and it'll try to grab it :sob:, fix that
     @app_commands.command(name="metar", description="Gets the metar for an airport")
-    @app_commands.describe(airport="Icao code of the airport", raw="Give only raw information")
-    async def metar(self, interaction:discord.Interaction, airport:str, raw:bool=False):
+    @app_commands.describe(airport="Icao code of the airport")
+    async def metar(self, interaction:discord.Interaction, airport:str):
         await interaction.response.defer()
         metar = get_metar(airport, False)
+
+        airport_exist = airport_lookup(airport)
+        if airport_exist == False:
+            await interaction.followup.send(f"The airport `{airport}` is not in my database")
+            return
 
         attempts = 10
         while attempts > 0:
@@ -143,7 +148,7 @@ class Metar(commands.Cog):
 
         await interaction.followup.send("This metar is not available")
     
-    @app_commands.command(name="metar_request", description="Have Solgaleo periodically send you the metar for an airport")
+    @app_commands.command(name="metar_request", description="Have Orion periodically send you the metar for an airport")
     @app_commands.describe(
         airport="Icao code of the airport",
         hours="How many hours you want to be reminded for"
@@ -256,10 +261,10 @@ class Metar(commands.Cog):
     async def temp_converter(self, interaction:discord.Interaction, celcius:float=None, farenheith:float=None):
         if celcius is not None:
             temperature = (celcius * 9/5) + 32
-            await interaction.response.send_message(f"{celcius}ºc is {temperature}ºf")
+            await interaction.response.send_message(f"{celcius}ºc is {temperature:.2f}ºf")
         elif farenheith is not None:
             temperature = (farenheith - 32) * 5/9
-            await interaction.response.send_message(f"{farenheith}ºf is {temperature}ºc")
+            await interaction.response.send_message(f"{farenheith}ºf is {temperature:.2f}ºc")
         elif farenheith is not None and celcius is not None:
             await interaction.response.send_message("One of the fields must have a value")
         else:

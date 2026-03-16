@@ -48,7 +48,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=not stream))
 
-        if 'entries' in data: # <-- this bad boy handles if you gave it a playlist TODO: Make sure the user wants to give solgaleo the entire playlist
+        if 'entries' in data: # <-- this bad boy handles if you gave it a playlist TODO: Make sure the user wants to give Orion the entire playlist
             return [cls(discord.FFmpegPCMAudio(entry['url'], **ffmpeg_options), data=entry) for entry in data['entries']]
         else:
             return [cls(discord.FFmpegPCMAudio(data['url'], **ffmpeg_options), data=data)]
