@@ -18,7 +18,7 @@ class Level_System(commands.Cog):
         await cursor.execute(sql)
         result = await cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE 'Guilds' (id INTEGER, cooldown INTEGER, minGain INTEGER, maxGain INTEGER, customRoles BOOLEAN, sinCount INTEGER)"
+            sql = "CREATE TABLE 'Guilds' (id INTEGER, cooldown INTEGER, minGain INTEGER, maxGain INTEGER, customRoles BOOLEAN, sinCount INTEGER, welcomeMessage TEXT)"
             await cursor.execute(sql)
             await db.commit()
             await db.close()

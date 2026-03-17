@@ -73,10 +73,7 @@ class Dev_commands(commands.Cog):
             if self.verify_messenger(user_id) == True:
                 db = sqlite3.connect("db_exp.db")
                 cursor = db.cursor()
-
-                sql = "ALTER TABLE '606456281469026305' ADD COLUMN role INTEGER"
-                cursor.execute(sql)
-                sql = "ALTER TABLE '671398463287722006' ADD COLUMN role INTEGER"
+                sql = "ALTER TABLE 'Guilds' ADD COLUMN welcomeMessage TEXT"
                 cursor.execute(sql)
                 db.commit()
                 db.close()
