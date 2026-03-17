@@ -225,6 +225,10 @@ class Roles(commands.Cog):
 
         if role_id:
             role = guild.get_role(role_id)
+            if role == None:
+                await interaction.followup.send("Your role no longer exists in my database, please tell an admin to relink it.")
+                await db.close()
+                return
         else:
             role = None
         
