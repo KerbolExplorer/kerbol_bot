@@ -190,10 +190,11 @@ class Roles(commands.Cog):
         if name is None and color is None and remove is False:
             await interaction.followup.send("You need to at least edit something")
             return
-        
-        if "unlinked" in name:
-            await interaction.followup.send("The substring 'unlinked' is not allowed on custom roles. 'Unlinked' however, is")
-            return
+
+        if name:
+            if "unlinked" in name:
+                await interaction.followup.send("The substring 'unlinked' is not allowed on custom roles. 'Unlinked' however, is")
+                return
 
         guild = interaction.guild
 
