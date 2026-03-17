@@ -18,6 +18,13 @@ class Say(commands.Cog):
             await interaction.channel.send(content=message, reference=reply_message)
         else:
             await interaction.channel.send(message)
+    
+    @commands.command()
+    async def edit(self, ctx:commands.Context, message_id:int, new_message:str):  
+        new_message = new_message.replace("\\n", "\n")  
+        message = await ctx.channel.fetch_message(int(message_id))
+        print(new_message)
+        await message.edit(content=str(new_message))
 
 async def setup(bot):
     await bot.add_cog(Say(bot))
