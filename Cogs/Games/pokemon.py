@@ -88,7 +88,6 @@ class Pokemon(commands.Cog):
         # Pokeapi request for images(home) and description
         # Rest can be pulled from the json
         # TODO: Allow search with numbers 
-        # TODO: Mega and dynamax forms will lack images.
         pokemon = pokemon.lower()
         with open("Bot_Databases/pokedex.json", 'r', encoding="utf-8") as file:
             data = json.load(file).get(pokemon)
@@ -100,21 +99,38 @@ class Pokemon(commands.Cog):
             api = "https://archives.bulbagarden.net/w/api.php"
             
             titles = ""
+            titles = f"{data['num']:04d}"
             
-            if shiny:
-                titles = f"{data['num']:04d}_s"
-            else:
-                titles = f"{data['num']:04d}"
+            #check for forms
+            form = data.get('forme', None)
+
+            home = "HOME"
+
+            if form:
+                if form == "Mega":
+                    titles = titles + "M"
+                elif form == "Mega-Z":
+                    # Game freak please put Z forms in home I beg you
+                    titles = f"{data['num']:04d}{data["baseSpecies"]}-Mega_Z"
+                    home = ""
+                elif form == "Gmax":
+                    titles = titles + "Gi"
+            
+            print(titles)
+
+            if shiny and form != "Mega-Z":
+                titles = f"{titles}_s"
 
             params = {
                 "action": "query",
-                "titles": f"File:HOME{titles}.png",
+                "titles": f"File:{home}{titles}.png",
                 "prop": "imageinfo",
                 "iiprop": "url",
                 "format": "json"
             }
 
             img_response = requests.get(api, params=params).json()
+            print(img_response)
             image_data = None
 
             if img_response is not None:
@@ -123,20 +139,17 @@ class Pokemon(commands.Cog):
 
             description_url = f"https://pokeapi.co/api/v2/pokemon-species/{pokemon}"
 
-
+            flavor_text = ""
             response = requests.get(description_url)
             if response.status_code == 404:
-                return None
-        
-            description_data = response.json()
-
-
-            # Grab the flavor text from this shitty api holy shit who made this
-            flavor_text = ""
-            for description in description_data["flavor_text_entries"]:
-                if description["language"]["name"] == "en":
-                    flavor_text = description["flavor_text"]
-                    break
+                flavor_text = "Description not available."
+            else:
+                description_data = response.json()
+                # Grab the flavor text from this shitty api holy shit who made this
+                for description in description_data["flavor_text_entries"]:
+                    if description["language"]["name"] == "en":
+                        flavor_text = description["flavor_text"]
+                        break
 
             to_return = self.Pokemon_data(name=data["name"],
                                           number=data["num"],
