@@ -87,10 +87,29 @@ class Pokemon(commands.Cog):
     async def get_pokemon(self, pokemon:str, shiny:bool=False):
         # Pokeapi request for images(home) and description
         # Rest can be pulled from the json
-        # TODO: Allow search with numbers 
-        pokemon = pokemon.lower()
+        # TODO: Allow search with numbers .
+        # TODO: Add forms to a dropdown, would be pretty cool.
+        is_numeric = False
+        if pokemon.isdigit():
+            is_numeric = True
+            pokemon = int(pokemon)
+        else:
+            pokemon = pokemon.lower()
         with open("Bot_Databases/pokedex.json", 'r', encoding="utf-8") as file:
-            data = json.load(file).get(pokemon)
+            data:dict = json.load(file)
+
+            found = False
+
+            if is_numeric:
+                for key, entry in data.items():
+                    if entry.get("num") == pokemon:
+                        data = data.get(entry["name"].lower())
+                        found = True
+                        break
+                if not found:
+                    data = None
+            else:
+                data = data.get(pokemon)
 
             if data == None:
                 return None
@@ -196,12 +215,12 @@ class Pokemon(commands.Cog):
         
         if shiny:
             embed = discord.Embed(
-                title=f"{pokemon_data.name} ({pokemon_data.number})✨",
+                title=f"{pokemon_data.name} (Nº{pokemon_data.number})✨",
                 description=f"*{pokemon_data.description}*"
             )
         else:
             embed = discord.Embed(
-                title=f"{pokemon_data.name} ({pokemon_data.number})",
+                title=f"{pokemon_data.name} (Nº{pokemon_data.number})",
                 description=f"*{pokemon_data.description}*"
             )
 
