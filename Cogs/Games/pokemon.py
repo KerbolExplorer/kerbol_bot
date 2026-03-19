@@ -87,7 +87,7 @@ class Pokemon(commands.Cog):
     async def get_pokemon(self, pokemon:str, shiny:bool=False):
         # Pokeapi request for images(home) and description
         # Rest can be pulled from the json
-        # TODO: Add autocomplete.
+        # TODO: You can use serebii, dumbass
         # TODO: Add forms to a dropdown, would be pretty cool.
         pokemon = pokemon.lower()
         with open("Bot_Databases/pokedex.json", 'r', encoding="utf-8") as file:
@@ -132,10 +132,13 @@ class Pokemon(commands.Cog):
 
             img_response = requests.get(api, params=params).json()
             image_data = None
-
-            if img_response is not None:
-                pages = img_response["query"]["pages"]
-                image_data = list(pages.values())[0]["imageinfo"][0]["url"]
+            #{'batchcomplete': '', 'query': {'pages': {'-1': {'ns': 6, 'title': 'File:HOME0000.png', 'missing': '', 'imagerepository': ''}}}}
+            try:
+                if img_response is not None:
+                    pages = img_response.get("query").get("pages")
+                    image_data = list(pages.values())[0]["imageinfo"][0]["url"]
+            except Exception as e:
+                pass
 
             description_url = f"https://pokeapi.co/api/v2/pokemon-species/{pokemon}"
 
