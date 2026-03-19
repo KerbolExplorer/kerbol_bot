@@ -15,6 +15,7 @@ class About(commands.Cog):
             -> The music commands have been removed indefinetely due to issues with youtube.
             -> Leaderboard is limited to top 10 users. Might also take a while to load.
             -> If a ⚠️shows up in a metar command. Use S!debugmetar `icao` and send it to Kobalt to add whichever is missing.
+            -> Pokemon Command: Mega and dinamax forms don't have descriptions at the moment
             """
             )
 
