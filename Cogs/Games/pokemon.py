@@ -115,8 +115,6 @@ class Pokemon(commands.Cog):
                     home = ""
                 elif form == "Gmax":
                     titles = titles + "Gi"
-            
-            print(titles)
 
             if shiny and form != "Mega-Z":
                 titles = f"{titles}_s"
@@ -130,7 +128,6 @@ class Pokemon(commands.Cog):
             }
 
             img_response = requests.get(api, params=params).json()
-            print(img_response)
             image_data = None
 
             if img_response is not None:
@@ -197,10 +194,16 @@ class Pokemon(commands.Cog):
             await interaction.followup.send("Pokemon not found.")
             return
         
-        embed = discord.Embed(
-            title=f"{pokemon_data.name} ({pokemon_data.number})",
-            description=f"*{pokemon_data.description}*"
-        )
+        if shiny:
+            embed = discord.Embed(
+                title=f"{pokemon_data.name} ({pokemon_data.number})✨",
+                description=f"*{pokemon_data.description}*"
+            )
+        else:
+            embed = discord.Embed(
+                title=f"{pokemon_data.name} ({pokemon_data.number})",
+                description=f"*{pokemon_data.description}*"
+            )
 
         colors = {
             "Black":0x000000,
