@@ -15,7 +15,9 @@ class About(commands.Cog):
             -> The music commands have been removed indefinetely due to issues with youtube.
             -> Leaderboard is limited to top 10 users. Might also take a while to load.
             -> If a ⚠️shows up in a metar command. Use S!debugmetar `icao` and send it to Kobalt to add whichever is missing.
-            -> Pokemon Command: Mega and dinamax forms don't have descriptions at the moment
+            -> Pokemon Command: Mega and dinamax forms don't have descriptions at the moment.
+            -> Pokemon Command: Megas introduced in ZA will show the standard pokemon's image. Z megas show a correct image.
+            (The reason for this is because the ZA megas don't have a home icon yet, which is the one the bot uses, While Z megas also don't, they at least have a different identifier, which allows me grab a picture for them.)
             """
             )
 
