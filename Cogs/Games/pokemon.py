@@ -87,29 +87,13 @@ class Pokemon(commands.Cog):
     async def get_pokemon(self, pokemon:str, shiny:bool=False):
         # Pokeapi request for images(home) and description
         # Rest can be pulled from the json
-        # TODO: Allow search with numbers .
+        # TODO: Add autocomplete.
         # TODO: Add forms to a dropdown, would be pretty cool.
-        is_numeric = False
-        if pokemon.isdigit():
-            is_numeric = True
-            pokemon = int(pokemon)
-        else:
-            pokemon = pokemon.lower()
+        pokemon = pokemon.lower()
         with open("Bot_Databases/pokedex.json", 'r', encoding="utf-8") as file:
             data:dict = json.load(file)
 
-            found = False
-
-            if is_numeric:
-                for key, entry in data.items():
-                    if entry.get("num") == pokemon:
-                        data = data.get(entry["name"].lower())
-                        found = True
-                        break
-                if not found:
-                    data = None
-            else:
-                data = data.get(pokemon)
+            data = data.get(pokemon)
 
             if data == None:
                 return None
@@ -194,9 +178,22 @@ class Pokemon(commands.Cog):
                                           forms=data.get("otherFormes"))
         return to_return
 
+    async def pokemon_autocomplete(self, interaction:discord.Interaction, current):
+        with open("Bot_Databases/pokedex.json", 'r', encoding="utf-8") as file:
+            data:dict = json.load(file)
+
+            tags = data.keys()
+
+            matches = [p for p in tags if current.lower() in p.lower()]
+
+            return [
+                app_commands.Choice(name=t, value=t)
+                for t in matches[:25]
+            ]
 
 
     @app_commands.command(name="pokemon", description="Shows information about a pokemon.")
+    @app_commands.autocomplete(pokemon=pokemon_autocomplete)
     @app_commands.describe(pokemon="Name of the pokemon to lookup")
     async def pokemon_info(self, interaction:discord.Interaction, pokemon:str):
         await interaction.response.defer()
