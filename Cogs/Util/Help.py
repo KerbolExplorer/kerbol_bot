@@ -45,6 +45,7 @@ class Help(commands.Cog):
         games_embed.add_field(name="gunslingers", value="Play a game of gunslingers")
         games_embed.add_field(name="gunslingers-about", value="Shows information about gunslingers")
         games_embed.add_field(name="rockpaperscissors", value="Play a game of rps against Orion")
+        games_embed.add_field(name="pokemon", value="Shows information about a chosen pokemon.")
 
         profile_embed = discord.Embed(
             title="Profile Commands",
