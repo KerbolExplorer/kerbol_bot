@@ -96,14 +96,33 @@ class Pokemon(commands.Cog):
             if data == None:
                 return None
 
-            image_url = f"https://pokeapi.co/api/v2/pokemon/{pokemon}"
+            # Image grabbing
+            api = "https://archives.bulbagarden.net/w/api.php"
+            
+            titles = ""
+            
+            if shiny:
+                titles = f"{data['num']:04d}_s"
+            else:
+                titles = f"{data['num']:04d}"
+
+            params = {
+                "action": "query",
+                "titles": f"File:HOME{titles}.png",
+                "prop": "imageinfo",
+                "iiprop": "url",
+                "format": "json"
+            }
+
+            img_response = requests.get(api, params=params).json()
+            image_data = None
+
+            if img_response is not None:
+                pages = img_response["query"]["pages"]
+                image_data = list(pages.values())[0]["imageinfo"][0]["url"]
+
             description_url = f"https://pokeapi.co/api/v2/pokemon-species/{pokemon}"
 
-            response = requests.get(image_url)
-            if response.status_code == 404:
-                image_data = {}
-            else:
-                image_data = response.json()
 
             response = requests.get(description_url)
             if response.status_code == 404:
@@ -133,8 +152,8 @@ class Pokemon(commands.Cog):
                                           sp_attack=data["baseStats"]["spa"],
                                           sp_defense=data["baseStats"]["spd"],
                                           speed=data["baseStats"]["spe"],
-                                          image=image_data.get("sprites", {}).get("other", {}).get("home", {}).get("front_default", {}),
-                                          shiny_image=image_data.get("sprites", {}).get("other", {}).get("home", {}).get("front_shiny", {}),
+                                          image=image_data,
+                                          shiny_image=image_data,
                                           is_shiny=shiny,
                                           gender=data.get("genderRatio"),
                                           evolution=None,
@@ -185,13 +204,10 @@ class Pokemon(commands.Cog):
 
         embed.color = colors[pokemon_data.color]
 
-        if pokemon_data.image == {}:
+        if pokemon_data.image == None:
             embed.set_thumbnail(url="https://static.wikia.nocookie.net/pokemon/images/7/7f/Substitute_USUM_artwork.png/revision/latest?cb=20250412130621")
         else:
-            if shiny:
-                embed.set_thumbnail(url=pokemon_data.shiny_image)
-            else:
-                embed.set_thumbnail(url=pokemon_data.image)
+            embed.set_thumbnail(url=pokemon_data.image)
         
         types_string = ""
 
@@ -205,7 +221,7 @@ class Pokemon(commands.Cog):
         embed.add_field(name="Types", value=types_string)
 
         if pokemon_data.gender:
-            embed.add_field(name="Gender Percentages", value=f"M: {pokemon_data.gender["M"]*100}%\nG: {pokemon_data.gender["F"]*100}%")
+            embed.add_field(name="Gender Percentages", value=f"M: {pokemon_data.gender["M"]*100}%\nF: {pokemon_data.gender["F"]*100}%")
         else:
             embed.add_field(name="Gender Percentages", value="Unknown")
         
@@ -248,7 +264,7 @@ class Pokemon(commands.Cog):
 
         embed.add_field(name="Egg Group", value=egg_string, inline=False)
 
-        embed.set_footer(text="Data is from Showdown, image and description is from PokeAPI. Description is from the generation where the pokemon was introduced")
+        embed.set_footer(text="Data is from Showdown, Image is from Bulbagarden, description is from PokeAPI. Description is from the generation where the pokemon was introduced")
 
         await interaction.followup.send(embed=embed)
         
