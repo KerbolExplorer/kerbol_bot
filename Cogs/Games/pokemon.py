@@ -147,7 +147,7 @@ class Pokemon(commands.Cog):
         flavor_text = ""
         response = requests.get(description_url)
         if response.status_code == 404:
-            flavor_text = "Description not available."
+            flavor_text = data.get("description", "Description not available")
         else:
             description_data = response.json()
             # Grab the flavor text from this shitty api holy shit who made this
@@ -182,7 +182,7 @@ class Pokemon(commands.Cog):
                                         evo_condition=data.get("evoCondition"),
                                         egg_group=data["eggGroups"],
                                         tier=data["tier"],
-                                        forms=data.get("otherFormes", None))
+                                        forms=data.get("otherFormes", ""))
         return to_return
     
     async def pokemon_embed(self, pokemon_data:Pokemon_data):
