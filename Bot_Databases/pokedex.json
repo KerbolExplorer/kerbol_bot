@@ -290,12 +290,14 @@
         ],
         "otherFormes": [
             "Charizard-Mega-X",
-            "Charizard-Mega-Y"
+            "Charizard-Mega-Y",
+            "Charizard-Gmax"
         ],
         "formeOrder": [
             "Charizard",
             "Charizard-Mega-X",
-            "Charizard-Mega-Y"
+            "Charizard-Mega-Y",
+            "Charizard-Gmax"
         ],
         "canGigantamax": "G-Max Wildfire",
         "tier": "ZU"
@@ -508,11 +510,13 @@
             "Water 1"
         ],
         "otherFormes": [
-            "Blastoise-Mega"
+            "Blastoise-Mega",
+            "Blastoise-Gmax"
         ],
         "formeOrder": [
             "Blastoise",
-            "Blastoise-Mega"
+            "Blastoise-Mega",
+            "Blastoise-Gmax"
         ],
         "canGigantamax": "G-Max Cannonade",
         "tier": "RUBL"
@@ -673,6 +677,12 @@
         "evoLevel": 10,
         "eggGroups": [
             "Bug"
+        ],
+        "otherFormes":[
+            "Butterfree-Gmax"
+        ],
+        "formeOrder":[
+            "Butterfree-Gmax"
         ],
         "canGigantamax": "G-Max Befuddle",
         "tier": "Illegal",
@@ -1315,7 +1325,8 @@
             "Pikachu-Alola",
             "Pikachu-Partner",
             "Pikachu-Starter",
-            "Pikachu-World"
+            "Pikachu-World",
+            "Pikachu-Gmax"
         ],
         "formeOrder": [
             "Pikachu",
@@ -1333,7 +1344,8 @@
             "Pikachu-Pop-Star",
             "Pikachu-PhD",
             "Pikachu-Libre",
-            "Pikachu-Cosplay"
+            "Pikachu-Cosplay",
+            "Pikachu-Gmax"
         ],
         "canGigantamax": "G-Max Volt Crash",
         "tier": "ZU"
@@ -3085,12 +3097,14 @@
         ],
         "otherFormes": [
             "Meowth-Alola",
-            "Meowth-Galar"
+            "Meowth-Galar",
+            "Meowth-Gmax"
         ],
         "formeOrder": [
             "Meowth",
             "Meowth-Alola",
-            "Meowth-Galar"
+            "Meowth-Galar",
+            "Meowth-Gmax"
         ],
         "canGigantamax": "G-Max Gold Rush",
         "tier": "LC"
@@ -3878,6 +3892,12 @@
         "evoType": "trade",
         "eggGroups": [
             "Human-Like"
+        ],
+        "otherFormes":[
+            "Machamp-Gmax"
+        ],
+        "formeOrder":[
+            "Machamp-Gmax"
         ],
         "canGigantamax": "G-Max Chi Strike",
         "tier": "Illegal",
@@ -5190,11 +5210,13 @@
             "Amorphous"
         ],
         "otherFormes": [
-            "Gengar-Mega"
+            "Gengar-Mega",
+            "Gengar-Gmax"
         ],
         "formeOrder": [
             "Gengar",
-            "Gengar-Mega"
+            "Gengar-Mega",
+            "Gengar-Gmax"
         ],
         "canGigantamax": "G-Max Terror",
         "tier": "RU"
@@ -5407,6 +5429,12 @@
         "evoLevel": 28,
         "eggGroups": [
             "Water 3"
+        ],
+        "otherFormes":[
+            "Kingler-Gmax"
+        ],
+        "formeOrder":[
+            "Kingler-Gmax"
         ],
         "canGigantamax": "G-Max Foam Burst",
         "tier": "Illegal",
@@ -6979,6 +7007,12 @@
             "Monster",
             "Water 1"
         ],
+        "otherFormes":[
+            "Lapras-Gmax"
+        ],
+        "formeOrder":[
+            "Lapras-Gmax"
+        ],   
         "canGigantamax": "G-Max Resonance",
         "tier": "ZU"
     },
@@ -7082,11 +7116,13 @@
             "Field"
         ],
         "otherFormes": [
-            "Eevee-Starter"
+            "Eevee-Starter",
+            "Eevee-Gmax"
         ],
         "formeOrder": [
             "Eevee",
-            "Eevee-Starter"
+            "Eevee-Starter",
+            "Eevee-Gmax"
         ],
         "canGigantamax": "G-Max Cuddle",
         "tier": "LC"
@@ -7542,6 +7578,12 @@
             "Monster"
         ],
         "canHatch": true,
+        "otherFormes":[
+            "Snorlax-Gmax"
+        ],
+        "formeOrder":[
+            "Snorlax-Gmax"
+        ],
         "canGigantamax": "G-Max Replenish",
         "tier": "ZU"
     },
@@ -25044,6 +25086,12 @@
         "eggGroups": [
             "Mineral"
         ],
+        "otherFormes":[
+            "Garbodor-Gmax"
+        ],
+        "formeOrder":[
+            "Garbodor-Gmax"
+        ],
         "canGigantamax": "G-Max Malodor",
         "tier": "Illegal",
         "isNonstandard": "Past"
@@ -36440,6 +36488,12 @@
         "eggGroups": [
             "Undiscovered"
         ],
+        "otherFormes": [
+            "Melmetal-Gmax"
+        ],
+        "formeOrder":[
+            "Melmetal-Gmax"
+        ],
         "canGigantamax": "G-Max Meltdown",
         "tier": "Illegal",
         "isNonstandard": "Past"
@@ -36574,6 +36628,9 @@
         "eggGroups": [
             "Field",
             "Grass"
+        ],
+        "otherFormes":[
+            "Rillaboom-Gmax"
         ],
         "canGigantamax": "G-Max Drum Solo",
         "tier": "OU"
@@ -36714,6 +36771,9 @@
             "Field",
             "Human-Like"
         ],
+        "otherFormes":[
+            "Cinderace-Gmax"
+        ],
         "canGigantamax": "G-Max Fireball",
         "tier": "OU"
     },
@@ -36852,6 +36912,9 @@
         "eggGroups": [
             "Water 1",
             "Field"
+        ],
+        "otherFormes":[
+            "Inteleon-Gmax"
         ],
         "canGigantamax": "G-Max Hydrosnipe",
         "tier": "PUBL"
@@ -37038,6 +37101,9 @@
         "eggGroups": [
             "Flying"
         ],
+        "otherFormes":[
+            "Corviknight-Gmax"
+        ],
         "canGigantamax": "G-Max Wind Rage",
         "tier": "OU"
     },
@@ -37165,6 +37231,9 @@
         "evoLevel": 30,
         "eggGroups": [
             "Bug"
+        ],
+        "otherFormes":[
+            "Orbeetle-Gmax"
         ],
         "canGigantamax": "G-Max Gravitas",
         "tier": "Illegal",
@@ -37445,6 +37514,9 @@
             "Monster",
             "Water 1"
         ],
+        "otherFormes":[
+            "Drednaw-Gmax"
+        ],
         "canGigantamax": "G-Max Stonesurge",
         "tier": "PUBL"
     },
@@ -37631,6 +37703,9 @@
         "eggGroups": [
             "Mineral"
         ],
+        "otherFormes":[
+            "Coalossal-Gmax"
+        ],
         "canGigantamax": "G-Max Volcalith",
         "tier": "PU"
     },
@@ -37730,6 +37805,9 @@
             "Grass",
             "Dragon"
         ],
+        "otherFormes":[
+            "Flapple-Gmax"
+        ],
         "canGigantamax": "G-Max Tartness",
         "tier": "ZU"
     },
@@ -37795,6 +37873,9 @@
         "eggGroups": [
             "Grass",
             "Dragon"
+        ],
+        "otherFormes":[
+            "Appletun-Gmax"
         ],
         "canGigantamax": "G-Max Sweetness",
         "tier": "ZU"
@@ -37890,6 +37971,9 @@
         "eggGroups": [
             "Field",
             "Dragon"
+        ],
+        "otherFormes":[
+            "Sandaconda-Gmax"
         ],
         "canGigantamax": "G-Max Sandblast",
         "tier": "ZU"
@@ -38142,11 +38226,13 @@
             "Human-Like"
         ],
         "otherFormes": [
-            "Toxtricity-Low-Key"
+            "Toxtricity-Low-Key",
+            "Toxtricity-Gmax"
         ],
         "formeOrder": [
             "Toxtricity",
-            "Toxtricity-Low-Key"
+            "Toxtricity-Low-Key",
+            "Toxtricity-Gmax"
         ],
         "canGigantamax": "G-Max Stun Shock",
         "tier": "NU"
@@ -38307,6 +38393,9 @@
         "evoLevel": 28,
         "eggGroups": [
             "Bug"
+        ],
+        "otherFormes": [
+            "Centiskorch-Gmax"
         ],
         "canGigantamax": "G-Max Centiferno",
         "tier": "Illegal",
@@ -38639,6 +38728,9 @@
         "eggGroups": [
             "Fairy"
         ],
+        "otherFormes":[
+            "Hatterene-Gmax"
+        ],   
         "canGigantamax": "G-Max Smite",
         "tier": "OU"
     },
@@ -38772,6 +38864,9 @@
         "eggGroups": [
             "Fairy",
             "Human-Like"
+        ],
+        "otherFormes":[
+            "Grimmsnarl-Gmax"
         ],
         "canGigantamax": "G-Max Snooze",
         "tier": "PU"
@@ -39058,6 +39153,9 @@
         "eggGroups": [
             "Fairy",
             "Amorphous"
+        ],
+        "otherFormes":[
+            "Alcremie-Gmax"
         ],
         "cosmeticFormes": [
             "Alcremie-Ruby-Cream",
@@ -39598,6 +39696,9 @@
             "Field",
             "Mineral"
         ],
+        "otherFormes":[
+            "Copperajah-Gmax"
+        ],
         "canGigantamax": "G-Max Steelsurge",
         "tier": "NU"
     },
@@ -39781,6 +39882,9 @@
         "eggGroups": [
             "Mineral",
             "Dragon"
+        ],
+        "otherFormes":[
+            "Duralodon-Gmax"
         ],
         "canGigantamax": "G-Max Depletion",
         "tier": "NU"
@@ -40196,7 +40300,9 @@
             "Undiscovered"
         ],
         "otherFormes": [
-            "Urshifu-Rapid-Strike"
+            "Urshifu-Rapid-Strike",
+            "Urshifu-Gmax",
+            "Urshifu-Rapid-Strike-Gmax"
         ],
         "formeOrder": [
             "Urshifu",
