@@ -332,7 +332,10 @@ class Pokemon(commands.Cog):
                 form_data = await self.get_pokemon(form)
                 form_embeds.insert(0, await self.pokemon_embed(form_data))
 
-                options.append(discord.SelectOption(label=form_data.name, description="Shows information for this form", emoji="<:megaevolution:1486725244537536662>"))
+                if "gmax" in form:
+                    options.append(discord.SelectOption(label=form_data.name, description="Shows information for this form", emoji="<:gigantamax:1486725643457527951>"))
+                else:
+                    options.append(discord.SelectOption(label=form_data.name, description="Shows information for this form", emoji="<:megaevolution:1486725244537536662>"))
 
             # If we have forms ready up the embeds and view.
             class PokemonView(discord.ui.View):
