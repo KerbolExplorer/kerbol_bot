@@ -144,17 +144,7 @@ class Pokemon(commands.Cog):
 
         description_url = f"https://pokeapi.co/api/v2/pokemon-species/{pokemon}"
 
-        flavor_text = ""
-        response = requests.get(description_url)
-        if response.status_code == 404:
-            flavor_text = data.get("description", "Description not available")
-        else:
-            description_data = response.json()
-            # Grab the flavor text from this shitty api holy shit who made this
-            for description in description_data["flavor_text_entries"]:
-                if description["language"]["name"] == "en":
-                    flavor_text = description["flavor_text"]
-                    break
+        flavor_text = data.get("description", "Description not available")
 
         to_return = self.Pokemon_data(name=data["name"],
                                         number=data["num"],
