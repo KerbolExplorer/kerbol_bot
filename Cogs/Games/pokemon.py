@@ -181,7 +181,7 @@ class Pokemon(commands.Cog):
                                         evo_type=data.get("evoType"),
                                         evo_condition=data.get("evoCondition"),
                                         egg_group=data["eggGroups"],
-                                        tier=data["tier"],
+                                        tier=data.get("tier", "Unknown"),
                                         forms=data.get("otherFormes", ""))
         return to_return
     
