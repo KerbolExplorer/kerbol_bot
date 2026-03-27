@@ -188,13 +188,7 @@ class Pokemon(commands.Cog):
                                         forms=data.get("otherFormes", ""))
         return to_return
     
-    async def pokemon_embed(self, pokemon_data:Pokemon_data):
-        shiny = random.randint(1, 1024)
-
-        if shiny == 621:
-            shiny = True
-        else:
-            shiny = False
+    async def pokemon_embed(self, pokemon_data:Pokemon_data, shiny=False):
         
         if shiny:
             embed = discord.Embed(
@@ -282,7 +276,7 @@ class Pokemon(commands.Cog):
 
         embed.add_field(name="Egg Group", value=egg_string, inline=False)
 
-        embed.set_footer(text="Data is from Showdown, Image is from Bulbagarden, description is from PokeAPI. Description is from the generation where the pokemon was introduced")
+        embed.set_footer(text="Data is from Showdown, Image is from Bulbagarden, description is from PokeAPI. Description is from Moon or the generation the pokemon was introduced in")
 
         return embed
 
@@ -306,14 +300,21 @@ class Pokemon(commands.Cog):
         await interaction.response.defer()
         pokemon = pokemon.lower()
 
-        pokemon_data:Pokemon.Pokemon_data = await self.get_pokemon(pokemon=pokemon)
+        shiny = random.randint(1, 1024)
+
+        if shiny == 621:
+            shiny = True
+        else:
+            shiny = False
+
+        pokemon_data:Pokemon.Pokemon_data = await self.get_pokemon(pokemon=pokemon, shiny=shiny)
 
         # Check if the pokemon exists
         if not pokemon_data:
             await interaction.followup.send("This pokemon does not exist or is not in my database.")
             return
         
-        init_embed = await self.pokemon_embed(pokemon_data)
+        init_embed = await self.pokemon_embed(pokemon_data, shiny)
         
         forms = []
         form_embeds = []
@@ -323,9 +324,9 @@ class Pokemon(commands.Cog):
 
             
             # All operations here should be done based on the original form. We also add the og form to the list also.
-            original_form = await self.get_pokemon(pokemon_data.base_species.lower())
+            original_form = await self.get_pokemon(pokemon_data.base_species.lower(), shiny)
             forms.insert(0, original_form.name)
-            form_embeds.insert(0, await self.pokemon_embed(original_form))
+            form_embeds.insert(0, await self.pokemon_embed(original_form, shiny))
             options.append(discord.SelectOption(label=original_form.name, description="Shows information for this form", emoji="<:pokeball:1486725525052457050>"))
 
             for form in original_form.forms:
@@ -333,7 +334,7 @@ class Pokemon(commands.Cog):
                 form:str = form.replace("-", "")
                 form = form.lower()
                 form_data = await self.get_pokemon(form)
-                form_embeds.insert(0, await self.pokemon_embed(form_data))
+                form_embeds.insert(0, await self.pokemon_embed(form_data, shiny))
 
                 if "gmax" in form:
                     options.append(discord.SelectOption(label=form_data.name, description="Shows information for this form", emoji="<:gigantamax:1486725643457527951>"))
