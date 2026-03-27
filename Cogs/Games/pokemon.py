@@ -141,7 +141,8 @@ class Pokemon(commands.Cog):
                 pages = img_response.get("query").get("pages")
                 image_data = list(pages.values())[0]["imageinfo"][0]["url"]
         except Exception as e:
-            #In case it's a ZA mega, try to grab a regular picture
+            # In case it's a ZA mega, try to grab a regular picture
+            # TODO doesn't work for pokemon such as tatsugiri, shows regular form
             try:
                 params = {
                     "action": "query",
