@@ -111,6 +111,7 @@ class Pokemon(commands.Cog):
 
         home = "HOME"
 
+        #TODO: Handling needed for u-necrozma, o-giratina, primal forms and any other forms.
         if form:
             if form == "Mega":
                 titles = titles + "M"
@@ -140,9 +141,20 @@ class Pokemon(commands.Cog):
                 pages = img_response.get("query").get("pages")
                 image_data = list(pages.values())[0]["imageinfo"][0]["url"]
         except Exception as e:
-            pass
-
-        description_url = f"https://pokeapi.co/api/v2/pokemon-species/{pokemon}"
+            #In case it's a ZA mega, try to grab a regular picture
+            try:
+                params = {
+                    "action": "query",
+                    "titles": f"File:{data['num']:04d}{data['baseSpecies']}-Mega.png",
+                    "prop": "imageinfo",
+                    "iiprop": "url",
+                    "format": "json"
+                }
+                img_response = requests.get(api, params=params).json()
+                pages = img_response.get("query").get("pages")
+                image_data = list(pages.values())[0]["imageinfo"][0]["url"]
+            except Exception as e:
+                pass
 
         flavor_text = data.get("description", "Description not available")
 
