@@ -108,7 +108,6 @@ class Pokemon(commands.Cog):
             
         #check for forms
         form = data.get('forme', None)
-
         home = "HOME"
 
         #TODO: Handling needed for u-necrozma, o-giratina, primal forms and any other forms.
@@ -135,7 +134,6 @@ class Pokemon(commands.Cog):
 
         img_response = requests.get(api, params=params).json()
         image_data = None
-        #{'batchcomplete': '', 'query': {'pages': {'-1': {'ns': 6, 'title': 'File:HOME0000.png', 'missing': '', 'imagerepository': ''}}}}
         try:
             if img_response is not None:
                 pages = img_response.get("query").get("pages")
