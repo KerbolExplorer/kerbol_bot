@@ -115,9 +115,17 @@ class Pokemon(commands.Cog):
             if form == "Mega":
                 titles = titles + "M"
             elif form == "Mega-Z":
-                # Game freak please put Z forms in home I beg you
-                titles = f"{data['num']:04d}{data["baseSpecies"]}-Mega_Z"
-                home = ""
+                titles = titles + "MZ"
+            elif "Mega-X" in form:
+                titles = titles + "MX"
+            elif "Mega-Y" in form:
+                titles = titles + "MY"
+            elif form == "Alola":
+                titles = titles + "A"
+            elif form == "Galar":
+                titles = titles + "G"
+            elif form == "Hisui":
+                titles = titles + "H"
             elif form == "Gmax":
                 titles = titles + "Gi"
 
@@ -139,21 +147,7 @@ class Pokemon(commands.Cog):
                 pages = img_response.get("query").get("pages")
                 image_data = list(pages.values())[0]["imageinfo"][0]["url"]
         except Exception as e:
-            # In case it's a ZA mega, try to grab a regular picture
-            # TODO doesn't work for pokemon such as tatsugiri, shows regular form
-            try:
-                params = {
-                    "action": "query",
-                    "titles": f"File:{data['num']:04d}{data['baseSpecies']}-Mega.png",
-                    "prop": "imageinfo",
-                    "iiprop": "url",
-                    "format": "json"
-                }
-                img_response = requests.get(api, params=params).json()
-                pages = img_response.get("query").get("pages")
-                image_data = list(pages.values())[0]["imageinfo"][0]["url"]
-            except Exception as e:
-                pass
+            pass
 
         flavor_text = data.get("description", "Description not available")
 
