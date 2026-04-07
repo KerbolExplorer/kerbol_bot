@@ -88,14 +88,38 @@ class Pokemon(commands.Cog):
             )
     
     async def get_pokemon(self, pokemon:str, shiny:bool=False):
-        # Pokeapi request for images(home) and description
-        # Rest can be pulled from the json
-        # TODO: You can use serebii, dumbass
-        # TODO: Add forms to a dropdown, would be pretty cool.
+        # Easter egg handling
+        easter_eggs = {
+            "kobalt" : "lucario",
+            "orion" : "solgaleo",
+            "amogus" : "amoonguss",
+            "garbage" : "chikorita",
+            "furry" : "lucario",
+            "furry2" : "zoroark",
+            "furry3" : "zeraora",
+            "aura_doggo" : "lucario",
+            "best" : "solgaleo",
+            "that bird that i fucking hate" : "fezandipiti",
+            "that fish that i fucking hate" : "bruxish",
+            "basketball" : "rowlet",
+            "football" : "spheal",
+            "cute" : "spheal",
+            "best thing ever" : "spheal",
+            "derp" : "clodsire",
+            ":3" : "spheal",
+            "that fucking thing that i hate" : "gholdengo",
+            "448" : "lucario",
+            "zeroaura" : "zeraora",
+        }
         pokemon = pokemon.lower()
+        easter_egg = easter_eggs.get(pokemon, None)
+
         data:dict = self.file
 
-        data = data.get(pokemon)
+        if easter_egg == None:
+            data = data.get(pokemon)
+        else:
+            data = data.get(easter_egg)
 
         if data == None:
             return None
