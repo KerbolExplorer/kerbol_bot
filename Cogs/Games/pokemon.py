@@ -312,9 +312,8 @@ class Pokemon(commands.Cog):
         form_embeds = []
         options = []
         # Check if the pokemon is a variant of a base pokemon. If this is true we are dealing with a form.
-        if pokemon_data.base_species.lower() != pokemon or len(pokemon_data.forms) > 0:
-
-            
+        # The check for number 0 is there to avoid Missingno. Which actually passes the first check by accident
+        if pokemon_data.base_species.lower() != pokemon and pokemon_data.number != 0 or len(pokemon_data.forms) > 0:
             # All operations here should be done based on the original form. We also add the og form to the list also.
             original_form = await self.get_pokemon(pokemon_data.base_species.lower(), shiny)
             forms.insert(0, original_form.name)
