@@ -3,3 +3,4 @@ pynacl
 requests
 dotenv
 aiosqlite
+hoppie-connector
