@@ -6,6 +6,8 @@ Current functions are:
     * airport_distance: Returns the distance between two airports in nautical miles.
     * get_metar: Returns the metar for an airport.
     * get_current_zulu: Returns the current zulu time.
+    *
+    * send_telex: Sends a telex message.
 
 """
 
@@ -18,6 +20,8 @@ import aiohttp
 from dataclasses import dataclass
 SIMBRIEF_URL = "https://www.simbrief.com/api/xml.fetcher.php"
 from . import Aviation_Math
+from dotenv import load_dotenv
+from hoppie_connector import *
 
 db_path = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "airports.db")
 
@@ -537,3 +541,37 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     cursor.close()
     airport_db.close()
     return (departing_airport, arrival_airport, distance)
+
+def send_telex(station, message:str):
+    """Sends a message to the specified station (maximum of 220 chars).
+
+    Parameters
+    ----------
+    station : str
+        The code for the station in ICAO standards
+
+    message : str
+        Message to send (maximum of 220 characters)
+
+    Returns
+    ----------
+    False
+        If message length exceed 220 characters.
+    String
+        If an error has occured, a string will be returned with the details of the error.
+    True
+        Message was sent.
+    """
+    if len(message) > 220:
+        return False
+
+    logon = load_dotenv("HOPPIE")
+    connection:HoppieConnector = HoppieConnector(station_name="ORI", logon=logon)
+
+    try:
+        connection.send_telex(to_name="ORI", message="This is a test message for station 'ORI'. Ignore if it's not for you")
+    except HoppieError as e:
+        return e
+
+    return True
+

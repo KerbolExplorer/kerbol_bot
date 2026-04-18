@@ -7,6 +7,9 @@ import aiosqlite
 class Responses(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.sin_words = ("uwu", "owo", ":3", "nya", "vore", "x3", "among us",
+                          "67", "six seven", "prrrr", "woof", "good boy",
+                          )
     
     @commands.Cog.listener('on_message')
     async def responses(self, message):
@@ -33,8 +36,9 @@ class Responses(commands.Cog):
             await message.channel.send(random.choice(response))
         elif message.author.bot == False and message.guild:
             content = message.content.lower()
-            if " vore" in content:
-                await message.reply("https://tenor.com/view/warning-gif-15403397949888856290")
+            if content in self.sin_words:
+                if " vore" in content or "vore" == content:
+                    await message.reply("https://tenor.com/view/warning-gif-15403397949888856290")
                 server_id = message.guild.id
 
                 db = await aiosqlite.connect("db_exp.db")

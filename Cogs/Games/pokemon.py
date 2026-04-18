@@ -88,14 +88,38 @@ class Pokemon(commands.Cog):
             )
     
     async def get_pokemon(self, pokemon:str, shiny:bool=False):
-        # Pokeapi request for images(home) and description
-        # Rest can be pulled from the json
-        # TODO: You can use serebii, dumbass
-        # TODO: Add forms to a dropdown, would be pretty cool.
+        # Easter egg handling
+        easter_eggs = {
+            "kobalt" : "lucario",
+            "orion" : "solgaleo",
+            "amogus" : "amoonguss",
+            "garbage" : "chikorita",
+            "furry" : "lucario",
+            "furry2" : "zoroark",
+            "furry3" : "zeraora",
+            "aura_doggo" : "lucario",
+            "best" : "solgaleo",
+            "that bird that i fucking hate" : "fezandipiti",
+            "that fish that i fucking hate" : "bruxish",
+            "basketball" : "rowlet",
+            "football" : "spheal",
+            "cute" : "spheal",
+            "best thing ever" : "spheal",
+            "derp" : "clodsire",
+            ":3" : "spheal",
+            "that fucking thing that i hate" : "gholdengo",
+            "448" : "lucario",
+            "zeroaura" : "zeraora",
+        }
         pokemon = pokemon.lower()
+        easter_egg = easter_eggs.get(pokemon, None)
+
         data:dict = self.file
 
-        data = data.get(pokemon)
+        if easter_egg == None:
+            data = data.get(pokemon)
+        else:
+            data = data.get(easter_egg)
 
         if data == None:
             return None
@@ -108,7 +132,6 @@ class Pokemon(commands.Cog):
             
         #check for forms
         form = data.get('forme', None)
-
         home = "HOME"
 
         #TODO: Handling needed for u-necrozma, o-giratina, primal forms and any other forms.
@@ -116,8 +139,17 @@ class Pokemon(commands.Cog):
             if form == "Mega":
                 titles = titles + "M"
             elif form == "Mega-Z":
-                # Game freak please put Z forms in home I beg you
                 titles = titles + "MZ"
+            elif "Mega-X" in form:
+                titles = titles + "MX"
+            elif "Mega-Y" in form:
+                titles = titles + "MY"
+            elif form == "Alola":
+                titles = titles + "A"
+            elif form == "Galar":
+                titles = titles + "G"
+            elif form == "Hisui":
+                titles = titles + "H"
             elif form == "Gmax":
                 titles = titles + "Gi"
 
@@ -134,27 +166,12 @@ class Pokemon(commands.Cog):
 
         img_response = requests.get(api, params=params).json()
         image_data = None
-        #{'batchcomplete': '', 'query': {'pages': {'-1': {'ns': 6, 'title': 'File:HOME0000.png', 'missing': '', 'imagerepository': ''}}}}
         try:
             if img_response is not None:
                 pages = img_response.get("query").get("pages")
                 image_data = list(pages.values())[0]["imageinfo"][0]["url"]
         except Exception as e:
-            # In case it's a ZA mega, try to grab a regular picture
-            # TODO doesn't work for pokemon such as tatsugiri, shows regular form
-            try:
-                params = {
-                    "action": "query",
-                    "titles": f"File:{data['num']:04d}{data['baseSpecies']}-Mega.png",
-                    "prop": "imageinfo",
-                    "iiprop": "url",
-                    "format": "json"
-                }
-                img_response = requests.get(api, params=params).json()
-                pages = img_response.get("query").get("pages")
-                image_data = list(pages.values())[0]["imageinfo"][0]["url"]
-            except Exception as e:
-                pass
+            pass
 
         flavor_text = data.get("description", "Description not available")
 
@@ -187,13 +204,7 @@ class Pokemon(commands.Cog):
                                         forms=data.get("otherFormes", ""))
         return to_return
     
-    async def pokemon_embed(self, pokemon_data:Pokemon_data):
-        shiny = random.randint(1, 1024)
-
-        if shiny == 621:
-            shiny = True
-        else:
-            shiny = False
+    async def pokemon_embed(self, pokemon_data:Pokemon_data, shiny=False):
         
         if shiny:
             embed = discord.Embed(
@@ -281,7 +292,7 @@ class Pokemon(commands.Cog):
 
         embed.add_field(name="Egg Group", value=egg_string, inline=False)
 
-        embed.set_footer(text="Data is from Showdown, Image is from Bulbagarden, description is from PokeAPI. Description is from the generation where the pokemon was introduced")
+        embed.set_footer(text="Data is from Showdown, Image is from Bulbagarden, description is from PokeAPI. Description is from Moon or the generation the pokemon was introduced in")
 
         return embed
 
@@ -305,26 +316,32 @@ class Pokemon(commands.Cog):
         await interaction.response.defer()
         pokemon = pokemon.lower()
 
-        pokemon_data:Pokemon.Pokemon_data = await self.get_pokemon(pokemon=pokemon)
+        shiny = random.randint(1, 1024)
+
+        if shiny == 621:
+            shiny = True
+        else:
+            shiny = False
+
+        pokemon_data:Pokemon.Pokemon_data = await self.get_pokemon(pokemon=pokemon, shiny=shiny)
 
         # Check if the pokemon exists
         if not pokemon_data:
             await interaction.followup.send("This pokemon does not exist or is not in my database.")
             return
         
-        init_embed = await self.pokemon_embed(pokemon_data)
+        init_embed = await self.pokemon_embed(pokemon_data, shiny)
         
         forms = []
         form_embeds = []
         options = []
         # Check if the pokemon is a variant of a base pokemon. If this is true we are dealing with a form.
-        if pokemon_data.base_species.lower() != pokemon or len(pokemon_data.forms) > 0:
-
-            
+        # The check for number 0 is there to avoid Missingno. Which actually passes the first check by accident
+        if pokemon_data.base_species.lower() != pokemon and pokemon_data.number != 0 or len(pokemon_data.forms) > 0:
             # All operations here should be done based on the original form. We also add the og form to the list also.
-            original_form = await self.get_pokemon(pokemon_data.base_species.lower())
+            original_form = await self.get_pokemon(pokemon_data.base_species.lower(), shiny)
             forms.insert(0, original_form.name)
-            form_embeds.insert(0, await self.pokemon_embed(original_form))
+            form_embeds.insert(0, await self.pokemon_embed(original_form, shiny))
             options.append(discord.SelectOption(label=original_form.name, description="Shows information for this form", emoji="<:pokeball:1486725525052457050>"))
 
             for form in original_form.forms:
@@ -332,7 +349,7 @@ class Pokemon(commands.Cog):
                 form:str = form.replace("-", "")
                 form = form.lower()
                 form_data = await self.get_pokemon(form)
-                form_embeds.insert(0, await self.pokemon_embed(form_data))
+                form_embeds.insert(0, await self.pokemon_embed(form_data, shiny))
 
                 if "gmax" in form:
                     options.append(discord.SelectOption(label=form_data.name, description="Shows information for this form", emoji="<:gigantamax:1486725643457527951>"))
