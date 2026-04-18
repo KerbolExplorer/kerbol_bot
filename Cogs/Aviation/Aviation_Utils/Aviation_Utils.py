@@ -542,7 +542,7 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     airport_db.close()
     return (departing_airport, arrival_airport, distance)
 
-def send_telex(station, message:str):
+def send_hoppie_telex(station, message:str):
     """Sends a message to the specified station (maximum of 220 chars).
 
     Parameters
@@ -569,7 +569,7 @@ def send_telex(station, message:str):
     connection:HoppieConnector = HoppieConnector(station_name="ORI", logon=logon)
 
     try:
-        connection.send_telex(to_name="ORI", message="This is a test message for station 'ORI'. Ignore if it's not for you")
+        connection.send_telex(to_name=station, message=message)
     except HoppieError as e:
         return e
 
