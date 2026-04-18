@@ -117,12 +117,11 @@ class Pokemon(commands.Cog):
                 titles = titles + "M"
             elif form == "Mega-Z":
                 # Game freak please put Z forms in home I beg you
-                titles = f"{data['num']:04d}{data["baseSpecies"]}-Mega_Z"
-                home = ""
+                titles = titles + "MZ"
             elif form == "Gmax":
                 titles = titles + "Gi"
 
-        if shiny and form != "Mega-Z":
+        if shiny:
             titles = f"{titles}_s"
 
         params = {
