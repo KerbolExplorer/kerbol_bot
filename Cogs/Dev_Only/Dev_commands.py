@@ -10,6 +10,7 @@ load_dotenv()
 ADMIN = os.getenv("ADMIN")
 
 DB_AIRPORT_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "airports.db"))
+DB_REQUEST_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Aviation", "Aviation_Databases", "requests.db"))
 
 class Dev_commands(commands.Cog):
     def __init__(self, bot):
@@ -71,9 +72,11 @@ class Dev_commands(commands.Cog):
         try:
             user_id = ctx.author.id
             if self.verify_messenger(user_id) == True:
-                db = sqlite3.connect("db_exp.db")
+                db = sqlite3.connect(DB_REQUEST_PATH)
                 cursor = db.cursor()
-                sql = "ALTER TABLE 'Guilds' ADD COLUMN welcomeMessage TEXT"
+                sql = "ALTER TABLE 'Requests' ADD COLUMN type TEXT"
+                cursor.execute(sql)
+                sql = "ALTER TABLE 'Requests' ADD COLUMN callsign TEXT"
                 cursor.execute(sql)
                 db.commit()
                 db.close()
