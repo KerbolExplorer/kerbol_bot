@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import asyncio
 import aiosqlite
 import os
-from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu, random_flight, airport_lookup
+from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu, random_flight, airport_lookup, send_hoppie_telex
 from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
 
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
@@ -286,11 +286,13 @@ class Metar(commands.Cog):
         if users != []:
             for user in users:
                 if int(user[3]) < current_time:
-                    user_target = await self.bot.fetch_user(user[0])
+                    if user[4] == None:
+                        user_target = await self.bot.fetch_user(user[0])
                     metar_raw = get_metar(user[1], False)
 
                     if metar_raw == False or metar_raw == None:
-                        await user_target.send(f"Hey there was an issue getting the metar for `{user[1]}`, I will try again in 5 minutes. If I can't get it then I'll wait another 5 minutes and reach back to you with the results")
+                        if user[4] == None:
+                            await user_target.send(f"Hey there was an issue getting the metar for `{user[1]}`, I will try again in 5 minutes. If I can't get it then I'll wait another 5 minutes and reach back to you with the results")
                         tries = 0
                         while tries != 2:
                             await asyncio.sleep(300)
@@ -301,10 +303,17 @@ class Metar(commands.Cog):
                                 tries += 1
 
                     if metar_raw == False or metar_raw == None:     #If the metar couldn't be grabbed 
-                        await user_target.send(f"Hey I've tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
+                        # Decide between telex or dm
+                        if user[4]:
+                            send_hoppie_telex(user[5], "METAR NOT AVAIL")
+                        else:
+                            await user_target.send(f"Hey I've tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
                     else:
-                        metar_fancy = self.get_metar_embed(metar_raw)
-                        await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
+                        if user[4]:
+                            send_hoppie_telex(user[5], metar_raw)
+                        else:
+                            metar_fancy = self.get_metar_embed(metar_raw)
+                            await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
                     
                     if user[2] == 1:
                         sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"

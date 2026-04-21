@@ -9,6 +9,7 @@ import os
 import re
 import asyncio
 import aiosqlite
+from datetime import datetime, timezone
 
 # TODO:
 # Implementation with metar command
@@ -29,6 +30,9 @@ class Acars(commands.Cog):
         # Begin polling task
         if not self.hoppie_polling.is_running():
             self.hoppie_polling.start()
+
+    def get_time(self):
+        return int(datetime.now(timezone.utc).timestamp())
 
         # Test command for sending messages
     @commands.command()
@@ -85,14 +89,15 @@ class Acars(commands.Cog):
                 continue
             
             # Format was at least valid, now we check 
+            # TODO: If ICAO = S, stop sending metars.
             # METAR: "METAR {ICAO} {hours}*     *optional"
             if result[0] == "METAR":
                 arguments = result[1].split() # [0] icao, [1] hours, optional
                 
                 if len(arguments) == 2:
                     hours = arguments.pop()
-                    sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
-                    await self.request_cursor.execute(sql, (442728041115025410, arguments[0], hours, 0))
+                    sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall, type, callsign) VALUES (?, ?, ?, ?, ?, ?)"
+                    await self.request_cursor.execute(sql, (None, arguments[0], hours, 0, "telex", msg.get_from_name()))
                     await self.request_db.commit()
                 
                 metar = get_metar(arguments[0])
