@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 from hoppie_connector import *
 
 db_path = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "airports.db")
+logon = load_dotenv("HOPPIE")
 
 def airport_lookup(airport: str):
     """Takes an icao code and returns all the info in the database about it.
@@ -565,8 +566,7 @@ def send_hoppie_telex(station, message:str):
     if len(message) > 220:
         return False
 
-    logon = load_dotenv("HOPPIE")
-    connection:HoppieConnector = HoppieConnector(station_name="ORI", logon=logon)
+    connection:HoppieConnector = HoppieConnector(station_name="ORI2", logon=logon)
 
     try:
         connection.send_telex(to_name=station, message=message)
