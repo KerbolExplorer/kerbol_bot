@@ -20,13 +20,14 @@ class Acars(commands.Cog):
 
         # Test command for sending messages
     @commands.command()
-    async def send_telex(self, ctx:commands.Context, station, message):
+    async def send_telex(self, ctx:commands.Context, station, *, message):
         if ctx.author.id != 442728041115025410:
             await ctx.send("Command not available")
             return
         
         response = send_hoppie_telex(station, message)
-        if type(response) == str:
+        print("Response:", response)
+        if type(response) == str or response == False:
             await ctx.send(f"Error: {response}")
         else:
             await ctx.send("Message sent!")
