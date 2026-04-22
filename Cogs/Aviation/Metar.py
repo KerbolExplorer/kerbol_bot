@@ -25,7 +25,7 @@ class Metar(commands.Cog):
         await request_cursor.execute(sql)
         result = await request_cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER)"
+            sql = "CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER, type TEXT, callsign TEXT)"
             await request_cursor.execute(sql)
         await request_db.commit()
         await request_db.close()
@@ -285,6 +285,8 @@ class Metar(commands.Cog):
 
         if users != []:
             for user in users:
+                if user[2] == "S":
+                    continue
                 if int(user[3]) < current_time:
                     if user[4] == 0:
                         user_target = await self.bot.fetch_user(user[0])
