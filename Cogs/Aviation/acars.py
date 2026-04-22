@@ -16,12 +16,15 @@ from datetime import datetime, timezone
 # Allow for receiving messages
 # Execute commands with receiving messages
 # Implementation with flightplan command
-# 
+
+# Uncomment when needed
+#STATION = "ORI"
+STATION = "TST"
 class Acars(commands.Cog):
     def __init__(self, bot, request_db, request_cursor):
         self.bot = bot
         self.logon = os.getenv("HOPPIE")
-        self.connection:HoppieConnector = HoppieConnector(station_name="ORI", logon=self.logon)
+        self.connection:HoppieConnector = HoppieConnector(station_name=STATION, logon=self.logon)
         self.request_db:aiosqlite.Connection = request_db
         self.request_cursor:aiosqlite.Cursor = request_cursor
 
@@ -76,12 +79,16 @@ class Acars(commands.Cog):
             send_hoppie_telex(callsign, metar)
 
     async def telex_airport(self, callsign, airport):
+        airport = airport.strip()
         airport_info = airport_lookup(airport) 
         if airport_info == False:
             await asyncio.sleep(15)
             send_hoppie_telex(callsign, F"ARPT {airport} NOT IN DB")
-        else:
             return
+        else:
+            await asyncio.sleep(15)
+            message = f"INF FOR {airport_info[1]} {airport_info[3]}\nALT {airport_info[6]}\nTYPE {airport_info[2]}\nCOUNTRY {airport_info[8]}"
+            send_hoppie_telex(callsign, message.replace("_", " "))
 
 
     @tasks.loop(seconds=67)
@@ -128,7 +135,7 @@ class Acars(commands.Cog):
                     await self.telex_metar(msg.get_from_name(), arguments[0])  
             elif result[0] == "AIRPT":
                 # AIRPT: "AIRPT {ICAO}"
-                await self.telex_airport(result[1])
+                await self.telex_airport(msg.get_from_name(), result[1])
 
             else:
                 # Invalid command, do nothing

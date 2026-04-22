@@ -14,29 +14,28 @@ class Airport_Lookup(commands.Cog):
     @app_commands.describe(airport="The Icao code of the airport we want to see")
     async def airport(self, interaction:discord.Interaction, airport: str):
         await interaction.response.defer()
-        airport = airport_lookup(airport)
         print(airport)
         if airport == False:
             await interaction.followup.send("That airport doesn't exist or is not in my database")
         else:
-            metar = get_metar(airport[0][1])
+            metar = get_metar(airport[1])
 
             if metar == False or metar == None:
                 metar = "No metar data available"   #Check if there is a metar
 
             embed = discord.Embed(
-                title=f"Information for `{airport[0][1].upper()}`",
+                title=f"Information for `{airport[1].upper()}`",
                 description=f"**Current Metar: **\n```{metar}```",
                 color=discord.Color.blue()
             )
             embed.add_field(name="**Airport Data:**", value=(
-                f"**Airport Name** : {airport[0][3]}\n"
-                f"**Location** : {airport[0][10]}\n"
-                f"**Latitude** : {airport[0][4]}\n"
-                f"**Longitude** : {airport[0][5]}\n"
-                f"**Elevation** : {airport[0][6]}\n"
-                f"**Country** : {airport[0][8]}\n"
-                f"**Airport Type** : {airport[0][2]}"
+                f"**Airport Name** : {airport[3]}\n"
+                f"**Location** : {airport[10]}\n"
+                f"**Latitude** : {airport[4]}\n"
+                f"**Longitude** : {airport[5]}\n"
+                f"**Elevation** : {airport[6]}\n"
+                f"**Country** : {airport[8]}\n"
+                f"**Airport Type** : {airport[2]}"
             ))
             embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use /metar. For flight simulation use only")
             await interaction.followup.send(embed=embed)

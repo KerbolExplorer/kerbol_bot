@@ -46,9 +46,9 @@ def airport_lookup(airport: str):
 
     sql = "SELECT * FROM airports WHERE ident = ?"
     cursor.execute(sql, (airport,))
-    airport = cursor.fetchall()
+    airport = cursor.fetchone()
     db.close()
-    if airport == []:
+    if airport == None:
         return False
     else:
         return airport
