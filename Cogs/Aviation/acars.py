@@ -108,7 +108,7 @@ class Acars(commands.Cog):
             pattern = "^([A-Z]{5})(.*)$"
 
             result = re.split(pattern, msg.get_message())
-            
+
             if len(result) <= 1:
                 print("failed check 0")
                 continue
@@ -152,7 +152,7 @@ class Acars(commands.Cog):
             title="ACARS - Information",
             color=discord.Colour.gold(),
             description="Orion now has several functionality that can be accessed via ACARS. This embed features a list of these functions.\nOrion uses ORI as it's station\n" \
-            "Note that functionality requires you to be using an aircraft compatible with Hoppie acars."
+            "Note that functionality requires you to be using an aircraft compatible with Hoppie acars.\n"
         )
         general_embed.set_thumbnail(url="https://i.redd.it/hx3hxf2gsnc31.png")
         general_embed.add_field(name="TELEX commands:", value=(
@@ -169,11 +169,16 @@ class Acars(commands.Cog):
             color=discord.Color.gold(),
             description="This embed shows all available commands that can be executed via telex. Please make sure to follow the correct format. Blank spaces are also required"
         )
-        telex_embed.add_field(name="METAR: Format: `METAR {airport_icao} HOURS`", value=(
+        telex_embed.add_field(name="METAR -> Format: `METAR {airport_icao} HOURS`", value=(
             "This command is extremely similar to /metar_request. When used it will return the current metar for the airport.\n"
             "In addition, you can queue up updates with optional HOURS field. You'll recieve a metar for every hour that passes until the time assigned has passed.\n"
             "If you wish to cancel a queue, send the same command but with an S on the hours. This will cancel the request. Do note that a sucessful execution will not send a response back"
+        ), inline=False)
+        telex_embed.add_field(name="AIRPT -> Format: `AIRPT {airport_icao}`", value=(
+            "This command shows airport information in a similar way to /airport\n"
+            "Note that for some airports, the name may have missing letters. This is because non ascii characters are not allowed."
         ))
+
         telex_embed.set_footer(text="Orion uses Hoppie:https://www.hoppie.nl/")
 
         embeds = [general_embed, telex_embed]
