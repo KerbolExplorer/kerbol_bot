@@ -18,8 +18,8 @@ from datetime import datetime, timezone
 # Implementation with flightplan command
 
 # Uncomment when needed
-#STATION = "ORI"
-STATION = "TST"
+STATION = "ORI"
+#STATION = "TST"
 class Acars(commands.Cog):
     def __init__(self, bot, request_db, request_cursor):
         self.bot = bot
