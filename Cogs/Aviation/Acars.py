@@ -47,21 +47,32 @@ class Acars(commands.Cog):
         else:
             await ctx.send(f"Error: {response}")
     
-    """
-    @app_commands.command(name="telex_metar", description="Sends the metar for the requested airport via telex")
-    async def telex_metar(self, interaction:discord.Interaction, callsign:str, airport:str):
-        callsign = callsign.upper()
-        airport = airport.upper()
+    async def telex_metar(self, callsign, airport, time=None):
+        metar = get_metar(airport)
+        if time != None:
+            # Check if it's a metar stop request
+            if time == "S":
+                # Make sure there is an entry to delete
+                sql = "SELECT * FROM Requests WHERE callsign = ? AND airportICAO = ?"
+                await self.request_cursor.execute(sql, (callsign, airport))
+                result = await self.request_cursor.fetchone()
+                if result is None:
+                    await asyncio.sleep(15)
+                    send_hoppie_telex(callsign, f"NO REQUESTS FOR {airport}")
+                # Delete it
+                sql = "DELETE FROM Requests WHERE callsign = ? AND airportICAO = ?"
+                await self.request_cursor.execute(sql, (callsign, airport))
+                await self.request_db.commit()
+                return
 
-        metar = get_metar(airport, True)
-
-        message = f"METAR FOR {airport}:\n{metar}"
-
-        response = send_hoppie_telex(callsign, message)
-        if response == True:
-            await interaction.response.send_message("Message sent!")
+            sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall, type, callsign) VALUES (?, ?, ?, ?, ?, ?)"
+            await self.request_cursor.execute(sql, (0, airport, time, self.get_time() + 3600, "telex", callsign))
+            await self.request_db.commit()
+            await asyncio.sleep(15)
+            send_hoppie_telex(callsign, f"{metar}\nSENDING METAR UPDATES FOR {time}H")
         else:
-            await interaction.response.send_message(f"Error: {response}")"""
+            await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
+            send_hoppie_telex(callsign, metar)
     
 
     @tasks.loop(seconds=67)
@@ -102,33 +113,11 @@ class Acars(commands.Cog):
                     await asyncio.sleep(15)
                     send_hoppie_telex(msg.get_from_name(), f"{arguments[0]} NOT IN DATABASE")
                     continue
-                
-                metar = get_metar(arguments[0])
-                if len(arguments) == 2:
-                    # Check if it's a metar stop request
-                    if arguments[1] == "S":
-                        # Make sure there is an entry to delete
-                        sql = "SELECT * FROM Requests WHERE callsign = ? AND airportICAO = ?"
-                        await self.request_cursor.execute(sql, (msg.get_from_name(), arguments[0]))
-                        result = await self.request_cursor.fetchone()
-                        if result is None:
-                            await asyncio.sleep(15)
-                            send_hoppie_telex(msg.get_from_name(), f"NO REQUESTS FOR {arguments[0]}")
-                        # Delete it
-                        sql = "DELETE FROM Requests WHERE callsign = ? AND airportICAO = ?"
-                        await self.request_cursor.execute(sql, (msg.get_from_name(), arguments[0]))
-                        await self.request_db.commit()
-                        continue
 
-                    hours = arguments.pop()
-                    sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall, type, callsign) VALUES (?, ?, ?, ?, ?, ?)"
-                    await self.request_cursor.execute(sql, (0, arguments[0], hours, self.get_time() + 3600, "telex", msg.get_from_name()))
-                    await self.request_db.commit()
-                    await asyncio.sleep(15)
-                    send_hoppie_telex(msg.get_from_name(), f"{metar}\nSENDING METAR UPDATES FOR {hours}H")
+                if len(arguments) == 2:
+                    await self.telex_metar(msg.get_from_name(), arguments[0], arguments[1])
                 else:
-                    await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
-                    send_hoppie_telex(msg.get_from_name(), metar)
+                    await self.telex_metar(msg.get_from_name(), arguments[0])
 
             else:
                 # Invalid command, do nothing
