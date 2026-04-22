@@ -15,6 +15,7 @@ class Airport_Lookup(commands.Cog):
     async def airport(self, interaction:discord.Interaction, airport: str):
         await interaction.response.defer()
         airport = airport_lookup(airport)
+        print(airport)
         if airport == False:
             await interaction.followup.send("That airport doesn't exist or is not in my database")
         else:
