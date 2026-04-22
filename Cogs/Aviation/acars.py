@@ -108,6 +108,10 @@ class Acars(commands.Cog):
             pattern = "^([A-Z]{5})(.*)$"
 
             result = re.split(pattern, msg.get_message())
+            
+            if len(result) <= 1:
+                print("failed check 0")
+                continue
 
             if result != None:
                 if len(result[1]) != 5:
