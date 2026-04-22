@@ -286,12 +286,12 @@ class Metar(commands.Cog):
         if users != []:
             for user in users:
                 if int(user[3]) < current_time:
-                    if user[4] == None:
+                    if user[4] == 0:
                         user_target = await self.bot.fetch_user(user[0])
                     metar_raw = get_metar(user[1], False)
 
                     if metar_raw == False or metar_raw == None:
-                        if user[4] == None:
+                        if user[4] == 0:
                             await user_target.send(f"Hey there was an issue getting the metar for `{user[1]}`, I will try again in 5 minutes. If I can't get it then I'll wait another 5 minutes and reach back to you with the results")
                         tries = 0
                         while tries != 2:
@@ -310,7 +310,7 @@ class Metar(commands.Cog):
                             await user_target.send(f"Hey I've tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
                     else:
                         if user[4]:
-                            send_hoppie_telex(user[5], metar_raw)
+                            send_hoppie_telex(user[5], metar_raw.get('rawOb'))
                         else:
                             metar_fancy = self.get_metar_embed(metar_raw)
                             await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)

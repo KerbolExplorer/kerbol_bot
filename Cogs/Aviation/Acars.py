@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 load_dotenv()
-from .Aviation_Utils.Aviation_Utils import send_hoppie_telex, get_metar
+from .Aviation_Utils.Aviation_Utils import send_hoppie_telex, get_metar, airport_lookup
 from hoppie_connector import *
 import os
 import re
@@ -93,32 +93,28 @@ class Acars(commands.Cog):
             # METAR: "METAR {ICAO} {hours}*     *optional"
             if result[0] == "METAR":
                 arguments = result[1].split() # [0] icao, [1] hours, optional
+
+                if airport_lookup(arguments[0]) == False:
+                    await asyncio.sleep(15)
+                    send_hoppie_telex(msg.get_from_name(), f"{arguments[0]} NOT IN DATABASE")
+                    continue
                 
+                metar = get_metar(arguments[0])
                 if len(arguments) == 2:
                     hours = arguments.pop()
                     sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall, type, callsign) VALUES (?, ?, ?, ?, ?, ?)"
-                    await self.request_cursor.execute(sql, (None, arguments[0], hours, 0, "telex", msg.get_from_name()))
+                    await self.request_cursor.execute(sql, (0, arguments[0], hours, 0, "telex", msg.get_from_name()))
                     await self.request_db.commit()
-                
-                metar = get_metar(arguments[0])
-                await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
-                send_hoppie_telex(msg.get_from_name(), metar)
+                    await asyncio.sleep(15)
+                    send_hoppie_telex(msg.get_from_name(), f"{metar}\nSENDING METAR UPDATES FOR {hours}H")
+                else:
+                    await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
+                    send_hoppie_telex(msg.get_from_name(), metar)
 
             else:
                 # Invalid command, do nothing
                 print(f"failed check 3")
                 continue
-
-
-
-            """
-            if type(msg) == TelexMessage:
-                if msg in self.telex_msgs:
-                    continue
-                else:
-                    self.telex_msgs.append(msg)
-                    print(self.telex_msgs)"""   
-    
 
 
 async def setup(bot):
