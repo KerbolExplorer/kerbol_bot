@@ -47,6 +47,7 @@ class Acars(commands.Cog):
         else:
             await ctx.send(f"Error: {response}")
     
+
     async def telex_metar(self, callsign, airport, time=None):
         metar = get_metar(airport)
         if time != None:
@@ -73,7 +74,15 @@ class Acars(commands.Cog):
         else:
             await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
             send_hoppie_telex(callsign, metar)
-    
+
+    async def telex_airport(self, callsign, airport):
+        airport_info = airport_lookup(airport) 
+        if airport_info == False:
+            await asyncio.sleep(15)
+            send_hoppie_telex(callsign, F"ARPT {airport} NOT IN DB")
+        else:
+            return
+
 
     @tasks.loop(seconds=67)
     async def hoppie_polling(self):
@@ -105,7 +114,6 @@ class Acars(commands.Cog):
             
             # Format was at least valid, now we check 
             # METAR: "METAR {ICAO} {hours}*     *optional. hours = S: stop metars for that airport"
-            # TODO: Turn this into a function, alongside the rest of commands.
             if result[0] == "METAR":
                 arguments = result[1].split() # [0] icao, [1] hours, optional
 
@@ -117,7 +125,10 @@ class Acars(commands.Cog):
                 if len(arguments) == 2:
                     await self.telex_metar(msg.get_from_name(), arguments[0], arguments[1])
                 else:
-                    await self.telex_metar(msg.get_from_name(), arguments[0])
+                    await self.telex_metar(msg.get_from_name(), arguments[0])  
+            elif result[0] == "AIRPT":
+                # AIRPT: "AIRPT {ICAO}"
+                await self.telex_airport(result[1])
 
             else:
                 # Invalid command, do nothing
