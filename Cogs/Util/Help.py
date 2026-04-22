@@ -31,7 +31,7 @@ class Help(commands.Cog):
         av_embed.add_field(name="bare_converter", value="Converts barometric pressures.")
         av_embed.add_field(name="temp_converter", value="Converts a value to either celcius or farenheith")
         av_embed.add_field(name="random_regional_flight", value="Returns a random flight between two airports depending on the parameters given.")
-        av_embed.add_field(name="Flightplan", value="Provides a summary of the latest simbrief flightplan.")
+        av_embed.add_field(name="flightplan", value="Provides a summary of the latest simbrief flightplan.")
         av_embed.add_field(name="acars_help", value="Provides instructions on how to use ACARS functionality.")
 
         games_embed = discord.Embed(
