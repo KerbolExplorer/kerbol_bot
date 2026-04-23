@@ -83,7 +83,7 @@ class Schedule(commands.Cog):
         )
         general_embed.add_field(name="Departure Time:", value=flpn.sanitize_times(flpn.departure_time))
         general_embed.add_field(name="Arrival Time:", value=flpn.sanitize_times(flpn.arrival_time))
-        general_embed.add_field(name="Block Time:", value=flpn.sanitize_times(flpn.block_time))
+        general_embed.add_field(name="Block Time:", value=flpn.sanitize_times(flpn.block_time).replace("z", ""))
         general_embed.add_field(name="Departure Category:", value=flpn.origin_cat.upper())
         general_embed.add_field(name="Arrival Category:", value=flpn.destination_cat.upper())
         general_embed.add_field(name="Initial Altitude:", value=flpn.fl())
