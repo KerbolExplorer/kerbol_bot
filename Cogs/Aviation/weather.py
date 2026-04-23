@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import asyncio
 import aiosqlite
 import os
-from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu, random_flight, airport_lookup, send_hoppie_telex
+from .Aviation_Utils.Aviation_Utils import get_metar, get_current_zulu, random_flight, airport_lookup, send_hoppie_telex, get_taf
 from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
 
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
@@ -101,10 +101,10 @@ class Metar(commands.Cog):
             embed.set_footer(text="For flight simulation use only. Source: https://aviationweather.gov/api/data/metar")
             return embed
 
-    # Debug metar command, delete or comment after it's done.
+    # Debug metar command
     @commands.command()
     async def debugmetar(self, ctx:commands.Context, icao:str):
-        icao = icao.capitalize()
+        icao = icao.upper()
 
         await ctx.send(f"```{get_metar(icao, False)}```")
     
@@ -239,6 +239,24 @@ class Metar(commands.Cog):
             await interaction.response.send_message("Here are your requests: ", embed=embed, ephemeral=True)
         
         await request_db.close()
+    
+    @app_commands.command(name="taf", description="Returns the taf for the requested airport")
+    @app_commands.describe(airport="ICAO code of the airport")
+    async def taf(self, interaction:discord.Interaction, airport:str):
+        await interaction.response.defer()
+        taf = get_taf(airport, raw_only=True)
+
+        await interaction.followup.send(f"```{taf}```")
+    
+    # Debug taf command
+    @commands.command()
+    async def debugtaf(self, ctx:commands.Context, icao:str):
+        icao = icao.upper()
+
+        await ctx.send(f"```{get_taf(icao, False)}```")
+    
+    def get_time(self):
+        return int(datetime.now(timezone.utc).timestamp())
     
     @app_commands.command(name="zulu_time", description="Returns the current zulu time")
     async def zulu_time(self, interaction:discord.Interaction):

@@ -122,6 +122,53 @@ def get_metar(icao_code: str, raw_only = True):
     except ValueError:
         return False
 
+def get_taf(icao_code: str, raw_only = True):
+    """Returns the current taf for an airport.
+
+    Parameters
+    ----------
+    icao_code : str
+        ICAO code for the airport.
+    raw_only : boolean
+        Decides if we only return a string with the raw data, or a dictionary with all the data.
+
+    Returns
+    ----------
+    string
+        Returns the raw taf for the airport.
+    boolean
+        Returns False if there was an issue getting the taf.
+    None
+        Returns None if there's no taf.
+    """
+    icao_code = icao_code.upper()
+    url = "https://aviationweather.gov/api/data/taf"
+    params = {
+        "ids": icao_code,
+        "format": "json",
+        "metar": "false",
+        "mostRecent": "true",
+        "hours": 1
+    }
+
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        tafs = response.json()
+
+        if not tafs:
+            return None
+        
+        taf = tafs[0]
+        if raw_only:
+            return taf["rawTAF"]
+        else:
+            return taf
+    except requests.RequestException:
+        return False
+    except ValueError:
+        return False
+
 def get_navaid(navaid):
     """ONLY WORKS FOR US Returns information belonging to a navaid(VOR, DME, Fix, etc).
 
