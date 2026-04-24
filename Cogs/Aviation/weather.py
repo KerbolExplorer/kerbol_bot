@@ -10,25 +10,24 @@ from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
 
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
 
-class Metar(commands.Cog):
-    def __init__(self, bot):
+class Weather(commands.Cog):
+    def __init__(self, bot, db, cursor):
         self.bot = bot
+        self.db:aiosqlite.Connection = db
+        self.cursor:aiosqlite.Cursor = cursor
         self.bot.loop.create_task(self.setup_database())
 
-        if not self.send_metar.is_running():
-            self.send_metar.start()
+        if not self.send_weather.is_running():
+            self.send_weather.start()
 
     async def setup_database(self):    
-        request_db = await aiosqlite.connect(db_requests_path)
-        request_cursor = await request_db.cursor()
         sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='Requests'"
-        await request_cursor.execute(sql)
-        result = await request_cursor.fetchall()
+        await self.cursor.execute(sql)
+        result = await self.cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER, type TEXT, callsign TEXT)"
-            await request_cursor.execute(sql)
-        await request_db.commit()
-        await request_db.close()
+            sql = "CREATE TABLE IF NOT EXISTS 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER, type TEXT, callsign TEXT, taf TEXT)"
+            await self.cursor.execute(sql)
+        await self.db.commit()
 
     def get_metar_embed(self, metar, alternate=None):
             # Getting the proper zulu time
@@ -155,6 +154,9 @@ class Metar(commands.Cog):
     )
     async def metar_request(self, interaction:discord.Interaction, airport:str, hours:int):
         await interaction.response.defer(ephemeral=True)
+        if hours > 24:
+            await interaction.followup.send("You do NOT need more than 24 hours of metar updates bruh")
+            return
         metar = get_metar(airport, False)
 
         if metar == False:
@@ -162,23 +164,19 @@ class Metar(commands.Cog):
         elif metar == None:
             await interaction.followup.send("This metar is not available.")
         else:
-            request_db = await aiosqlite.connect(db_requests_path)
-            request_cursor = await request_db.cursor()
             sql = "SELECT * FROM Requests WHERE userId = ? AND airportICAO = ?"
-            await request_cursor.execute(sql, (interaction.user.id, airport.upper()))
-            result = await request_cursor.fetchall()
+            await self.cursor.execute(sql, (interaction.user.id, airport.upper()))
+            result = await self.cursor.fetchall()
 
             next_call = self.get_time()
             next_call += 3600
             if result == []:
                 sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
-                await request_cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
+                await self.cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
             else:
                 await interaction.followup.send(f"You already have a request for `{airport.upper()}`!")
-                await request_db.close()
                 return
-            await request_db.commit()
-            await request_db.close()
+            await self.db.commit()
 
             await interaction.followup.send(f"Roger that, I'll DM you the metar of `{airport.upper()}` during {hours} hours. If you wish to cancel, do `/metar_stop`")
 
@@ -187,43 +185,38 @@ class Metar(commands.Cog):
         airport="The airport you want to cancel the request for, leave empty if you wish to cancel all the requests"
     )
     async def metar_stop(self, interaction:discord.Interaction, airport:str = None):
-        request_db = await aiosqlite.connect(db_requests_path)
-        request_cursor = await request_db.cursor()
 
         #Check if the user has any metar requests
         sql = "SELECT * FROM Requests WHERE userId = ?"
-        await request_cursor.execute(sql, (interaction.user.id,))
-        result = await request_cursor.fetchall()
+        await self.cursor.execute(sql, (interaction.user.id,))
+        result = await self.cursor.fetchall()
         if result == []:
             await interaction.response.send_message("You don't have any metar requests", ephemeral=True)
         else:
             if airport == None:
                 sql = "DELETE FROM Requests WHERE userId = ?"
-                await request_cursor.execute(sql, (interaction.user.id,))
+                await self.cursor.execute(sql, (interaction.user.id,))
                 await interaction.response.send_message("All of your metar requests have been cancelled", ephemeral=True)
             else:
                 sql = "SELECT * FROM Requests WHERE userId = ? AND airportICAO = ?"
-                await request_cursor.execute(sql, (interaction.user.id, airport.upper()))
-                result = await request_cursor.fetchall()
+                await self.cursor.execute(sql, (interaction.user.id, airport.upper()))
+                result = await self.cursor.fetchall()
                 if result == []:
                     await interaction.response.send_message(f"I Couldn't find any metar requests for `{airport.upper()}`", ephemeral=True)
                 else:
                     sql= "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
-                    await request_cursor.execute(sql, (interaction.user.id, airport.upper()))
+                    await self.cursor.execute(sql, (interaction.user.id, airport.upper()))
                     await interaction.response.send_message(f"Alright, I've cancelled the metar requests for `{airport.upper()}`", ephemeral=True)
 
-        await request_db.commit()
-        await request_db.close()
+        await self.db.commit()
 
     @app_commands.command(name="metar_list", description="Returns a list of the metars you requested")
-    async def metar_list(self, interaction:discord.Interaction):
-        request_db = await aiosqlite.connect(db_requests_path)
-        request_cursor = await request_db.cursor()    
+    async def metar_list(self, interaction:discord.Interaction):   
 
         #Check if the user has any metar requests
         sql = "SELECT * FROM Requests WHERE userId = ?"
-        await request_cursor.execute(sql, (interaction.user.id,))
-        result = await request_cursor.fetchall()
+        await self.cursor.execute(sql, (interaction.user.id,))
+        result = await self.cursor.fetchall()
         if result == []:
             await interaction.response.send_message("You don't have any metar requests", ephemeral=True)
         else:
@@ -238,7 +231,6 @@ class Metar(commands.Cog):
             embed.description=requests
             await interaction.response.send_message("Here are your requests: ", embed=embed, ephemeral=True)
         
-        await request_db.close()
     
     @app_commands.command(name="taf", description="Returns the taf for the requested airport")
     @app_commands.describe(airport="ICAO code of the airport")
@@ -289,8 +281,89 @@ class Metar(commands.Cog):
             await interaction.response.send_message("Both fields cannot have a value")
 
 
-            
+    # TODO: Better handling for metar outages
+    @tasks.loop(minutes=1)
+    async def send_weather(self):
+        sql = "SELECT * FROM Requests"
+        await self.cursor.execute(sql)
+        users = await self.cursor.fetchall() # 0 = id, 1 = icao, 2 = calls, 3 = nextCall, 4 = type, 5 = callsign, 6 = taf
+        current_time = self.get_time()
 
+        if users != []:
+            for user in users:
+                user_id, airport, calls, next_call, type, callsign, taf_requested = user
+                if calls == "S":
+                    continue
+
+                if int(next_call) < current_time:
+                    # differentiated between telex and dms
+                    if type == "telex":
+                        # Telex
+                        # Differentiate between metar and taf telex
+                        if taf_requested == "yes":
+                            # It's a taf request
+                            taf = get_taf(airport, True)
+                            if taf == False:
+                                # Send it back to the queue:
+                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                continue
+                            else:
+                                # Got the taf
+                                result = send_hoppie_telex(callsign, taf)
+                                if result == False:
+                                    send_hoppie_telex("TAF NOT AVAIL TOO LONG")
+                        else:
+                            # It's a metar request
+                            metar = get_metar(airport, True)
+                            if metar == False:
+                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                continue
+                            else:
+                                result = send_hoppie_telex(callsign, metar)
+                                if result == False:
+                                    send_hoppie_telex("METAR NOT AVAIL TOO LONG")
+
+                        if calls == 1:
+                            sql = "DELETE FROM Requests WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                            await self.cursor.execute(sql, (callsign, airport, type, taf_requested))
+                        else:
+                            sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                            await self.cursor.execute(sql, ((calls - 1), (current_time + 3600), callsign, airport, type, taf_requested))
+                    else:
+                        user_target = await self.bot.fetch_user(user_id)
+                        #DM
+                        if taf_requested == "yes":
+                            taf = get_taf(airport, True) # TODO: Once we have the code for translating the TAF into a readable format. Change it to False
+                            if taf == False:
+                                # Send it back to the queue:
+                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                continue
+                            else:
+                                await user_target.send(f"Hey, here's the TAF for `{airport}`,\n{taf}")
+                        else:
+                            metar = get_metar(airport, False)
+                            if metar == False:
+                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                continue
+                            else:
+                                metar = self.get_metar_embed(metar)
+                                result = await user_target.send(f"Heyo, here's the METAR for `{airport}`", embed=metar)
+                        
+                        if calls == 1:
+                            sql = "DELETE FROM Requests WHERE user_id = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                            await self.cursor.execute(sql, (user_id, airport, type, taf_requested))
+                        else:
+                            sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE user_id = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                            await self.cursor.execute(sql, ((calls - 1), (current_time + 3600), user_id, airport, type, taf_requested))
+                else:
+                    continue
+        await self.db.commit()
+                
+""" #TODO: Delete after properly testing the new one.
     @tasks.loop(minutes=1)
     async def send_metar(self):
         request_db = await aiosqlite.connect(db_requests_path)
@@ -347,7 +420,10 @@ class Metar(commands.Cog):
 
         await request_db.commit()
         await request_db.close()
+"""
 
              
 async def setup(bot):
-    await bot.add_cog(Metar(bot))
+    db = await aiosqlite.connect(db_requests_path)
+    cursor = await db.cursor()
+    await bot.add_cog(Weather(bot, db, cursor))

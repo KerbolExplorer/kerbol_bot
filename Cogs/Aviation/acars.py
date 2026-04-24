@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 load_dotenv()
-from .Aviation_Utils.Aviation_Utils import send_hoppie_telex, get_metar, airport_lookup
+from .Aviation_Utils.Aviation_Utils import send_hoppie_telex, get_metar, airport_lookup, get_taf
 from hoppie_connector import *
 import os
 import re
@@ -89,6 +89,33 @@ class Acars(commands.Cog):
             await asyncio.sleep(15)
             message = f"INF FOR {airport_info[1]} {airport_info[3]}\nALT {airport_info[6]}\nTYPE {airport_info[2]}\nCOUNTRY {airport_info[8]}"
             send_hoppie_telex(callsign, message.replace("_", " "))
+    
+    async def telex_taf(self, callsign, airport, time=None):
+        taf = get_taf(airport)
+        if time != None:
+            # Check if it's a taf stop request
+            if time == "S":
+                # Make sure there is an entry to delete
+                sql = "SELECT * FROM Requests WHERE callsign = ? AND airportICAO = ? AND taf = ?"
+                await self.request_cursor.execute(sql, (callsign, airport, "yes"))
+                result = await self.request_cursor.fetchone()
+                if result is None:
+                    await asyncio.sleep(15)
+                    send_hoppie_telex(callsign, f"NO REQUESTS FOR {airport}")
+                # Delete it
+                sql = "DELETE FROM Requests WHERE callsign = ? AND airportICAO = ? AND taf = ?"
+                await self.request_cursor.execute(sql, (callsign, airport, "yes"))
+                await self.request_db.commit()
+                return
+
+            sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall, type, callsign, taf) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            await self.request_cursor.execute(sql, (0, airport, time, self.get_time() + 3600, "telex", callsign, "yes"))
+            await self.request_db.commit()
+            await asyncio.sleep(15)
+            send_hoppie_telex(callsign, f"{taf}\nSENDING TAF UPDATES FOR {time}H")
+        else:
+            await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
+            send_hoppie_telex(callsign, taf)
 
 
     @tasks.loop(seconds=67)
@@ -137,9 +164,24 @@ class Acars(commands.Cog):
                     await self.telex_metar(msg.get_from_name(), arguments[0], arguments[1])
                 else:
                     await self.telex_metar(msg.get_from_name(), arguments[0])  
+
             elif result[0] == "AIRPT":
                 # AIRPT: "AIRPT {ICAO}"
                 await self.telex_airport(msg.get_from_name(), result[1])
+
+            elif result[0] == "MTAFS":
+                # MTAFS: "MTAFS {ICAO} {hours}*" <- sends the TAF for the airport
+                arguments = result[1].split() # [0] icao, [1] hours, optional
+
+                if airport_lookup(arguments[0]) == False:
+                    await asyncio.sleep(15)
+                    send_hoppie_telex(msg.get_from_name(), f"{arguments[0]} NOT IN DATABASE")
+                    continue
+
+                if len(arguments) == 2:
+                    await self.telex_taf(msg.get_from_name(), arguments[0], arguments[1])
+                else:
+                    await self.telex_taf(msg.get_from_name(), arguments[0])  
 
             else:
                 # Invalid command, do nothing

@@ -74,9 +74,7 @@ class Dev_commands(commands.Cog):
             if self.verify_messenger(user_id) == True:
                 db = sqlite3.connect(DB_REQUEST_PATH)
                 cursor = db.cursor()
-                sql = "ALTER TABLE 'Requests' ADD COLUMN type TEXT"
-                cursor.execute(sql)
-                sql = "ALTER TABLE 'Requests' ADD COLUMN callsign TEXT"
+                sql = "ALTER TABLE 'Requests' ADD COLUMN taf TEXT"
                 cursor.execute(sql)
                 db.commit()
                 db.close()
