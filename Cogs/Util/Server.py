@@ -52,7 +52,7 @@ class Server(commands.Cog):
             await self.cursor.execute(sql, (member.guild.id,))
             message = await self.cursor.fetchone()
 
-            if message is None:
+            if message == None or message == "NULL":
                 return
             await channel.send(f"{member.mention}\n{message[0]}")
 
