@@ -14,7 +14,7 @@ class Airport_Lookup(commands.Cog):
     @app_commands.describe(airport="The Icao code of the airport we want to see")
     async def airport(self, interaction:discord.Interaction, airport: str):
         await interaction.response.defer()
-        print(airport)
+        airport = airport_lookup(airport)
         if airport == False:
             await interaction.followup.send("That airport doesn't exist or is not in my database")
         else:
