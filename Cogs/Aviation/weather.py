@@ -10,6 +10,9 @@ from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
 
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
 
+TIME = 3600
+TIME_TEST = 10
+
 class Weather(commands.Cog):
     def __init__(self, bot, db, cursor):
         self.bot = bot
@@ -169,7 +172,7 @@ class Weather(commands.Cog):
             result = await self.cursor.fetchall()
 
             next_call = self.get_time()
-            next_call += 3600
+            next_call += TIME
             if result == []:
                 sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall) VALUES (?, ?, ?, ?)"
                 await self.cursor.execute(sql, (interaction.user.id, airport.upper(), hours, next_call))
@@ -284,6 +287,7 @@ class Weather(commands.Cog):
     # TODO: Better handling for metar outages
     @tasks.loop(minutes=1)
     async def send_weather(self):
+
         sql = "SELECT * FROM Requests"
         await self.cursor.execute(sql)
         users = await self.cursor.fetchall() # 0 = id, 1 = icao, 2 = calls, 3 = nextCall, 4 = type, 5 = callsign, 6 = taf
@@ -306,7 +310,7 @@ class Weather(commands.Cog):
                             if taf == False:
                                 # Send it back to the queue:
                                 sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                await self.cursor.execute(sql, (current_time + 300, callsign, airport, type, taf_requested))
                                 continue
                             else:
                                 # Got the taf
@@ -318,7 +322,7 @@ class Weather(commands.Cog):
                             metar = get_metar(airport, True)
                             if metar == False:
                                 sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                await self.cursor.execute(sql, (current_time + 300, callsign, airport, type, taf_requested))
                                 continue
                             else:
                                 result = send_hoppie_telex(callsign, metar)
@@ -330,7 +334,7 @@ class Weather(commands.Cog):
                             await self.cursor.execute(sql, (callsign, airport, type, taf_requested))
                         else:
                             sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                            await self.cursor.execute(sql, ((calls - 1), (current_time + 3600), callsign, airport, type, taf_requested))
+                            await self.cursor.execute(sql, (calls - 1, current_time + TIME, callsign, airport, type, taf_requested))
                     else:
                         user_target = await self.bot.fetch_user(user_id)
                         #DM
@@ -338,27 +342,27 @@ class Weather(commands.Cog):
                             taf = get_taf(airport, True) # TODO: Once we have the code for translating the TAF into a readable format. Change it to False
                             if taf == False:
                                 # Send it back to the queue:
-                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type is ? AND taf is ?"
+                                await self.cursor.execute(sql, (current_time + 300, callsign, airport, type, taf_requested))
                                 continue
                             else:
                                 await user_target.send(f"Hey, here's the TAF for `{airport}`,\n{taf}")
                         else:
                             metar = get_metar(airport, False)
                             if metar == False:
-                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                                await self.cursor.execute(sql, ((current_time + 300), callsign, airport, type, taf_requested))
+                                sql = "UPDATE Requests SET nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type is ? AND taf is ?"
+                                await self.cursor.execute(sql, (current_time + 300, callsign, airport, type, taf_requested))
                                 continue
                             else:
                                 metar = self.get_metar_embed(metar)
                                 result = await user_target.send(f"Heyo, here's the METAR for `{airport}`", embed=metar)
                         
                         if calls == 1:
-                            sql = "DELETE FROM Requests WHERE user_id = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                            sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ? AND type is ? AND taf is ?"
                             await self.cursor.execute(sql, (user_id, airport, type, taf_requested))
                         else:
-                            sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE user_id = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                            await self.cursor.execute(sql, ((calls - 1), (current_time + 3600), user_id, airport, type, taf_requested))
+                            sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ? AND type is ? AND taf is ?"
+                            await self.cursor.execute(sql, (calls - 1, current_time + TIME, user_id, airport, type, taf_requested))
                 else:
                     continue
         await self.db.commit()
