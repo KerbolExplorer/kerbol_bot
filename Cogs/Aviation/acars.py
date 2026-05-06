@@ -18,8 +18,11 @@ from datetime import datetime, timezone
 # Implementation with flightplan command
 
 # Uncomment when needed
-STATION = "ORI"
-#STATION = "TST"
+#STATION = "ORI"
+STATION = "TST"
+
+#Log channel
+log_channel = 1501598637590057031
 class Acars(commands.Cog):
     def __init__(self, bot, request_db, request_cursor):
         self.bot = bot
@@ -28,7 +31,7 @@ class Acars(commands.Cog):
         self.request_db:aiosqlite.Connection = request_db
         self.request_cursor:aiosqlite.Cursor = request_cursor
 
-        self.telex_msgs = []
+        self.log_channel:discord.TextChannel = bot.get_channel(log_channel)
 
         # Begin polling task
         if not self.hoppie_polling.is_running():
@@ -127,6 +130,7 @@ class Acars(commands.Cog):
             print(f"TO: {msg.get_to_name()}")
             print(f"MSG: {msg.get_message()}")
             print("------")
+            await self.log_channel.send(f"FROM: {msg.get_from_name()}\nTO: {msg.get_to_name()}\nMSG: {msg.get_message()}\n--------")
             # Check if the message corresponds to any command
             # All commands must have 5 characters for the name. Worst case scenario a "." can be used to fill up space.
             # General conditions for these commands:
