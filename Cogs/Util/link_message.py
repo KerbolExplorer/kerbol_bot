@@ -39,7 +39,7 @@ class LinkMessage(commands.Cog):
             embed = discord.Embed(
                 description=(
                     f"**Originally posted in** {linked_message.channel.mention} "
-                    f"**on** <t:{int(linked_message.created_at.timestamp())}:F>\n\n"
+                    f"**on** <t:{int(linked_message.created_at.timestamp())}:F>\n"
                     f"{quoted_content}"
                 ),
                 timestamp=discord.utils.utcnow(),
