@@ -18,8 +18,8 @@ from datetime import datetime, timezone
 # Implementation with flightplan command
 
 # Uncomment when needed
-#STATION = "ORI"
-STATION = "TST"
+STATION = "ORI"
+#STATION = "TST"
 
 #Log channel
 log_channel = 1501598637590057031
