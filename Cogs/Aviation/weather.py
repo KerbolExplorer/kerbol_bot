@@ -11,7 +11,6 @@ from .Aviation_Utils.Aviation_Math import hpa_to_inhg, inhg_to_hpa
 db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
 
 TIME = 3600
-TIME_TEST = 10
 
 class Weather(commands.Cog):
     def __init__(self, bot, db, cursor):
@@ -28,7 +27,7 @@ class Weather(commands.Cog):
         await self.cursor.execute(sql)
         result = await self.cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE IF NOT EXISTS 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER, type TEXT, callsign TEXT, taf TEXT)"
+            sql = "CREATE TABLE IF NOT EXISTS 'Requests' (userId INTEGER, airportICAO TEXT, calls INTEGER, nextCall INTEGER, type TEXT DEFAULT 'Dm', callsign TEXT DEFAULT 'None', taf TEXT DEFAULT 'None')"
             await self.cursor.execute(sql)
         await self.db.commit()
 
@@ -331,10 +330,10 @@ class Weather(commands.Cog):
 
                         if calls == 1:
                             sql = "DELETE FROM Requests WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                            await self.cursor.execute(sql, (callsign, airport, type, taf_requested))
+                            await self.cursor.execute(sql, (callsign, airport, 'telex', taf_requested))
                         else:
                             sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE callsign = ? AND airportICAO = ? AND type = ? AND taf = ?"
-                            await self.cursor.execute(sql, (calls - 1, current_time + TIME, callsign, airport, type, taf_requested))
+                            await self.cursor.execute(sql, (calls - 1, current_time + TIME, callsign, airport, 'telex', taf_requested))
                     else:
                         user_target = await self.bot.fetch_user(user_id)
                         #DM
@@ -359,10 +358,10 @@ class Weather(commands.Cog):
                         
                         if calls == 1:
                             sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ? AND type is ? AND taf is ?"
-                            await self.cursor.execute(sql, (user_id, airport, type, taf_requested))
+                            await self.cursor.execute(sql, (user_id, airport, 'Dm', taf_requested))
                         else:
-                            sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ? AND type is ? AND taf is ?"
-                            await self.cursor.execute(sql, (calls - 1, current_time + TIME, user_id, airport, type, taf_requested))
+                            sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ? AND type = ? AND taf = ?"
+                            await self.cursor.execute(sql, (calls - 1, current_time + TIME, user_id, airport, 'Dm', taf_requested))
                 else:
                     continue
         await self.db.commit()
