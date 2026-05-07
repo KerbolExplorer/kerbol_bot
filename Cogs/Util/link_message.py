@@ -10,7 +10,7 @@ class LinkMessage(commands.Cog):
         self.message_regex = re.compile(
             r"https:\/\/(?:canary\.|ptb\.)?discord(?:app)?\.com\/channels\/(\d+)\/(\d+)\/(\d+)"
                                         )
-        self.enabled = False
+        self.enabled = True
     
     @commands.Cog.listener('on_message')
     async def link_message(self, message):
@@ -24,9 +24,38 @@ class LinkMessage(commands.Cog):
 
             channel:discord.TextChannel = self.bot.get_channel(channel_id)
 
-            linked_message:discord.Message = await channel.fetch_message(message_id)
+            try:
+                linked_message:discord.Message = await channel.fetch_message(message_id)
+            except Exception:
+                return
+            
+            if linked_message.embeds != [] and linked_message.content == "":
+                return
 
-            await channel.send(linked_message.content)
+            quoted_content = "\n".join(
+                f"> {line}" for line in linked_message.content.splitlines()
+            )
+
+            embed = discord.Embed(
+                description=(
+                    f"**Originally posted in** {linked_message.channel.mention} "
+                    f"**on** <t:{int(linked_message.created_at.timestamp())}:F>\n\n"
+                    f"{quoted_content}"
+                ),
+                timestamp=discord.utils.utcnow(),
+                color=discord.Colour.gold()
+            )
+
+            embed.set_author(
+                name=str(linked_message.author),
+                icon_url=linked_message.author.display_avatar.url
+            )
+
+            embed.set_footer(
+                text=f"Linked by {message.author}"
+            )
+
+            await message.channel.send(embed=embed)
 
 
 async def setup(bot):
