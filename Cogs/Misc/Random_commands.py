@@ -37,7 +37,8 @@ class Random_commands(commands.Cog):
         responses = ("Ella quiere conmigo pero nah", "Se lo tienen muy creido, no tienen ni idea",
                      "Le ganaria a campeones de tekken masheando botones",
                      "He llegado al punto de no retorno", "Rocket League es el juego mas mecanicamente complejo de la historia",
-                     "No hay fisicamente tiempo para estudiar")
+                     "No hay fisicamente tiempo para estudiar", "9 meses ya", "Ya está, ya toqué fondo, que mas quiere la vida de mi?",
+                     "Pues nada, ya me jodieron el inicio de la vida adulta")
         
         await ctx.send(f'"*{random.choice(responses)}"*')
 
