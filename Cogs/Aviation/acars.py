@@ -17,9 +17,10 @@ from datetime import datetime, timezone
 # Execute commands with receiving messages
 # Implementation with flightplan command
 
-# Uncomment when needed
+# Change as needed
 STATION = "ORI"
-#STATION = "TST"
+
+DELAY = 15
 
 #Log channel
 log_channel = 1501598637590057031
@@ -64,7 +65,7 @@ class Acars(commands.Cog):
                 await self.request_cursor.execute(sql, (callsign, airport))
                 result = await self.request_cursor.fetchone()
                 if result is None:
-                    await asyncio.sleep(15)
+                    await asyncio.sleep(DELAY)
                     send_hoppie_telex(callsign, f"NO REQUESTS FOR {airport}")
                 # Delete it
                 sql = "DELETE FROM Requests WHERE callsign = ? AND airportICAO = ?"
@@ -75,21 +76,21 @@ class Acars(commands.Cog):
             sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall, type, callsign) VALUES (?, ?, ?, ?, ?, ?)"
             await self.request_cursor.execute(sql, (0, airport, time, self.get_time() + 3600, "telex", callsign))
             await self.request_db.commit()
-            await asyncio.sleep(15)
+            await asyncio.sleep(DELAY)
             send_hoppie_telex(callsign, f"{metar}\nSENDING METAR UPDATES FOR {time}H")
         else:
-            await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
+            await asyncio.sleep(DELAY) # sleep 15 seconds, lowers load on hoppie
             send_hoppie_telex(callsign, metar)
 
     async def telex_airport(self, callsign, airport):
         airport = airport.strip()
         airport_info = airport_lookup(airport) 
         if airport_info == False:
-            await asyncio.sleep(15)
+            await asyncio.sleep(DELAY)
             send_hoppie_telex(callsign, F"ARPT {airport} NOT IN DB")
             return
         else:
-            await asyncio.sleep(15)
+            await asyncio.sleep(DELAY)
             message = f"INF FOR {airport_info[1]} {airport_info[3]}\nALT {airport_info[6]}\nTYPE {airport_info[2]}\nCOUNTRY {airport_info[8]}"
             send_hoppie_telex(callsign, message.replace("_", " "))
     
@@ -103,7 +104,7 @@ class Acars(commands.Cog):
                 await self.request_cursor.execute(sql, (callsign, airport, "yes"))
                 result = await self.request_cursor.fetchone()
                 if result is None:
-                    await asyncio.sleep(15)
+                    await asyncio.sleep(DELAY)
                     send_hoppie_telex(callsign, f"NO REQUESTS FOR {airport}")
                 # Delete it
                 sql = "DELETE FROM Requests WHERE callsign = ? AND airportICAO = ? AND taf = ?"
@@ -114,10 +115,10 @@ class Acars(commands.Cog):
             sql = "INSERT INTO Requests (userId, airportICAO, calls, nextCall, type, callsign, taf) VALUES (?, ?, ?, ?, ?, ?, ?)"
             await self.request_cursor.execute(sql, (0, airport, time, self.get_time() + 3600, "telex", callsign, "yes"))
             await self.request_db.commit()
-            await asyncio.sleep(15)
+            await asyncio.sleep(DELAY)
             send_hoppie_telex(callsign, f"{taf}\nSENDING TAF UPDATES FOR {time}H")
         else:
-            await asyncio.sleep(15) # sleep 15 seconds, lowers load on hoppie
+            await asyncio.sleep(DELAY) # sleep 15 seconds, lowers load on hoppie
             send_hoppie_telex(callsign, taf)
 
 
@@ -185,7 +186,7 @@ class Acars(commands.Cog):
                 if len(arguments) == 2:
                     await self.telex_taf(msg.get_from_name(), arguments[0], arguments[1])
                 else:
-                    await self.telex_taf(msg.get_from_name(), arguments[0])  
+                    await self.telex_taf(msg.get_from_name(), arguments[0])
 
             else:
                 # Invalid command, do nothing
