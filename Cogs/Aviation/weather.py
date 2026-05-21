@@ -42,10 +42,10 @@ class Weather(commands.Cog):
                 if metar['wgst'] is not None:
                     wind = f"From {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
             except KeyError:
-                if metar['wdir'] == "VRB":
+                if metar.get('wdir', None) == "VRB":
                     wind = f"Variable winds at {metar['wspd']}kt\n"
                 else:
-                    wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
+                    wind = "No wind data available\n"
 
             # Cloud cover handling
             clouds = ""
