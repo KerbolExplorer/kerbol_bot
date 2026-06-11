@@ -45,29 +45,23 @@ async def on_ready():
     cogs_list_misc = ('Cogs.Misc.Bite', 'Cogs.Misc.Pet', 'Cogs.Misc.Fetch', 'Cogs.Misc.Responses', 'Cogs.Misc.Rate', 'Cogs.Misc.Random_commands')
     cogs_list_bot_utils = ('Cogs.Bot_Utils.User_db',)
 
-    for cog in cogs_list_Test_Commands:
-        await bot.load_extension(cog)
-    
-    for cog in cogs_list_dev:
-        await bot.load_extension(cog)
-    
-    for cog in cogs_list_lvl:
-        await bot.load_extension(cog)
-    
-    for cog in cogs_list_games:
-        await bot.load_extension(cog)
-    
-    for cog in cogs_list_aviation:
-        await bot.load_extension(cog)
-    
-    for cog in cogs_list_util:
-        await bot.load_extension(cog)
-    
-    for cog in cogs_list_misc:
-        await bot.load_extension(cog)
-    
-    for cog in cogs_list_bot_utils:
-        await bot.load_extension(cog)
+    all_cogs = (
+        cogs_list_Test_Commands
+        + cogs_list_dev
+        + cogs_list_lvl
+        + cogs_list_games
+        + cogs_list_aviation
+        + cogs_list_util
+        + cogs_list_misc
+        + cogs_list_bot_utils
+    )
+
+    for cog in all_cogs:
+        try:
+            await bot.load_extension(cog)
+            print(f"Loaded {cog}")
+        except Exception as e:
+            print(f"Failed to load {cog}: {e}")
 
     print("Cogs loaded!")
 
