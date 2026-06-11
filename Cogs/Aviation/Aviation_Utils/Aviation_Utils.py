@@ -633,7 +633,8 @@ def send_hoppie_telex(station, message:str):
     True
         Message was sent.
     """
-    print(message)
+    if type(message) != str:
+        return
     if len(message) > 220:
         return False
 
