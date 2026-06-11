@@ -33,6 +33,9 @@ class Random_commands(commands.Cog):
         await ctx.send("<:kerbol:1312437693979955230>")
     
     @commands.command()
+    async def blowup(self, ctx):
+        await ctx.send("https://tenor.com/view/cat-explode-cat-explode-mike-interpol-gif-13503338605162614186")
+    @commands.command()
     async def alusin(self, ctx):
         responses = ("Ella quiere conmigo pero nah", "Se lo tienen muy creido, no tienen ni idea",
                      "Le ganaria a campeones de tekken masheando botones",

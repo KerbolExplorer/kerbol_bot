@@ -95,7 +95,7 @@ async def on_app_command_error(interaction: discord.Interaction, error: discord.
     await admin_user.send(
         f"Hey, an error has ocurred while executing `{interaction.command.name}`\n"
         f"Type: `{type(error).__name__}`\n"
-        f"Message: `{str(error)}`"
+        f"Message: `{str(error.__traceback__)}`"
                         )
     try:
         await interaction.response.send_message(f"Something went wrong while doing this command. I have notified {admin_user.display_name} about it", ephemeral=True)
