@@ -116,7 +116,7 @@ class Acars(commands.Cog):
 
     @tasks.loop(seconds=67)
     async def hoppie_polling(self):
-        messages, delay = self.connection.poll()
+        messages, delay = await asyncio.to_thread (self.connection.poll)
 
         for msg in messages:
             print(f"FROM: {msg.get_from_name()}")
