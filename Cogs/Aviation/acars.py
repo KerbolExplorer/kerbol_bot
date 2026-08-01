@@ -129,6 +129,7 @@ class Acars(commands.Cog):
 
     # Messages tracked aircraft with important information
     async def message_tracked(self):
+        return
         sql =  "SELECT * FROM Tracking"
         await self.acars_cursor.execute(sql)
         flights = await self.acars_cursor.fetchall()
