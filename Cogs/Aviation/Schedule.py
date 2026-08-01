@@ -141,6 +141,8 @@ class Schedule(commands.Cog):
 
         embeds = (general_embed, performance_embed, alternate_embed, weather_embed)
 
+        user = interaction.user.id
+
         class EmbedView(discord.ui.View):         # select 0 = General, select 1 = Performance, select 2 = Alternate, select 3 = Weather
             def __init__(self, embeds):
                 super().__init__()
@@ -176,6 +178,15 @@ class Schedule(commands.Cog):
             async def select_callback(self, interaction: discord.Interaction, select: discord.ui.Select):
                 index = ["General Information", "Performance", "Alternates", "Weather"].index(select.values[0])
                 await interaction.response.edit_message(embed=self.embeds[index], view=self)
+
+            #Acars button
+            @discord.ui.button(label="📡", style=discord.ButtonStyle.blurple)
+            async def sync_acars(self, interaction:discord.Interaction, button:discord.ui.Button):
+                await interaction.response.defer(ephemeral=True)
+                if interaction.user.id == user:
+                    await interaction.followup.send("Currently not implemented...", ephemeral=True)
+                else:
+                    await interaction.followup.send("This isn't your flightplan!", ephemeral=True)
         
         await interaction.followup.send(view=EmbedView(embeds), embed=general_embed)
 
