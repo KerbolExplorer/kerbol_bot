@@ -49,8 +49,10 @@ class Weather(commands.Cog):
 
             # Cloud cover handling
             clouds = ""
-            if metar['cover'] == 'CAVOK' or metar['cover'] == 'CLR':
+            if metar.get('cover', "") == 'CAVOK' or metar.get('cover', "") == 'CLR':
                 clouds = "Clear skies"
+            elif metar.get('cover', "") == "":
+                clouds = "Unknown"
             else:
                 cover_types = {
                     'FEW' : 'Few clouds', 
@@ -78,7 +80,7 @@ class Weather(commands.Cog):
             #TODO: Treat key errors with .get()
 
             embed = discord.Embed(
-                color=colors[metar['fltCat']]
+                color=colors[metar.get('fltCat', "VFR")]
             )
 
             if alternate:
@@ -97,7 +99,7 @@ class Weather(commands.Cog):
                 f"**Dew Point** : {metar['dewp']}ºC\n"
                 f"**Altimeter** : {int(metar['altim'])}hpa ({hpa_to_inhg(float(metar['altim']))}inhg)\n"
                 f"**Clouds** : {clouds}\n"
-                f"**Category** : {metar["fltCat"]}"
+                f"**Category** : {metar.get("fltCat", "VFR")}"
             ), inline=False)
             embed.set_footer(text="For flight simulation use only. Source: https://aviationweather.gov/api/data/metar")
             return embed
