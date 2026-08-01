@@ -130,6 +130,7 @@ class Weather(commands.Cog):
         if metar:
             embed = self.get_metar_embed(metar)
             await interaction.followup.send(embed=embed)
+            return
 
         # Didn't get the metar, search for an alternate
         attempts = 10
