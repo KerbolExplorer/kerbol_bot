@@ -3,7 +3,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
 load_dotenv()
-from .Aviation_Utils.Aviation_Utils import send_hoppie_telex, get_metar, airport_lookup, get_taf
+from .Aviation_Utils.Aviation_Utils import send_hoppie_telex, get_metar, airport_lookup, get_taf, fetch_flightplan, FlightPlan
 from hoppie_connector import *
 import os
 import re
@@ -48,7 +48,7 @@ class Acars(commands.Cog):
         await self.acars_cursor.execute(sql)
         result = await self.acars_cursor.fetchall()
         if not result:
-            sql = "CREATE TABLE IF NOT EXISTS 'Tracking' (callsign INTEGER, userId INTEGER, time INTEGER)"
+            sql = "CREATE TABLE IF NOT EXISTS 'Tracking' (callsign INTEGER, userId INTEGER, time INTEGER, simbriefId TEXT, sentTakeOff BOOL, sentLanding BOOL)"
             await self.acars_cursor.execute(sql)
         await self.acars_db.commit()
 
@@ -127,13 +127,23 @@ class Acars(commands.Cog):
         else:
             send_hoppie_telex(callsign, taf)
 
+    # Messages tracked aircraft with important information
+    async def message_tracked(self):
+        sql =  "SELECT * FROM Tracking"
+        await self.acars_cursor.execute(sql)
+        flights = await self.acars_cursor.fetchall()
+
+        for flight in flights:
+            flightplan = fetch_flightplan(flight[3])
+            
+
 
     @tasks.loop(seconds=67)
     async def hoppie_polling(self):
 
         # Delete old tracking (Delete anything older than 24 hours)
         sql = "DELETE FROM Tracking WHERE time < ?"
-        await self.acars_cursor.execute(sql (self.get_time()-86400,))
+        await self.acars_cursor.execute(sql, (self.get_time()-86400,))
         await self.acars_db.commit()
 
         messages, delay = await asyncio.to_thread (self.connection.poll)
@@ -204,6 +214,9 @@ class Acars(commands.Cog):
                 # Invalid command, do nothing
                 print(f"failed check 3")
                 continue
+
+        # Send anything tracked aircraft need
+
 
     @app_commands.command(name="acars_help", description="Shows ACARS functionality")
     async def acars_help(self, interaction:discord.Interaction):

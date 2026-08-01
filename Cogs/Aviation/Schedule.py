@@ -194,11 +194,11 @@ class Schedule(commands.Cog):
                     result = await cursor.fetchone()
 
                     if result != None:
-                        sql = "UPDATE Tracking SET callsign = ?, time = ? WHERE userId = ?"
-                        await cursor.execute(sql, (flpn.callsign, get_current_zulu(True), user))
+                        sql = "UPDATE Tracking SET callsign = ?, time = ?, sentTakeOff = ?, sentLanding = ? WHERE userId = ?"
+                        await cursor.execute(sql, (flpn.callsign, get_current_zulu(True), False, False, user))
                     else:
-                        sql = "INSERT INTO Tracking (callsign, userId, time) VALUES (?, ?, ?)"
-                        await cursor.execute(sql, (flpn.callsign, user, get_current_zulu(True)))
+                        sql = "INSERT INTO Tracking (callsign, userId, time, simbriefId, sentTakeOff, sentLanding) VALUES (?, ?, ?, ?, ?, ?)"
+                        await cursor.execute(sql, (flpn.callsign, user, get_current_zulu(True), simbrief_id, False, False))
 
                     await db.commit()
                     await db.close()

@@ -347,6 +347,17 @@ class FlightPlan:
     cost_index: int
     stepclimbs: str
 
+    # Take off data
+    to_rwy:str
+    v1: int
+    vr: int
+    v2: int
+    flaps: int
+    thrust_setting: str
+    flex_temp: int
+
+    # Landing Data
+
     # Winds
     wind_dir: int
     wind_speed: int
@@ -429,7 +440,18 @@ async def fetch_flightplan(simbrief_id:str):
             data:dict = await response.json()
 
 
-    
+    to_rwy=data.get("tlr", {}).get("takeoff", {}).get("conditions", {}).get("planned_runway", 00)
+
+    #find to runway
+    runways = data.get("tlr", {}).get("takeoff", {}).get("runway", {})
+
+    to_info = None
+
+    for runway in runways:
+        if runway.get("identifier") == to_rwy:
+            to_info = runway
+            break
+
     flightplan = FlightPlan(
     icao_airline=data.get("general", {}).get("icao_airline"),
     flight_number=data.get("general", {}).get("flight_number"),
@@ -452,6 +474,15 @@ async def fetch_flightplan(simbrief_id:str):
     cruise_mach=data.get("general", {}).get("cruise_mach"),
     cost_index=data.get("general", {}).get("costindex"),
     stepclimbs=data.get("general", {}).get("stepclimb_string"),
+
+    v1=to_info.get("speeds_v1"),
+    vr=to_info.get("speeds_vr"),
+    v2=to_info.get("speeds_v2"),
+    flaps=to_info.get("flaps_setting"),
+    thrust_setting=to_info.get("thrust_setting"),
+    flex_temp=to_info.get("flex_temperature"),
+    to_rwy=to_info.get("identifier"),
+
     wind_dir=data.get("general", {}).get("avg_wind_dir"),
     wind_speed=data.get("general", {}).get("avg_wind_spd"),
 
