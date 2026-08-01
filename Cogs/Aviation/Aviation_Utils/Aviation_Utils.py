@@ -554,24 +554,24 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     if departing_airport is not None:
         departing_airport = airport_lookup(departing_airport)
         departure_locked = True
-        departing_cords = (departing_airport[0][4], departing_airport[0][5])
+        departing_cords = (departing_airport[4], departing_airport[5])
         if departing_airport == False:
             cursor.close()
             airport_db.close()
             return 2
 
-        departing_airport = (departing_airport[0][3], departing_airport[0][1])
+        departing_airport = (departing_airport[3], departing_airport[1])
 
     if arrival_airport is not None:
         arrival_airport = airport_lookup(arrival_airport)
         arrival_locked = True
-        arrival_cords = (arrival_airport[0][4], arrival_airport[0][5])
+        arrival_cords = (arrival_airport[4], arrival_airport[5])
         if arrival_airport == False:
             cursor.close()
             airport_db.close()
             return 3
 
-        arrival_airport = (arrival_airport[0][3], arrival_airport[0][1])
+        arrival_airport = (arrival_airport[3], arrival_airport[1])
     
     attempts = 20
     total_attempts = 0
@@ -633,7 +633,8 @@ def send_hoppie_telex(station, message:str):
     True
         Message was sent.
     """
-    print(message)
+    if type(message) != str:
+        return
     if len(message) > 220:
         return False
 

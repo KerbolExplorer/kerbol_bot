@@ -42,10 +42,10 @@ class Weather(commands.Cog):
                 if metar['wgst'] is not None:
                     wind = f"From {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
             except KeyError:
-                if metar['wdir'] == "VRB":
+                if metar.get('wdir', None) == "VRB":
                     wind = f"Variable winds at {metar['wspd']}kt\n"
                 else:
-                    wind = f"From {metar['wdir']}º at {metar['wspd']}kt\n"
+                    wind = "No wind data available\n"
 
             # Cloud cover handling
             clouds = ""
@@ -120,18 +120,24 @@ class Weather(commands.Cog):
     @app_commands.describe(airport="Icao code of the airport")
     async def metar(self, interaction:discord.Interaction, airport:str):
         await interaction.response.defer()
-        metar = get_metar(airport, False)
 
         airport_exist = airport_lookup(airport)
         if airport_exist == False:
             await interaction.followup.send(f"The airport `{airport}` is not in my database")
             return
+        metar = get_metar(airport, False)
+        # Metar got correctly
+        if metar:
+            embed = self.get_metar_embed(metar)
+            await interaction.followup.send(embed=embed)
 
+        # Didn't get the metar, search for an alternate
         attempts = 10
         while attempts > 0:
+            print("looking for alternate...")
             if metar == False or metar == None:
                 airport_data = airport_lookup(airport)
-                alternate = random_flight(airport_data[0][8], departing_airport=airport, max_distance=10, min_distance=1)
+                alternate = random_flight(airport_data[8], departing_airport=airport, max_distance=10, min_distance=1)
                 if alternate == None:
                     attempts -= 1
                     continue
@@ -144,10 +150,6 @@ class Weather(commands.Cog):
                     embed = self.get_metar_embed(alt_metar, airport)
                     await interaction.followup.send(embed=embed) # Alternate metar
                     return
-            else:
-                embed = self.get_metar_embed(metar)
-                await interaction.followup.send(embed=embed) # Normal metar
-                return
 
         await interaction.followup.send("This metar is not available")
     

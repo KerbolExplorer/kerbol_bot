@@ -33,11 +33,14 @@ class Random_commands(commands.Cog):
         await ctx.send("<:kerbol:1312437693979955230>")
     
     @commands.command()
+    async def blowup(self, ctx):
+        await ctx.send("https://tenor.com/view/cat-explode-cat-explode-mike-interpol-gif-13503338605162614186")
+    @commands.command()
     async def alusin(self, ctx):
         responses = ("Ella quiere conmigo pero nah", "Se lo tienen muy creido, no tienen ni idea",
                      "Le ganaria a campeones de tekken masheando botones",
                      "He llegado al punto de no retorno", "Rocket League es el juego mas mecanicamente complejo de la historia",
-                     "No hay fisicamente tiempo para estudiar", "9 meses ya", "Ya está, ya toqué fondo, que mas quiere la vida de mi?",
+                     "No hay fisicamente tiempo para estudiar", "Ya está, ya toqué fondo, que mas quiere la vida de mi?",
                      "Pues nada, ya me jodieron el inicio de la vida adulta")
         
         await ctx.send(f'"*{random.choice(responses)}"*')
