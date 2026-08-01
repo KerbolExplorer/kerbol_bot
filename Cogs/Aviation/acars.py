@@ -130,6 +130,12 @@ class Acars(commands.Cog):
 
     @tasks.loop(seconds=67)
     async def hoppie_polling(self):
+
+        # Delete old tracking (Delete anything older than 24 hours)
+        sql = "DELETE FROM Tracking WHERE time < ?"
+        await self.acars_cursor.execute(sql (self.get_time()-86400,))
+        await self.acars_db.commit()
+
         messages, delay = await asyncio.to_thread (self.connection.poll)
 
         for msg in messages:
