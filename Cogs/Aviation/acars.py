@@ -22,15 +22,20 @@ STATION = "ORI"
 
 DELAY = 15
 
-#Log channel
+# Log channel
 log_channel = 1501598637590057031
+
 class Acars(commands.Cog):
-    def __init__(self, bot, request_db, request_cursor):
+    def __init__(self, bot, request_db, request_cursor, acars_db, acars_cursor):
         self.bot = bot
         self.logon = os.getenv("HOPPIE")
         self.connection:HoppieConnector = HoppieConnector(station_name=STATION, logon=self.logon)
         self.request_db:aiosqlite.Connection = request_db
         self.request_cursor:aiosqlite.Cursor = request_cursor
+
+        self.acars_db:aiosqlite.Connection = acars_db
+        self.acars_cursor:aiosqlite.Cursor = acars_cursor
+        self.bot.loop.create_task(self.setup_database())
 
         self.log_channel:discord.TextChannel = bot.get_channel(log_channel)
 
@@ -38,10 +43,19 @@ class Acars(commands.Cog):
         if not self.hoppie_polling.is_running():
             self.hoppie_polling.start()
 
+    async def setup_database(self):
+        sql = "SELECT name FROM sqlite_master WHERE type='table' AND name='acars'"
+        await self.acars_cursor.execute(sql)
+        result = await self.acars_cursor.fetchall()
+        if not result:
+            sql = "CREATE TABLE IF NOT EXISTS 'Tracking' (callsign INTEGER, userId INTEGER, time INTEGER)"
+            await self.acars_cursor.execute(sql)
+        await self.acars_db.commit()
+
     def get_time(self):
         return int(datetime.now(timezone.utc).timestamp())
 
-        # Test command for sending messages
+    # Test command for sending messages
     @commands.command()
     async def send_telex(self, ctx:commands.Context, station, *, message):
         if ctx.author.id != 442728041115025410:
@@ -255,6 +269,10 @@ class Acars(commands.Cog):
 
 async def setup(bot):
     db_requests_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "requests.db")
-    db = await aiosqlite.connect(db_requests_path)
-    cursor = await db.cursor()
-    await bot.add_cog(Acars(bot, db, cursor))
+    request_db = await aiosqlite.connect(db_requests_path)
+    request_cursor = await request_db.cursor()
+
+    db_acars_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "acars.db")
+    acars_db = await aiosqlite.connect(db_acars_path)
+    acars_cursor = await acars_db.cursor()
+    await bot.add_cog(Acars(bot, request_db, request_cursor, acars_db, acars_cursor))

@@ -4,9 +4,10 @@ from discord.ext import commands
 import aiosqlite
 import random
 import os
-from .Aviation_Utils.Aviation_Utils import random_flight, fetch_flightplan, FlightPlan
+from .Aviation_Utils.Aviation_Utils import random_flight, fetch_flightplan, FlightPlan, get_current_zulu
 
 db_airport_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airports.db")
+db_acars_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "acars.db")
 
 class Schedule(commands.Cog):
     def __init__(self, bot):
@@ -184,7 +185,25 @@ class Schedule(commands.Cog):
             async def sync_acars(self, interaction:discord.Interaction, button:discord.ui.Button):
                 await interaction.response.defer(ephemeral=True)
                 if interaction.user.id == user:
-                    await interaction.followup.send("Currently not implemented...", ephemeral=True)
+                    db = await aiosqlite.connect(db_acars_path)
+                    cursor:aiosqlite.Cursor = await db.cursor()
+
+                    # Only 1 flight per user, overwrite previous flight if it exists
+                    sql = "SELECT userId FROM Tracking"
+                    await cursor.execute(sql)
+                    result = await cursor.fetchone()
+
+                    if result != None:
+                        sql = "UPDATE Tracking SET callsign = ?, time = ? WHERE userId = ?"
+                        await cursor.execute(sql, (flpn.callsign, get_current_zulu(True), user))
+                    else:
+                        sql = "INSERT INTO Tracking (callsign, userId, time) VALUES (?, ?, ?)"
+                        await cursor.execute(sql, (flpn.callsign, user, get_current_zulu(True)))
+
+                    await db.commit()
+                    await db.close()
+
+                    await interaction.followup.send("Flight tracking...You should be getting messages on your aircraft soon.", ephemeral=True)
                 else:
                     await interaction.followup.send("This isn't your flightplan!", ephemeral=True)
         

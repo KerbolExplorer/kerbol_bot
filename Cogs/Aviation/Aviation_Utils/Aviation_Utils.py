@@ -208,7 +208,7 @@ def get_navaid(navaid):
     except ValueError:
         return False
 
-def get_current_zulu():
+def get_current_zulu(get_unix:bool):
     """Returns the current zulu time.
 
     Returns
@@ -216,6 +216,8 @@ def get_current_zulu():
     Integer
         The current zulu time.
     """
+    if get_unix:
+        return int(datetime.now(timezone.utc).timestamp())
     current_time = datetime.now(timezone.utc)
     current_time = int(current_time.strftime("%H%M"))
     return current_time
