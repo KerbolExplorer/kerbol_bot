@@ -14,7 +14,7 @@ class LinkMessage(commands.Cog):
     
     @commands.Cog.listener('on_message')
     async def link_message(self, message):
-        if self.enabled == False:
+        if self.enabled == False or message.author.bot == True:
             return
         
         match = self.message_regex.search(message.content)

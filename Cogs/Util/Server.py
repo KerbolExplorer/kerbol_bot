@@ -46,6 +46,7 @@ class Server(commands.Cog):
     
     @commands.Cog.listener()
     async def on_member_join(self, member:discord.Member):
+        return
         channel = member.guild.system_channel
         if channel:
             sql = "SELECT welcomeMessage FROM 'Guilds' WHERE id = ?"
