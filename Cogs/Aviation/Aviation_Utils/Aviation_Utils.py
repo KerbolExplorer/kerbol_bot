@@ -415,7 +415,7 @@ class FlightPlan:
             f"{self.icao_airline}{self.flight_number} | {self.aircraft}\n"
             f"{self.origin} → {self.destination} (ALT {self.alternate})\n"
             f"DEP {self.departure_time}  ARR {self.arrival_time}  ETE {self.block_time}\n"
-            f"CRZ FL{self.initial_alt}  M{self.cruise_mach:.2f}  CI {self.cost_index}  {etops}\n"
+            f"CRZ FL{self.initial_alt}  M{self.cruise_mach}  CI {self.cost_index}  {etops}\n"
             f"PAX {self.passengers}  CARGO {self.cargo} kg\n"
             f"ZFW {self.zfw}  TOW {self.tow}  LDW {self.ldw}\n"
             f"FUEL {self.block_fuel} kg  DIST {self.air_distance} nm\n"

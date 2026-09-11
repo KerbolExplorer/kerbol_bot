@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 # Implementation with flightplan command
 
 # Change as needed
-STATION = "ORI"
+STATION = "OTST"
 
 DELAY = 15
 
@@ -129,13 +129,26 @@ class Acars(commands.Cog):
 
     # Messages tracked aircraft with important information
     async def message_tracked(self):
-        return
         sql =  "SELECT * FROM Tracking"
         await self.acars_cursor.execute(sql)
         flights = await self.acars_cursor.fetchall()
 
         for flight in flights:
-            flightplan = fetch_flightplan(flight[3])
+            # Check missing take offs
+            if flight[4] == 0:
+                flightplan:FlightPlan = await fetch_flightplan(flight[3])
+                message = (
+                    f"PRELIM T/O INFO {flight[0]}\n"
+                    f"TOW {flightplan.tow} RWY {flightplan.to_rwy}\n"
+                    f"V1 {flightplan.v1} VR {flightplan.vr} V2 {flightplan.v2}\n"
+                    f"FLAPS {flightplan.flaps} FLX {flightplan.flex_temp}"
+                )
+
+                result = send_hoppie_telex("ORI", message)
+                print(result)
+                sql = "UPDATE Tracking SET sentTakeOff = ? WHERE simbriefId = ?"
+                await self.acars_cursor.execute(sql, (1, flight[3]))
+                await self.acars_db.commit()
             
 
 
@@ -217,7 +230,7 @@ class Acars(commands.Cog):
                 continue
 
         # Send anything tracked aircraft need
-
+        await self.message_tracked()
 
     @app_commands.command(name="acars_help", description="Shows ACARS functionality")
     async def acars_help(self, interaction:discord.Interaction):
