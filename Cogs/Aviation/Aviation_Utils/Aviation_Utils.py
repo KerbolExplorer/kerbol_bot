@@ -100,8 +100,7 @@ def get_metar(icao_code: str, raw_only = True):
         "ids": icao_code,
         "format": "json",
         "taf": "false",
-        "mostRecent": "true",
-        "hours": 1
+        "hours": 1.5
     }
 
     try:
