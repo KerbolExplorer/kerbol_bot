@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 # Implementation with flightplan command
 
 # Change as needed
-STATION = "OTST"
+STATION = "ORI"
 
 DELAY = 15
 
@@ -144,7 +144,7 @@ class Acars(commands.Cog):
                     f"FLAPS {flightplan.flaps} FLX {flightplan.flex_temp}"
                 )
 
-                result = send_hoppie_telex("ORI", message)
+                result = send_hoppie_telex({flight[0]}, message)
                 print(result)
                 sql = "UPDATE Tracking SET sentTakeOff = ? WHERE simbriefId = ?"
                 await self.acars_cursor.execute(sql, (1, flight[3]))
