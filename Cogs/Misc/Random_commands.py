@@ -41,7 +41,8 @@ class Random_commands(commands.Cog):
                      "Le ganaria a campeones de tekken masheando botones",
                      "He llegado al punto de no retorno", "Rocket League es el juego mas mecanicamente complejo de la historia",
                      "No hay fisicamente tiempo para estudiar", "Ya está, ya toqué fondo, que mas quiere la vida de mi?",
-                     "Pues nada, ya me jodieron el inicio de la vida adulta")
+                     "Pues nada, ya me jodieron el inicio de la vida adulta",
+                     "Mucho derecho humanos y free gaza, pero despues se ríen del asesinato de una persona")
         
         await ctx.send(f'"*{random.choice(responses)}"*')
 
