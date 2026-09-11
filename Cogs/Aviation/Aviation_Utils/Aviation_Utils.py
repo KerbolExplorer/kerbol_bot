@@ -530,7 +530,7 @@ async def fetch_flightplan(simbrief_id:str):
 
 
 
-def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None):
+def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None, prohibited:list = None):
     """Returns a random flight
 
     Parameters
@@ -541,6 +541,7 @@ def random_flight(country:str, international:bool = False, departing_airport:str
     arrival_airport: The airport you arrive at.
     min_distance: The minimum distance of the flight.
     max_distance: The max distance of the flight.
+    prohibited: Prohibited airports.
 
     Returns
     ----------
@@ -612,11 +613,19 @@ def random_flight(country:str, international:bool = False, departing_airport:str
             dep = random.choice(all_airports)
             departing_cords = (dep[1], dep[2])
             departing_airport = (dep[0], dep[3])
+            if prohibited:
+                if departing_airport[0] in prohibited:
+                    total_attempts += 1
+                    continue
         
         if not arrival_locked:
             arrival = random.choice(all_airports)
             arrival_cords = (arrival[1], arrival[2])
             arrival_airport = (arrival[0], arrival[3])
+            if prohibited:
+                if arrival_airport[0] in prohibited:
+                    total_attempts += 1
+                    continue
 
         distance = airport_distance(departing_cords, arrival_cords)
 

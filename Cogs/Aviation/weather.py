@@ -116,6 +116,7 @@ class Weather(commands.Cog):
 
     # TODO: Optimize airport lookup, too slow. Nearby icao codes can surely be grabbed quicker
     # TODO: You can write whatever the fuck you want on the metar and it'll try to grab it :sob:, fix that
+    # TODO: Download cache files instead of pinging the api
     @app_commands.command(name="metar", description="Gets the metar for an airport")
     @app_commands.describe(airport="Icao code of the airport")
     async def metar(self, interaction:discord.Interaction, airport:str):
@@ -134,18 +135,21 @@ class Weather(commands.Cog):
 
         # Didn't get the metar, search for an alternate
         attempts = 10
+        prohibeted = [airport.upper()]
         while attempts > 0:
             print("looking for alternate...")
             if metar == False or metar == None:
                 airport_data = airport_lookup(airport)
-                alternate = random_flight(airport_data[8], departing_airport=airport, max_distance=10, min_distance=1)
+                alternate = random_flight(airport_data[8], departing_airport=airport, max_distance=10, min_distance=1, prohibited=prohibeted)
                 if alternate == None:
                     attempts -= 1
+                    prohibeted.append(alternate)
                     continue
                 else:
                     alternate = alternate[1][1]
                     alt_metar = get_metar(alternate, False)
                     if alt_metar == False or alt_metar == None:
+                        prohibeted.append(alternate)
                         attempts -= 1
                         continue
                     embed = self.get_metar_embed(alt_metar, airport)
