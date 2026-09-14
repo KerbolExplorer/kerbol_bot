@@ -199,6 +199,7 @@ def get_navaid(ident=None, airport=None):
         sql = "SELECT * FROM 'navaids' WHERE ident = ?"
         cursor.execute(sql, (ident,))
     else:
+    # TODO: This will return several valid navaids, we need to calculate the distance between them and their airport and choose the closest one
         airport = airport.upper()
         sql = "SELECT * FROM 'navaids' WHERE associated_airport = ?"
         cursor.execute(sql, (airport,))
