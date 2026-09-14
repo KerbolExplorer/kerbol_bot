@@ -2,7 +2,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import os
-from .Aviation_Utils.Aviation_Utils import airport_lookup, airport_distance, get_metar
+from .Aviation_Utils.Aviation_Utils import airport_lookup, airport_distance, get_metar, get_navaid
 
 db_path = os.path.join(os.path.dirname(__file__), "Aviation_Databases", "airports.db")
 
@@ -23,6 +23,8 @@ class Airport_Lookup(commands.Cog):
             if metar == False or metar == None:
                 metar = "No metar data available"   #Check if there is a metar
 
+            navaid = get_navaid(airport=airport[1])
+
             embed = discord.Embed(
                 title=f"Information for `{airport[1].upper()}`",
                 description=f"**Current Metar: **\n```{metar}```",
@@ -35,7 +37,8 @@ class Airport_Lookup(commands.Cog):
                 f"**Longitude** : {airport[5]}\n"
                 f"**Elevation** : {airport[6]}\n"
                 f"**Country** : {airport[8]}\n"
-                f"**Airport Type** : {airport[2]}"
+                f"**Airport Type** : {airport[2]}\n"
+                f"**Associated Navaid**: {navaid[2]} : {navaid[5]/1000}"
             ))
             embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use /metar. For flight simulation use only")
             await interaction.followup.send(embed=embed)

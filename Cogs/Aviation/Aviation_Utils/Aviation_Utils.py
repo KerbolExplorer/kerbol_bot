@@ -169,13 +169,17 @@ def get_taf(icao_code: str, raw_only = True):
     except ValueError:
         return False
 
-def get_navaid(ident):
+def get_navaid(ident=None, airport=None):
     """Returns information belonging to a navaid(VOR, DME, Fix, etc).
 
     Parameters
     ----------
     ident : str
         The ID of the navaid
+    airport : str
+        The ICAO code of the airport
+
+    One of these two are mandatory
 
     Returns
     ----------
@@ -186,13 +190,18 @@ def get_navaid(ident):
     None
         If not found.
     """
-    ident = ident.upper()
+
     db = sqlite3.connect(navaid_db)
     cursor = db.cursor()
 
-    sql = "SELECT * FROM 'navaids' WHERE ident = ?"
-
-    cursor.execute(sql, (ident,))
+    if ident:
+        ident = ident.upper()
+        sql = "SELECT * FROM 'navaids' WHERE ident = ?"
+        cursor.execute(sql, (ident,))
+    else:
+        airport = airport.upper()
+        sql = "SELECT * FROM 'navaids' WHERE associated_airport = ?"
+        cursor.execute(sql, (airport,))
     result = cursor.fetchone()
 
     if result == None:

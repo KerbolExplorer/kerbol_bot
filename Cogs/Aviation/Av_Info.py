@@ -14,7 +14,7 @@ class Av_Info(commands.Cog):
         embed = discord.Embed(
             title=f"{navaid[3]}:`{navaid[4]}`",
             color=discord.Colour.blue(),
-            description=f"Related airport {navaid[19]}"
+            description=f"Related airport `{navaid[19]}`"
         )
         embed.add_field(name="**Ident:**", value=f"{navaid[2]}", inline=False)
         embed.add_field(name="**Frequency:**", value=f"{navaid[5]/1000}", inline=False)
