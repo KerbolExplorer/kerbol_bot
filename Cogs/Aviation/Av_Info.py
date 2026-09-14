@@ -16,6 +16,7 @@ class Av_Info(commands.Cog):
             color=discord.Colour.blue(),
             description=f"Related airport `{navaid[19]}`"
         )
+        embed.set_thumbnail(url="https://cdn.creazilla.com/icons/3231339/navaid-vordme-icon-size_256.png")
         embed.add_field(name="**Ident:**", value=f"{navaid[2]}", inline=False)
         embed.add_field(name="**Frequency:**", value=f"{navaid[5]/1000}", inline=False)
         embed.add_field(name="**Coordinates:**", value=f"{navaid[6]}, {navaid[7]}", inline=False)
