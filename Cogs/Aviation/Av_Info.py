@@ -10,8 +10,18 @@ class Av_Info(commands.Cog):
     @app_commands.command(name="get_navaid", description="Fetches information on a navaid")
     async def get_navaid(self, interaction:discord.Interaction, navaid:str):
         navaid = get_navaid(navaid)
-        print(navaid)
-        await interaction.response.send_message(navaid)
+
+        embed = discord.Embed(
+            title=f"{navaid[3]}:`{navaid[4]}`",
+            color=discord.Colour.blue(),
+            description=f"Related airport {navaid[19]}"
+        )
+        embed.add_field(name="**Ident:**", value=f"{navaid[2]}", inline=False)
+        embed.add_field(name="**Frequency:**", value=f"{navaid[5]/1000}", inline=False)
+        embed.add_field(name="**Coordinates:**", value=f"{navaid[6]}, {navaid[7]}", inline=False)
+        embed.add_field(name="**Country:**", value=f"{navaid[9]}")
+
+        await interaction.response.send_message(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Av_Info(bot))

@@ -24,6 +24,7 @@ from dotenv import load_dotenv
 from hoppie_connector import *
 
 db_path = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "airports.db")
+navaid_db = os.path.join(os.path.dirname(__file__), '..', "Aviation_Databases", "navaids.db")
 logon = os.getenv("HOPPIE")
 
 def airport_lookup(airport: str):
@@ -168,12 +169,12 @@ def get_taf(icao_code: str, raw_only = True):
     except ValueError:
         return False
 
-def get_navaid(navaid):
-    """ONLY WORKS FOR US Returns information belonging to a navaid(VOR, DME, Fix, etc).
+def get_navaid(ident):
+    """Returns information belonging to a navaid(VOR, DME, Fix, etc).
 
     Parameters
     ----------
-    navaid : str
+    ident : str
         The ID of the navaid
 
     Returns
@@ -185,27 +186,20 @@ def get_navaid(navaid):
     None
         If not found.
     """
-    navaid = navaid.upper()
-    url = "https://aviationweather.gov/api/data/navaid"
-    params = {
-        "ids":navaid,
-        "format":"json"
-    }
+    ident = ident.upper()
+    db = sqlite3.connect(navaid_db)
+    cursor = db.cursor()
 
-    try:
-        response = requests.get(url, params=params)
-        response.raise_for_status()
-        navaids = response.json()
+    sql = "SELECT * FROM 'navaids' WHERE ident = ?"
 
-        if not navaids:
-            return None
-        
-        return navaids
+    cursor.execute(sql, (ident,))
+    result = cursor.fetchone()
 
-    except requests.RequestException:
-        return False
-    except ValueError:
-        return False
+    if result == None:
+        return None
+    else:
+        return result
+
 
 def get_current_zulu(get_unix:bool):
     """Returns the current zulu time.
