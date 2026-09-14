@@ -35,15 +35,18 @@ class Weather(commands.Cog):
             # Getting the proper zulu time
             zulu_time = datetime.fromtimestamp(metar['obsTime'], tz=timezone.utc)
             zulu_time = zulu_time.strftime("%H%MZ")
-
+            wind = None
     
             try:
             # Handles how the wind is displayed, depending on gusts or vrb winds
                 if metar['wgst'] is not None:
                     wind = f"From {metar['wdir']}º at {metar['wspd']}kt, gusting at {metar['wgst']}kt\n"
             except KeyError:
-                if metar.get('wdir', None) == "VRB":
+                wind = metar.get('wdir', None)
+                if wind == "VRB":
                     wind = f"Variable winds at {metar['wspd']}kt\n"
+                elif wind != None:
+                    wind = f"From {metar['wdir']}º at {metar['wspd']}kt.\n"
                 else:
                     wind = "No wind data available\n"
 
