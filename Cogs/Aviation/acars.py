@@ -256,8 +256,8 @@ class Acars(commands.Cog):
             description="This embed shows all available commands that can be executed via telex. Please make sure to follow the correct format. Blank spaces are also required"
         )
         telex_embed.add_field(name="METAR -> Format: `METAR {airport_icao} HOURS`", value=(
-            "This command is extremely similar to /metar_request. When used it will return the current metar for the airport.\n"
-            "In addition, you can queue up updates with optional HOURS field. You'll recieve a metar for every hour that passes until the time assigned has passed.\n"
+            "This command is similar to /metar_request. When used it will return the current metar for the airport.\n"
+            "In addition, you can queue up updates with the optional HOURS field. You'll recieve a metar every hour until the specified time passes.\n"
             "If you wish to cancel a queue, send the same command but with an S on the hours. This will cancel the request. Do note that a sucessful execution will not send a response back"
         ), inline=False)
         telex_embed.add_field(name="AIRPT -> Format: `AIRPT {airport_icao}`", value=(
