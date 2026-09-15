@@ -10,6 +10,10 @@ class Av_Info(commands.Cog):
     @app_commands.command(name="get_navaid", description="Fetches information on a navaid")
     async def get_navaid(self, interaction:discord.Interaction, navaid:str):
         navaid = get_navaid(navaid)
+        print(navaid)
+        if navaid == None:
+            await interaction.response.send_message("This navaid is not in my database", ephemeral=True)
+            return
 
         embed = discord.Embed(
             title=f"{navaid[3]}:`{navaid[4]}`",

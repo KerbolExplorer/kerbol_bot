@@ -24,6 +24,8 @@ class Airport_Lookup(commands.Cog):
                 metar = "No metar data available"   #Check if there is a metar
 
             navaid = get_navaid(airport=airport[1])
+            if navaid == None:
+                navaid = (0, 0, "None", 0, 0, 1000)
 
             embed = discord.Embed(
                 title=f"Information for `{airport[1].upper()}`",

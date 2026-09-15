@@ -198,17 +198,29 @@ def get_navaid(ident=None, airport=None):
         ident = ident.upper()
         sql = "SELECT * FROM 'navaids' WHERE ident = ?"
         cursor.execute(sql, (ident,))
+        result = cursor.fetchone()
+        return result
     else:
     # TODO: This will return several valid navaids, we need to calculate the distance between them and their airport and choose the closest one
         airport = airport.upper()
         sql = "SELECT * FROM 'navaids' WHERE associated_airport = ?"
         cursor.execute(sql, (airport,))
-    result = cursor.fetchone()
+        result = cursor.fetchall()
+        airport_info = airport_lookup(airport)
 
-    if result == None:
-        return None
-    else:
-        return result
+        if airport_info == None:
+            return None
+
+        airport_location = (float(airport_info[4]), float(airport_info[5]))
+
+        closest = (None, 100)
+        for navaid in result:
+            distance = Aviation_Math.great_circle_distance(airport_location[0], float(navaid[6]), airport_location[1], float(navaid[7]))
+            if distance < closest[1]:
+                closest = (navaid, distance)
+
+        return closest[0]
+
 
 
 def get_current_zulu(get_unix:bool):
