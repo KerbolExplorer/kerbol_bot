@@ -169,7 +169,7 @@ def get_taf(icao_code: str, raw_only = True):
     except ValueError:
         return False
 
-def get_navaid(ident=None, airport=None):
+def get_navaid(ident=None, airport=None, country=None):
     """Returns information belonging to a navaid(VOR, DME, Fix, etc).
 
     Parameters
@@ -178,6 +178,8 @@ def get_navaid(ident=None, airport=None):
         The ID of the navaid
     airport : str
         The ICAO code of the airport
+    country : str
+        The Country the navaid belogs to
 
     One of these two are mandatory
 
@@ -196,8 +198,13 @@ def get_navaid(ident=None, airport=None):
 
     if ident:
         ident = ident.upper()
-        sql = "SELECT * FROM 'navaids' WHERE ident = ?"
-        cursor.execute(sql, (ident,))
+        if country:
+            country = country.upper()
+            sql = "SELECT * FROM 'navaids' WHERE ident = ? AND iso_country = ?"
+            cursor.execute(sql, (ident, country))
+        else:
+            sql = "SELECT * FROM 'navaids' WHERE ident = ?"
+            cursor.execute(sql, (ident,))
         result = cursor.fetchone()
         return result
     else:
@@ -213,7 +220,7 @@ def get_navaid(ident=None, airport=None):
 
         airport_location = (float(airport_info[4]), float(airport_info[5]))
 
-        closest = (None, 100)
+        closest = (None, float("inf"))
         for navaid in result:
             distance = Aviation_Math.great_circle_distance(airport_location[0], float(navaid[6]), airport_location[1], float(navaid[7]))
             if distance < closest[1]:

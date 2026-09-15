@@ -8,9 +8,12 @@ class Av_Info(commands.Cog):
         self.bot = bot
     
     @app_commands.command(name="get_navaid", description="Fetches information on a navaid")
-    async def get_navaid(self, interaction:discord.Interaction, navaid:str):
-        navaid = get_navaid(navaid)
-        print(navaid)
+    @app_commands.describe(
+        navaid="The navaid to search",
+        country="ISO code of the country of the navaid."
+    )
+    async def get_navaid(self, interaction:discord.Interaction, navaid:str, country:str=None):
+        navaid = get_navaid(navaid, country=country)
         if navaid == None:
             await interaction.response.send_message("This navaid is not in my database", ephemeral=True)
             return
@@ -25,6 +28,7 @@ class Av_Info(commands.Cog):
         embed.add_field(name="**Frequency:**", value=f"{navaid[5]/1000}", inline=False)
         embed.add_field(name="**Coordinates:**", value=f"{navaid[6]}, {navaid[7]}", inline=False)
         embed.add_field(name="**Country:**", value=f"{navaid[9]}")
+        embed.set_footer(text="Last updated: 15/9/26. Not for real aviation use.")
 
         await interaction.response.send_message(embed=embed)
 
