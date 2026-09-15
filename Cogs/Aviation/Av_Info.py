@@ -26,7 +26,7 @@ class Av_Info(commands.Cog):
         embed.set_thumbnail(url="https://cdn.creazilla.com/icons/3231339/navaid-vordme-icon-size_256.png")
         embed.add_field(name="**Ident:**", value=f"{navaid[2]}", inline=False)
         embed.add_field(name="**Frequency:**", value=f"{navaid[5]/1000}", inline=False)
-        embed.add_field(name="**Coordinates:**", value=f"{navaid[6]}, {navaid[7]}", inline=False)
+        embed.add_field(name="**Coordinates:**", value=f"{round(navaid[6], 3)}, {round(navaid[7], 3)}", inline=False)
         embed.add_field(name="**Country:**", value=f"{navaid[9]}")
         embed.set_footer(text="Last updated: 15/9/26. Not for real aviation use.")
 
