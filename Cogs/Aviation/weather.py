@@ -377,65 +377,6 @@ class Weather(commands.Cog):
                 else:
                     continue
         await self.db.commit()
-                
-""" #TODO: Delete after properly testing the new one.
-    @tasks.loop(minutes=1)
-    async def send_metar(self):
-        request_db = await aiosqlite.connect(db_requests_path)
-        request_cursor = await request_db.cursor()
-        sql = "SELECT * FROM Requests"
-        await request_cursor.execute(sql)
-        users = await request_cursor.fetchall()
-
-        current_time = self.get_time()
-
-        if users != []:
-            for user in users:
-                if user[2] == "S":
-                    continue
-                if int(user[3]) < current_time:
-                    if user[4] == 0:
-                        user_target = await self.bot.fetch_user(user[0])
-                    metar_raw = get_metar(user[1], False)
-
-                    if metar_raw == False or metar_raw == None:
-                        if user[4] == 0:
-                            await user_target.send(f"Hey there was an issue getting the metar for `{user[1]}`, I will try again in 5 minutes. If I can't get it then I'll wait another 5 minutes and reach back to you with the results")
-                        tries = 0
-                        while tries != 2:
-                            await asyncio.sleep(300)
-                            metar_raw = get_metar(user[1], False)
-                            if metar_raw:
-                                break
-                            else:
-                                tries += 1
-
-                    if metar_raw == False or metar_raw == None:     #If the metar couldn't be grabbed 
-                        # Decide between telex or dm
-                        if user[4]:
-                            send_hoppie_telex(user[5], "METAR NOT AVAIL")
-                        else:
-                            await user_target.send(f"Hey I've tried getting the metar for `{user[1]}`. But the service doesn't seem to be responding currently, I will try sending you the metar next cycle")
-                    else:
-                        if user[4]:
-                            send_hoppie_telex(user[5], metar_raw.get('rawOb'))
-                        else:
-                            metar_fancy = self.get_metar_embed(metar_raw)
-                            await user_target.send(f"Hey, here's the current metar for `{user[1]}`", embed=metar_fancy)
-                    
-                    if user[2] == 1:
-                        sql = "DELETE FROM Requests WHERE userId = ? AND airportICAO = ?"
-                        await request_cursor.execute(sql, (user[0], user[1]))
-                    else:
-                        sql = "UPDATE Requests SET calls = ?, nextCall = ? WHERE userId = ? AND airportICAO = ?"
-                        next_call = self.get_time() + 3600
-                        await request_cursor.execute(sql, ((user[2] - 1), next_call, user[0], user[1]))
-                else:
-                    continue
-
-        await request_db.commit()
-        await request_db.close()
-"""
 
              
 async def setup(bot):
