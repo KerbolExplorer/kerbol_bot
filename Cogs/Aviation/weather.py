@@ -273,7 +273,7 @@ class Weather(commands.Cog):
     @app_commands.command(name="baro-converter", description="Converts an altimeter value to it's equivalent in hpa or inhg")
     @app_commands.describe(value="The value we want to convert")
     async def baro_converter(self, interaction:discord.Interaction, value:float):
-        if value > 1000: #value is in hpa
+        if value > 40: #value is in hpa
             converted = hpa_to_inhg(value)
             await interaction.response.send_message(f"{value:.0f} hpa in inhg would be: {converted} inhg")
         else:
