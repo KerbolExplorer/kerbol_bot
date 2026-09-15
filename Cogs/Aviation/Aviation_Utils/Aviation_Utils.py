@@ -146,9 +146,7 @@ def get_taf(icao_code: str, raw_only = True):
     params = {
         "ids": icao_code,
         "format": "json",
-        "metar": "false",
-        "mostRecent": "true",
-        "hours": 1
+        "metar": "false"
     }
 
     try:
@@ -164,7 +162,8 @@ def get_taf(icao_code: str, raw_only = True):
             return taf["rawTAF"]
         else:
             return taf
-    except requests.RequestException:
+    except requests.RequestException as e:
+        print(f"TAF request failed {e}")
         return False
     except ValueError:
         return False
