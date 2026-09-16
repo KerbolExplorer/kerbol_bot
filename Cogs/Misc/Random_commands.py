@@ -43,7 +43,7 @@ class Random_commands(commands.Cog):
                      "No hay fisicamente tiempo para estudiar", "Ya está, ya toqué fondo, que mas quiere la vida de mi?",
                      "Pues nada, ya me jodieron el inicio de la vida adulta",
                      "Mucho derecho humanos y free gaza, pero despues se ríen del asesinato de una persona",
-                    "La vida me pide a gritos que no ayude a nadie y sea un hijo de puta basto)
+                    "La vida me pide a gritos que no ayude a nadie y sea un hijo de puta basto")
         
         await ctx.send(f'"*{random.choice(responses)}"*')
 
