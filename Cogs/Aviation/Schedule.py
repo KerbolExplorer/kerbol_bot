@@ -13,7 +13,7 @@ class Schedule(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @app_commands.command(name="random_regional_flight", description="Returns a random regional flight")
+    @app_commands.command(name="random_flight", description="Returns a random flight")
     @app_commands.describe(
         country="ISO code of the country",
         departure_airport="The airport you want to depart from",
@@ -21,11 +21,12 @@ class Schedule(commands.Cog):
         min_distance="The minimum distance of the flight, note that this might be decreased if the bot can't find a flight within set parameters",
         max_distance= "The maximum distance of the flight, note that this might be decreased if the bot can't find a flight within set parameters"
         )
-    async def random_regional_flight(self, interaction:discord.Interaction, country: str, departure_airport : str = None, arrival_airport: str = None, min_distance: int = 100, max_distance: int = 200):
+    async def random_flight(self, interaction:discord.Interaction, country: str = None, departure_airport : str = None, arrival_airport: str = None, min_distance: int = 100, max_distance: int = 500):
         await interaction.response.defer()
 
         flight = random_flight(departure=departure_airport, arrival=arrival_airport, min_distance=min_distance, max_distance=max_distance, country=country)
-        if flight == None:
+        print(flight    )
+        if flight == None or flight == 4:
             await interaction.followup.send("Could not find any valid flights", ephemeral=True)
         elif flight == 1:
             await interaction.followup.send("You have somehow found a country with a single airport")
@@ -33,7 +34,6 @@ class Schedule(commands.Cog):
             await interaction.followup.send("The first airport is not valid", ephemeral=True)
         elif flight == 3:
             await interaction.followup.send("The second airport is not valid", ephemeral=True)
-        else:
             await interaction.followup.send(f"A flight has been selected from {flight[0][1]} ({flight[0][0]}) to {flight[1][1]} ({flight[1][0]}) with a distance of {int(flight[2])}nm")
 
     @app_commands.command(name="flightplan", description="Fetches the latest simbrief flightplan")
