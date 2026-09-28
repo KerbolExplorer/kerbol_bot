@@ -25,7 +25,6 @@ class Schedule(commands.Cog):
         await interaction.response.defer()
 
         flight = random_flight(departure=departure_airport, arrival=arrival_airport, min_distance=min_distance, max_distance=max_distance, country=country)
-        print(flight    )
         if flight == None or flight == 4:
             await interaction.followup.send("Could not find any valid flights", ephemeral=True)
         elif flight == 1:
