@@ -44,6 +44,12 @@ class Airport_Lookup(commands.Cog):
             ))
             embed.set_footer(text="Metar source: https://aviationweather.gov/api/data/metar. If you require a summary of the metar use /metar. For flight simulation use only")
             await interaction.followup.send(embed=embed)
+
+    @commands.command()
+    async def debug_airport(self, ctx, airport:str):
+        airport = airport.upper()
+        airport_info = airport_lookup(airport)
+        await ctx.send(f"```{airport_info}```")
     
     @app_commands.command(name="airport_distance", description="Calculates the distance between two airports")
     @app_commands.describe(

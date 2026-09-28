@@ -552,127 +552,136 @@ async def fetch_flightplan(simbrief_id:str):
 
 
 
-def random_flight(country:str, international:bool = False, departing_airport:str = None, arrival_airport:str = None, min_distance = None, max_distance = None, prohibited:list = None):
-    """Returns a random flight
+import random
+
+_MAX_WIDEN_ROUNDS = 8    # each round widens the range by 25 nm on both ends
+_MAX_DEPARTURES = 15     # random departures tried per round when nothing is locked
+
+
+def _resolve_airport(code: str):
+    """Looks up a locked airport. Returns ((name, ident), (lat, lon)) or None."""
+    info = airport_lookup(code)
+    if info is False:
+        return None
+    try:
+        return (info[3], info[1]), (float(info[4]), float(info[5]))
+    except (TypeError, ValueError):
+        return None
+
+
+def _in_range(origin_coords, pool, lo, hi, exclude_ident=None):
+    """Returns [(airport, distance)] for pool airports within [lo, hi] nm of origin."""
+    matches = []
+    for airport, coords in pool:
+        if exclude_ident and airport[1] == exclude_ident:
+            continue
+        d = airport_distance(origin_coords, coords)
+        if lo <= d <= hi:
+            matches.append((airport, d))
+    return matches
+
+
+def random_flight(departure: str = None, arrival: str = None, min_distance=100, max_distance=500,
+                  regional=False, country: str = None, prohibited: list = None):
+    """Returns a random flight.
 
     Parameters
     ----------
-    country: ISO code of the country.
-    international: If the flight is internation (not implemented).
-    departing_airport: The airport you want to depart from.
-    arrival_airport: The airport you arrive at.
-    min_distance: The minimum distance of the flight.
-    max_distance: The max distance of the flight.
-    prohibited: Prohibited airports.
+    departure: ICAO code of the airport to depart from (optional).
+    arrival: ICAO code of the airport to arrive at (optional).
+    min_distance: Minimum distance of the flight in nm.
+    max_distance: Maximum distance of the flight in nm.
+    regional: Currently unused (kept so existing callers don't break).
+    country: ISO country code the random airports must belong to (optional).
+    prohibited: List of ICAO codes that may not be picked randomly.
 
     Returns
     ----------
-    None: If there's no airport in the country given.
-    1: If there is only 1 airport in this country.
+    None: If there are no airports in the given country.
+    1: If there is only 1 airport in the given country.
     2: If the departing airport is not valid.
-    3: If the arrival airport is not valid
+    3: If the arrival airport is not valid.
+    4: If no airport pair could be found in (or near) the requested distance range.
     Tuple
-        A tuple containing the information of the flight.
+        ((name, icao), (name, icao), distance_nm)
+
+    Notes
+    ----------
+    If both departure and arrival are given, the distance is fixed, so the
+    range is ignored and the flight is returned as requested.
     """
-    import random
 
-    country = country.upper()
-    airport_db = sqlite3.connect(db_path)
-    cursor = airport_db.cursor()
-
-    sql = "SELECT name, latitude_deg, longitude_deg, ident FROM airports WHERE iso_country = ? AND type != 'heliport' AND type != 'closed'"
-    cursor.execute(sql, (country,))
-    all_airports = cursor.fetchall()
-
-    if not all_airports:
-        cursor.close()
-        airport_db.close()
-        return None
-    elif len(all_airports) == 1:
-        cursor.close()
-        airport_db.close()
-        return 1
-    
-    if min_distance is None:
-        min_distance = 0
-    if max_distance is None:
-        max_distance = 9999
-    
-    if max_distance < min_distance:
-        cursor.close()
-        airport_db.close()
-        return None
-    
-    departure_locked = False
-    arrival_locked = False
-
-    if departing_airport is not None:
-        departing_airport = airport_lookup(departing_airport)
-        departure_locked = True
-        departing_cords = (departing_airport[4], departing_airport[5])
-        if departing_airport == False:
-            cursor.close()
-            airport_db.close()
+    dep = arr = None
+    if departure is not None:
+        dep = _resolve_airport(departure)
+        if dep is None:
             return 2
-
-        departing_airport = (departing_airport[3], departing_airport[1])
-
-    if arrival_airport is not None:
-        arrival_airport = airport_lookup(arrival_airport)
-        arrival_locked = True
-        arrival_cords = (arrival_airport[4], arrival_airport[5])
-        if arrival_airport == False:
-            cursor.close()
-            airport_db.close()
+    if arrival is not None:
+        arr = _resolve_airport(arrival)
+        if arr is None:
             return 3
 
-        arrival_airport = (arrival_airport[3], arrival_airport[1])
-    
-    attempts = 20
-    total_attempts = 0
-    while attempts > 0:
-        if not departure_locked:
-            dep = random.choice(all_airports)
-            departing_cords = (dep[1], dep[2])
-            departing_airport = (dep[0], dep[3])
-            if prohibited:
-                if departing_airport[0] in prohibited:
-                    total_attempts += 1
-                    continue
-        
-        if not arrival_locked:
-            arrival = random.choice(all_airports)
-            arrival_cords = (arrival[1], arrival[2])
-            arrival_airport = (arrival[0], arrival[3])
-            if prohibited:
-                if arrival_airport[0] in prohibited:
-                    total_attempts += 1
-                    continue
 
-        distance = airport_distance(departing_cords, arrival_cords)
+    if dep and arr:
+        return (dep[0], arr[0], airport_distance(dep[1], arr[1]))
 
-        if distance < min_distance or distance > max_distance:
-            attempts -= 1
-            if attempts == 0:
-                min_distance = max(0, min_distance - 25)
-                max_distance += 25
-                attempts = 20
-            total_attempts += 1
-        else:
-            break
-        if total_attempts == 100:
-            cursor.close()
-            airport_db.close()
-            return None
 
-    if distance < min_distance or distance > max_distance:
-        cursor.close()
-        airport_db.close()
+    sql = """SELECT name, latitude_deg, longitude_deg, ident
+             FROM airports
+             WHERE type != 'heliport' AND type != 'closed'
+             AND icao_code IS NOT NULL AND TRIM(icao_code) != ''
+             AND latitude_deg IS NOT NULL AND longitude_deg IS NOT NULL"""
+    params = ()
+    if country:
+        sql += " AND iso_country = ?"
+        params = (country.upper(),)
+
+    database = sqlite3.connect(db_path)
+    try:
+        rows = database.execute(sql, params).fetchall()
+    finally:
+        database.close()
+
+    if not rows:
         return None
-    
-    cursor.close()
-    airport_db.close()
-    return (departing_airport, arrival_airport, distance)
+    if len(rows) == 1 and not (dep or arr):
+        return 1
+
+    banned = {p.upper() for p in (prohibited or [])}
+    for locked in (dep, arr):
+        if locked:
+            banned.add(locked[0][1].upper()) 
+
+    pool = [((name, ident), (float(lat), float(lon)))
+            for name, lat, lon, ident in rows
+            if ident.upper() not in banned]
+    if not pool:
+        return 1 if country else 4
+
+
+    if dep or arr:
+        fixed = dep or arr
+        for r in range(_MAX_WIDEN_ROUNDS + 1):
+            lo = max(0, min_distance - 25 * r)
+            hi = max_distance + 25 * r
+            matches = _in_range(fixed[1], pool, lo, hi)
+            if matches:
+                other, distance = random.choice(matches)
+                return (fixed[0], other, distance) if dep else (other, fixed[0], distance)
+        return 4
+
+
+    random.shuffle(pool)
+    origins = pool[:_MAX_DEPARTURES]
+    for r in range(_MAX_WIDEN_ROUNDS + 1):
+        lo = max(0, min_distance - 25 * r)
+        hi = max_distance + 25 * r
+        for origin, origin_coords in origins:
+            matches = _in_range(origin_coords, pool, lo, hi, exclude_ident=origin[1])
+            if matches:
+                other, distance = random.choice(matches)
+                return (origin, other, distance)
+    return 4
 
 connection:HoppieConnector = HoppieConnector(station_name="ORI", logon=logon)
 

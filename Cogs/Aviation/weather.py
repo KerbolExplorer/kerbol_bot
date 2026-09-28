@@ -143,7 +143,7 @@ class Weather(commands.Cog):
             print("looking for alternate...")
             if metar == False or metar == None:
                 airport_data = airport_lookup(airport)
-                alternate = random_flight(airport_data[8], departing_airport=airport, max_distance=10, min_distance=1, prohibited=prohibeted)
+                alternate = random_flight(country=airport_data[8], departure=airport, max_distance=15, min_distance=1, prohibited=prohibeted)
                 if alternate == None:
                     attempts -= 1
                     prohibeted.append(alternate)

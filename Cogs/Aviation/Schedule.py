@@ -21,10 +21,10 @@ class Schedule(commands.Cog):
         min_distance="The minimum distance of the flight, note that this might be decreased if the bot can't find a flight within set parameters",
         max_distance= "The maximum distance of the flight, note that this might be decreased if the bot can't find a flight within set parameters"
         )
-    async def random_regional_flight(self, interaction:discord.Interaction, country: str, departure_airport : str = None, arrival_airport: str = None, min_distance: int = None, max_distance: int = None):
+    async def random_regional_flight(self, interaction:discord.Interaction, country: str, departure_airport : str = None, arrival_airport: str = None, min_distance: int = 100, max_distance: int = 200):
         await interaction.response.defer()
 
-        flight = random_flight(country, False, departure_airport, arrival_airport, min_distance, max_distance)
+        flight = random_flight(departure=departure_airport, arrival=arrival_airport, min_distance=min_distance, max_distance=max_distance, country=country)
         if flight == None:
             await interaction.followup.send("Could not find any valid flights", ephemeral=True)
         elif flight == 1:
