@@ -33,6 +33,7 @@ class Schedule(commands.Cog):
             await interaction.followup.send("The first airport is not valid", ephemeral=True)
         elif flight == 3:
             await interaction.followup.send("The second airport is not valid", ephemeral=True)
+        else:
             await interaction.followup.send(f"A flight has been selected from {flight[0][1]} ({flight[0][0]}) to {flight[1][1]} ({flight[1][0]}) with a distance of {int(flight[2])}nm")
 
     @app_commands.command(name="flightplan", description="Fetches the latest simbrief flightplan")
