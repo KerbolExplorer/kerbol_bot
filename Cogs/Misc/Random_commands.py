@@ -44,7 +44,7 @@ class Random_commands(commands.Cog):
                      "Pues nada, ya me jodieron el inicio de la vida adulta",
                      "Mucho derecho humanos y free gaza, pero despues se ríen del asesinato de una persona",
                     "La vida me pide a gritos que no ayude a nadie y sea un hijo de puta basto",
-                    "Lo llaman injustice pero las mujeres pueden elegir, los hombres rara vez podemos)
+                    "Lo llaman injustice pero las mujeres pueden elegir, los hombres rara vez podemos")
         
         await ctx.send(f'"*{random.choice(responses)}"*')
 
